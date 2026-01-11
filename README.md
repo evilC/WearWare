@@ -22,7 +22,7 @@ This folder should contain the following subfolders:
 #### Deploy assets
 - Build the rpi-rgb-led-matrix library.  
 - Place a compiled copy of `led-image-viewer` in the tools folder  
-- .NET runtime must be installed on the Pi (Currently uses `net9.0` as this is the minimum version for `ConcurrentDictionary<TKey, TValue>`)
+- .NET runtime must be installed on the Pi (Currently uses `net9.0`)
 
 ### Dev machine setup
 - Set the environment variable `WEARWARE_REMOTE_MACHINE` to point to the hostname and username used to SSH into the Pi (eg `root@DietPi`)
