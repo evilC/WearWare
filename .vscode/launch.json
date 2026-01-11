@@ -6,15 +6,15 @@
             "name": "Debug (Remote Pi)",
             "type": "coreclr",
             "request": "launch",
-            "program": "/root/dev/${workspaceFolderBasename}/bin/${workspaceFolderBasename}",
+            "program": "${env:WEARWARE_REMOTE_DIR}/bin/${workspaceFolderBasename}",
             "args": [],
-            "cwd": "/root/dev/${workspaceFolderBasename}/bin",
+            "cwd": "${env:WEARWARE_REMOTE_DIR}/bin",
             "stopAtEntry": false,
             "console": "internalConsole",
             "pipeTransport": {
                 "pipeCwd": "${workspaceFolder}",
                 "pipeProgram": "wsl",
-                "pipeArgs": ["ssh", "root@DietPi"],
+                "pipeArgs": ["ssh", "${env:WEARWARE_REMOTE_MACHINE}"],
                 "debuggerPath": "~/vsdbg/vsdbg"
             },
             "env": {

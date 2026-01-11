@@ -24,6 +24,11 @@ This folder should contain the following subfolders:
 - Place a compiled copy of `led-image-viewer` in the tools folder  
 - .NET runtime must be installed on the Pi (Currently uses `net9.0` as this is the minimum version for `ConcurrentDictionary<TKey, TValue>`)
 
+### Dev machine setup
+- Set the environment variable `WEARWARE_REMOTE_MACHINE` to point to the hostname and username used to SSH into the Pi (eg `root@DietPi`)
+= Set the environment varibale `WEARWARE_REMOTE_DIR` to point to the folder name where WearWare is to be deployed to on the Pi (eg `/root/dev/WearWare`)  
+  Ensure the `bin` folder is created in this folder (eg `/root/dev/WearWare/bin`)
+
 ### Remote Dev (VSCode on Windows, debug on Pi)
 - WSL must be installed, and Rsync must be added to WSL  
   This is to allow VSCode to transfer the built files to the Pi

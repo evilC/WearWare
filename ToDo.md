@@ -1,6 +1,5 @@
 # ToDo list
 
-- Remove hard-coded references to DietPi, replace with env variables
 - Start from scratch  
   - Create folders on service start
     - incoming

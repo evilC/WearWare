@@ -41,7 +41,7 @@
             "command": "wsl",
             "args": [
                 "bash", "-c",
-                "rsync -avz --delete src/bin/pi-publish/ root@DietPi:/root/dev/${workspaceFolderBasename}/bin/"
+                "rsync -avz --delete src/bin/pi-publish/ ${env:WEARWARE_REMOTE_MACHINE}:${env:WEARWARE_REMOTE_DIR}/bin/"
             ],
             "problemMatcher": [],
             "dependsOn": ["Copy .so to publish"]
