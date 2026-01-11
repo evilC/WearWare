@@ -1,6 +1,6 @@
 # ToDo list
 
-- Start from scratch  
+- Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
     Restart and it is OK  
     This is because some Matrix options (eg RowAddressType) cannot be changed  
@@ -14,14 +14,8 @@
 - Disaster recovery
   - Some way to restore last known good?
 - Should we not move to using the `ParentFolder` property of PlayableItem to get path?
-- Lots of instances where it is possible to add duplicate items
-  Where things are indexed by name etc
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
-- Mocked local dev  
-  - Mock Import (Just copy, don't convert)
-- C# Bindings
-  - clear() on the matrix is not exposed in the bindings  
-    because of this, we have to manually blank the canvas by writing all black in Stop()
+- Mock Import (Just copy, don't convert)
 - UI pages not responsive immediately after loading  
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
