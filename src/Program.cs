@@ -72,6 +72,10 @@ if (env == "Desktop")
 else
 {
     // RPi specific services
+    if (!File.Exists(Path.Combine(PathConfig.ToolsPath, "led-image-viewer")))
+    {
+        Log.Warning("led-image-viewer not found in tools folder! Stream conversion functionality will not work!");
+    }
     builder.Services.AddSingleton<IStreamConverterService, StreamConverterService>();
     builder.Services.AddSingleton<IStreamPlayer, RpiStreamPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
