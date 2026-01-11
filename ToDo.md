@@ -17,6 +17,9 @@
 - Config files
   - AppConfig is currently only for Playlists (Storing currently active playlist etc) - rename?  
     Is also in Program.cs, should be moved
+- PlaylistItems
+  - Split PlaylistItemsConfig (Storage of currentitem) off into separate file?  
+  That way, if we shut down while it is being written, we only corrupt that file, not the whole playlist
 - PlaylistService
   - A bunch of stuff in here should be moved to PlaylistItems
 - Disaster recovery
@@ -28,9 +31,6 @@
     However, no enabled checkbox is present on the QuickMedia page  
     Do we need to deal with this?
 - Should we not move to using the `ParentFolder` property of PlayableItem to get path?
-- Playlist
-  - Save CurrentItem on Stop  
-    Also possible on program exit?
 - Lots of instances where it is possible to add duplicate items
   Where things are indexed by name etc
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates

@@ -20,17 +20,22 @@ namespace WearWare.Services.Playlist
 
         // ToDo: PlaylistConfig is currently not used. It should be used to store current item index, so that playback resumes on the same item after app restart
         // There is a concern though that storing current item could cause problems if shutdown occurs while writing to the config file
-        public PlaylistItemsConfig PlaylistConfig { get; init; }
-        private int _currentIndex;
+        private PlaylistItemsConfig _config { get; init; }
 
 
         public PlaylistItems(string name, PlaylistItemsConfig playlistConfig, List<PlayableItem> items)
         {
             Name = name;
-            PlaylistConfig = playlistConfig;
+            _config = playlistConfig;
+            if (_config.CurrentItem >= items.Count || _config.CurrentItem < -1)
+            {
+                _config.CurrentItem = -1;
+            }
             _items = items;
-            _currentIndex = -1; // Set to -1 so that first call to MoveNext() sets it to first enabled item
-            MoveNext();
+            // if (_config.CurrentItem == -1)
+            // {
+            //     MoveNext();
+            // }
         }
 
         /// <summary>
@@ -39,8 +44,8 @@ namespace WearWare.Services.Playlist
         /// <returns></returns>
         public PlayableItem? GetCurrentItem()
         {
-            if (_items.Count == 0 || _currentIndex < 0 || _currentIndex >= _items.Count) return null;
-            return _items[_currentIndex];
+            if (_items.Count == 0 || _config.CurrentItem < 0 || _config.CurrentItem >= _items.Count) return null;
+            return _items[_config.CurrentItem];
         }
         
         public PlayableItem? MoveNext()
@@ -49,10 +54,12 @@ namespace WearWare.Services.Playlist
             if (nextIndex == null)
             {
                 // No next item found
-                _currentIndex = -1;
+                _config.CurrentItem = -1;
+                Serialize();
                 return null;
             }
-            _currentIndex = nextIndex.Value;
+            _config.CurrentItem = nextIndex.Value;
+            Serialize();
             return GetCurrentItem();
         }
 
@@ -62,7 +69,7 @@ namespace WearWare.Services.Playlist
         /// <returns>The index of the next enabled item, or null if none found</returns>
         public int? GetNextElegibleItemIndex()
         {
-            var currentIndex = _currentIndex;
+            var currentIndex = _config.CurrentItem;
             if (_items.Count == 0)
             {
                 return null;
@@ -93,7 +100,8 @@ namespace WearWare.Services.Playlist
         {
             if (index < 0 || index >= _items.Count) return false;
             if (!_items[index].Enabled) return false;
-            _currentIndex = index;
+            _config.CurrentItem = index;
+            Serialize();
             return true;
         }
 
@@ -126,9 +134,15 @@ namespace WearWare.Services.Playlist
                 _items.Insert(insertIndex, item);
             }
             // If current index is -1 (no current item), try to move to this item
-            if (_currentIndex == -1)
+            if (_config.CurrentItem == -1)
             {
                 MoveNext();
+            }
+            else if (insertIndex <= _config.CurrentItem)
+            {
+                // Adjust current index if necessary
+                _config.CurrentItem++;
+                Serialize();
             }
             return true;
         }
@@ -139,7 +153,7 @@ namespace WearWare.Services.Playlist
         public bool RemoveItem(int removedIndex)
         {
             if (removedIndex < 0 || removedIndex >= _items.Count) return false;
-            var oldCurrentIndex = _currentIndex;
+            var oldCurrentIndex = _config.CurrentItem;
             _items.RemoveAt(removedIndex);
 
             // Adjust current index if necessary
@@ -149,24 +163,22 @@ namespace WearWare.Services.Playlist
                 if (_items.Count == 0)
                 {
                     // Last item removed, reset current index
-                    _currentIndex = -1;
+                    _config.CurrentItem = -1;
+                    Serialize();
                 }
                 else
                 {
                     // Try to move to next item
-                    _currentIndex--; // Step back one so that MoveNext advances to the next item correctly
-                    if (MoveNext() == null)
-                    {
-                        // No valid next item, reset current index
-                        _currentIndex = -1;
-                    }
+                    _config.CurrentItem--; // Step back one so that MoveNext advances to the next item correctly
+                    MoveNext();
                 }
             }
             // Otherwise, if we removed an item before the current index, adjust the current index
             else if (removedIndex < oldCurrentIndex)
             {
                 // Adjust current index if necessary
-                _currentIndex--;
+                _config.CurrentItem--;
+                Serialize();
             }
 
             return true;
@@ -195,7 +207,7 @@ namespace WearWare.Services.Playlist
         public void Serialize()
         {
             var outPath = Path.Combine(PathConfig.PlaylistPath, Name, "playlist.json");
-            var dto = new PlaylistDto(PlaylistConfig, _items);
+            var dto = new PlaylistDto(_config, _items);
             JsonUtils.ToJsonFile(outPath, dto);
         }
 
