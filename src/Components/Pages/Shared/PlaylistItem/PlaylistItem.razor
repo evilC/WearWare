@@ -1,0 +1,41 @@
+@using WearWare.Common.Media
+@using Microsoft.AspNetCore.Components
+
+<div class="playlist-item-image-and-info">
+    @if (!string.IsNullOrEmpty(ImageSrc))
+    {
+        <img class="playlist-item-image" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
+    }
+    <div class="playlist-item-info">
+        <strong class="playlist-item-title">@Item?.Name</strong>
+        @if (Item is not null)
+        {
+            @if (Item.PlayMode == PlayMode.FOREVER)
+            {
+                <div class="playlist-item-mode">Forever</div>
+            }
+            else if (Item.PlayMode == PlayMode.LOOP)
+            {
+                <div class="playlist-item-mode">Loop @($"{Item.PlayModeValue}x")</div>
+            }
+            else if (Item.PlayMode == PlayMode.DURATION)
+            {
+                <div class="playlist-item-mode">Duration @($"{Item.PlayModeValue}s")</div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public PlayableItem? Item { get; set; }
+    [Parameter] public string? ImageSrc { get; set; }
+    [Parameter] public EventCallback<PlayableItem?> ImageClicked { get; set; }
+
+    private async Task HandleImageClick()
+    {
+        if (ImageClicked.HasDelegate)
+        {
+            await ImageClicked.InvokeAsync(Item);
+        }
+    }
+}

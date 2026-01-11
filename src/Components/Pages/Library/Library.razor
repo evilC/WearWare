@@ -1,0 +1,116 @@
+@page "/library"
+@using WearWare.Services.Library
+@using WearWare.Services.MatrixConfig
+@using WearWare.Services.StreamConverter
+@using WearWare.Config
+@using WearWare.Common.Media
+@inject WearWare.Services.Library.LibraryService LibraryService
+@inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
+@inject WearWare.Services.StreamConverter.IStreamConverterService StreamConverterService
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Library</PageTitle>
+
+<h3>Library Items</h3>
+
+@if (items == null)
+{
+    <p>Loading...</p>
+}
+else if (!items.Any())
+{
+    <p>No items found in the library.</p>
+}
+else
+{
+    <ul class="library-list" style="list-style:none; padding:0; margin:0;">
+        @foreach (var item in items)
+        {
+            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.75em;">
+                <div style="display:flex; flex-direction:column; gap:0.25em;">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowReconvert(item)">ReConvert</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)">Delete</button>
+                </div>
+                <img src="/library-image/@item.SourceFileName" alt="@item.Name" style="max-width:64px; max-height:64px; border-radius:8px; box-shadow:0 1px 8px #0002; background:#eee;" />
+                <div>
+                    <strong style="font-size:1em; color:#222;">@item.Name</strong><br />
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private IReadOnlyList<LibraryItem>? items;
+
+    protected override void OnInitialized()
+    {
+        LibraryService.ItemsChanged += OnItemsChanged;
+        LibraryService.Reload();
+        items = LibraryService.Items;
+    }
+
+    private void OnItemsChanged()
+    {
+        items = LibraryService.Items;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LibraryService.ItemsChanged -= OnItemsChanged;
+    }
+
+    private async Task ConfirmDelete(LibraryItem item)
+    {
+        var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete library item '{item.Name}' and its files?");
+        if (ok)
+        {
+            LibraryService.DeleteLibraryItem(item);
+        }
+    }
+
+    // ReConvert flow
+    private bool showOptionsForm = false;
+    private LedMatrixOptionsConfig? modalOptions;
+    private LibraryItem? editingItem;
+
+    private void ShowReconvert(LibraryItem item)
+    {
+        editingItem = item;
+        modalOptions = MatrixConfigService.CloneOptions();
+        showOptionsForm = true;
+    }
+
+    private Task OnOptionsOk()
+    {
+        showOptionsForm = false;
+        modalOptions = null;
+        editingItem = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task<WearWare.Common.TaskResult> OnLibraryReconvertAsync(LedMatrixOptionsConfig options)
+    {
+        if (editingItem is null) return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No item selected" };
+        try
+        {
+            var folder = PathConfig.LibraryPath;
+            return await StreamConverterService.ConvertToStream(folder, editingItem.SourceFileName, folder, editingItem.Name, options);
+        }
+        catch (Exception ex)
+        {
+            return new WearWare.Common.TaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed" };
+        }
+    }
+}
+
+@if (showOptionsForm && modalOptions is not null)
+{
+    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
+        <div style="width:80%;">
+            <MatrixOptionsForm Options="modalOptions" OnValidSubmitAsync="OnLibraryReconvertAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+        </div>
+    </div>
+}

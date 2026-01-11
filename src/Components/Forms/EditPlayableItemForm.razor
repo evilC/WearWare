@@ -1,0 +1,141 @@
+@inject IJSRuntime JS
+@inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
+@using WearWare.Common.Media
+@using WearWare.Services.MatrixConfig
+
+@code {
+    [Parameter] public PlayableItem? EditingItem { get; set; }
+    [Parameter] public int EditingIndex { get; set; }
+    [Parameter] public string? ImageUrl { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem)> OnSave { get; set; }
+    [Parameter] public Func<LedMatrixOptionsConfig, Task<WearWare.Common.TaskResult>>? OnReprocessAsync { get; set; }
+    [Parameter] public string PageTitle { get; set; } = "Playlist";
+
+    private Dictionary<string, int> playModeOptions = new()
+    {
+        { "Loop", (int)PlayMode.LOOP },
+        { "Duration", (int)PlayMode.DURATION },
+        { "Forever", (int)PlayMode.FOREVER }
+    };
+
+    private int selectedPlayMode;
+    private int selectedPlayModeValue;
+    private bool showOptionsForm = false;
+    private LedMatrixOptionsConfig? modalOptions;
+
+    protected override void OnInitialized()
+    {
+        if (EditingItem != null)
+        {
+            selectedPlayMode = (int)EditingItem.PlayMode;
+            selectedPlayModeValue = EditingItem.PlayModeValue;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("import", "/js/ScrollbarHider.js");
+            await JS.InvokeVoidAsync("modalScrollLock.lock");
+        }
+    }
+
+    public async Task UnlockScrollAsync()
+    {
+        await JS.InvokeVoidAsync("modalScrollLock.unlock");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("modalScrollLock.unlock");
+    }
+
+    private void OnSelectPlayMode(int value)
+    {
+        selectedPlayMode = value;
+        if (selectedPlayMode == (int)PlayMode.FOREVER)
+        {
+            selectedPlayModeValue = 1;
+        }
+    }
+
+    private void OnSelectPlayModeValue(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+            selectedPlayModeValue = v;
+    }
+
+    private void SaveEdit()
+    {
+        if (EditingItem != null)
+        {
+            EditingItem.PlayMode = (PlayMode)selectedPlayMode;
+            EditingItem.PlayModeValue = selectedPlayModeValue;
+            OnSave.InvokeAsync((EditingIndex, EditingItem));
+        }
+    }
+
+    private void ShowReprocess()
+    {
+        modalOptions = MatrixConfigService.CloneOptions();
+        showOptionsForm = true;
+    }
+
+    private Task OnOptionsOk()
+    {
+        showOptionsForm = false;
+        modalOptions = null;
+        return Task.CompletedTask;
+    }
+}
+
+@if (EditingItem is not null)
+{
+    <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
+        <div class="edit-dialog__content" @onclick:stopPropagation>
+            <h2>Edit @PageTitle</h2>
+            <div class="add-dialog-row">
+                <div class="add-dialog-section">
+                    <div class="add-dialog-options">
+                        @foreach (var mode in playModeOptions)
+                        {
+                            <label class="add-dialog-radio-label">
+                                <span class="add-dialog-mode-text">@mode.Key</span>
+                                <input type="radio" name="editPlayMode" value="@mode.Value" @onchange="() => OnSelectPlayMode(mode.Value)" checked="@(selectedPlayMode == mode.Value)" class="add-dialog-radio" />
+                            </label>
+                        }
+                    </div>
+                </div>
+                <div class="add-dialog-section">
+                    <label class="add-dialog-label">Value</label>
+                    <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.FOREVER)" @onchange="OnSelectPlayModeValue" />
+                </div>
+            </div>
+            <div class="add-dialog__list">
+                <div style="display:flex; align-items:center; gap:1rem;">
+                    <img class="add-dialog__item-image" src="@ImageUrl" alt="@EditingItem?.Name" />
+                    <div>
+                        <strong>@EditingItem?.Name</strong><br />
+                        <span class="add-dialog__item-type">@EditingItem?.MediaType</span>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%;">
+                <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
+                <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit">Save</button>
+                <button type="button" class="add-dialog__cancel-button" @onclick="ShowReprocess">ReConvert</button>
+            </div>
+        </div>
+    </div>
+}
+
+@if (showOptionsForm && modalOptions is not null)
+{
+    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
+            <div style="width:80%;">
+            <WearWare.Components.Forms.MatrixOptionsForm Options="modalOptions" OnValidSubmitAsync="OnReprocessAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+        </div>
+    </div>
+}

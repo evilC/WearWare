@@ -1,0 +1,9 @@
+/logs/*.txt
+/src/bin/
+/src/obj/
+/config/
+/incoming/
+/library/
+/playlists/
+/quickmedia/
+/tools/

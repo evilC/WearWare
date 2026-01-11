@@ -1,0 +1,126 @@
+@page "/import"
+@using System.Threading.Tasks
+@using WearWare.Config
+@rendermode InteractiveServer
+@inject WearWare.Services.Import.ImportService ImportService
+@using WearWare.Common
+@inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
+@inject IJSRuntime JSRuntime
+
+<h3>Import</h3>
+@using static WearWare.Common.Media.MediaTypeMappings
+@using static WearWare.Common.Media.MediaType
+
+@if (showForm && selectedFileName != null)
+{
+    <ImportForm FileName="@selectedFileName" OnFilenameConfirmed="OnFilenameConfirmed" />
+}
+else if (showOptionsForm && modalOptions != null && selectedFileName != null)
+{
+    <MatrixOptionsForm Options="modalOptions" OnValidSubmitAsync="OnOptionsConfirmedAsync" OnCancel="OnOptionsOk" Action="Import" Title="Matrix Options for Import" />
+}
+else if (importFiles == null)
+{
+    <p>Loading images...</p>
+}
+else if (!importFiles.Any())
+{
+    <p>No images found in the incoming folder.</p>
+}
+else
+{
+    <ul class="import-list" style="list-style:none; padding:0; margin:0;">
+        @foreach (var file in importFiles)
+        {
+            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.5em; cursor:pointer;"
+                @onclick="() => ShowForm(file)">
+                <div style="display:flex; flex-direction:column; gap:0.25em;">
+                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(file)" @onclick:stopPropagation="true">Delete</button>
+                </div>
+                <img src="/incoming-media/@file" alt="@file" style="max-width: 64px; max-height: 64px; display: block;" />
+                <div>
+                    <strong style="font-size:1em; color:#222;">@file</strong><br />
+                </div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<string>? importFiles;
+    private bool showForm = false;
+    private string? selectedFileName;
+    private bool showOptionsForm = false;
+    private WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? modalOptions;
+    private string? pendingNewFileName;
+
+    protected override void OnInitialized()
+    {
+        importFiles = ImportService.GetImportFiles();
+        ImportService.StateChanged += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        importFiles = ImportService.GetImportFiles();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ImportService.StateChanged -= OnStateChanged;
+    }
+
+    private void ShowForm(string fileName)
+    {
+        selectedFileName = fileName;
+        showForm = true;
+    }
+
+    private async Task ConfirmDelete(string fileName)
+    {
+        var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete incoming file '{fileName}'?");
+        if (ok)
+        {
+            ImportService.DeleteIncomingFile(fileName);
+        }
+    }
+
+    private Task OnFilenameConfirmed(string? newFileName)
+    {
+        showForm = false;
+        if (newFileName != null && selectedFileName != null)
+        {
+            // Prepare a clone of current matrix options for the import form to edit
+            modalOptions = MatrixConfigService.CloneOptions();
+            pendingNewFileName = newFileName;
+            showOptionsForm = true;
+            return Task.CompletedTask;
+        }
+        selectedFileName = null;
+        return Task.CompletedTask;
+    }
+
+    private async Task<TaskResult> OnOptionsConfirmedAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig editedOptions)
+    {
+        showOptionsForm = false;
+        TaskResult result = new TaskResult { ExitCode = -1, Error = "", Message = "Unknown" };
+        if (pendingNewFileName != null && selectedFileName != null)
+        {
+            result = await ImportService.ImportLibraryItem(selectedFileName, pendingNewFileName, editedOptions);
+        }
+        // clear state
+        pendingNewFileName = null;
+        selectedFileName = null;
+        return result;
+    }
+
+    private Task OnOptionsOk()
+    {
+        // Close the options form and return to the import list without importing
+        showOptionsForm = false;
+        pendingNewFileName = null;
+        selectedFileName = null;
+        return Task.CompletedTask;
+    }
+}

@@ -1,0 +1,37 @@
+
+.log-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+
+.log-page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 75vh;
+    height: 100%;
+}
+
+.log-entries {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    background: #222;
+    color: #eee;
+    padding: 1em;
+    border-radius: 6px;
+    font-size: 0.5em;
+    /* width: 50rem; */
+}
+
+.log-entry {
+    width: 50rem;
+}
+
+@media (max-width: 640px) {
+    .log-entries {
+        max-height: 70vh !important;
+    }
+}

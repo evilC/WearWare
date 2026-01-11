@@ -1,0 +1,62 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-native-libs",
+            "type": "shell",
+            "command": "wsl",
+            "args": [
+                "bash",
+                "-lc",
+                "make -C rpi-rgb-led-matrix/lib CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ AR=aarch64-linux-gnu-ar"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "publish-linux-arm64-debug",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish", "src/WearWare.csproj", "-c", "Debug", "-r", "linux-arm64", "-o", "src/bin/pi-publish"
+            ],
+            "problemMatcher": [],
+            "group": "build",
+            "dependsOn": "build-native-libs"
+        },
+        {
+            "label": "Copy .so to publish",
+            "type": "shell",
+            "command": "wsl",
+            "args": [
+                "bash",
+                "-c",
+                "cp rpi-rgb-led-matrix/lib/librgbmatrix.so.1 \"src/bin/pi-publish\""
+            ],
+            "problemMatcher": [],
+            "dependsOn": "publish-linux-arm64-debug"
+        },        
+        {
+            "label": "deploy-to-pi",
+            "type": "shell",
+            "command": "wsl",
+            "args": [
+                "bash", "-c",
+                "rsync -avz --delete src/bin/pi-publish/ root@DietPi:/root/dev/${workspaceFolderBasename}/bin/"
+            ],
+            "problemMatcher": [],
+            "dependsOn": ["Copy .so to publish"]
+        },
+        {
+            "label": "publish-desktop-mock",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish",
+                "src/WearWare.csproj",
+                "-c", "Debug",
+                "-o", "src/bin/desktop-publish"
+            ],
+            "group": "build"
+        }
+    ]
+}

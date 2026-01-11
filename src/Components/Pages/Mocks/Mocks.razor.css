@@ -1,0 +1,15 @@
+.qm-button-title {
+    font-size: 0.8rem;
+}
+
+.qm-button-item {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 70px;
+}
+
+.qm-button-instructions {
+    padding-bottom: 1rem;
+}

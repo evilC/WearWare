@@ -1,0 +1,59 @@
+# WearWare
+An application to turn a Raspberry Pi with an LED Matrix into a wearable LED screen t-shirt.  
+This repo is very much a Work-in-progress and should not be considered ready for consumption by others
+
+## Setup
+Note: The toolchain (Build tasks etc) are currently Windows-specific (WSL - Windows Subsytem for Linux is a requirement). If running a different OS, you may need to adapt
+### On the Pi:
+#### Disk setup
+Pick a folder to deploy to (eg `/root/dev/WearWare`)
+This folder should contain the following subfolders:
+
+- bin - WearWare binaries should be in here.  
+  When developing, deploy to this folder, not to the parent folder.
+  This is because the rsync will wipe everything in the deploy folder (Wipe your library and config etc)
+- config - This is where configuration of the app will be stored
+- incoming - Uploaded files will go here
+- library - Imported (Converted) files will go here
+- playlists - Playlists will be stored here
+- quickmedia - QuickMedia items will be stored here
+- tools - Tools (eg the `led-image-viewer` executable) will go here
+
+#### Deploy assets
+- Build the rpi-rgb-led-matrix library.  
+- Place a compiled copy of `led-image-viewer` in the tools folder  
+- .NET runtime must be installed on the Pi (Currently uses `net9.0` as this is the minimum version for `ConcurrentDictionary<TKey, TValue>`)
+
+### Remote Dev (VSCode on Windows, debug on Pi)
+- WSL must be installed, and Rsync must be added to WSL  
+  This is to allow VSCode to transfer the built files to the Pi
+- Passwordless SSH to the Pi as root must be configured
+- `launch.json` and `target.json` may need to be edited for the paths you use on the Pi (Remember to deploy to `WearWare/bin`, not `WearWare`!)
+- Ensure that the fork of rpi-rgb-led-matrix mentioned above is the one checked out in the submodule (Git should enforce this)
+- EITHER
+  - Ensure WSL is set up to compile C++:  
+    ```
+    sudo apt update
+    sudo apt install -y make build-essential rsync ssh \
+    crossbuild-essential-arm64
+    ```
+- OR
+  - Copy `librgbmatrix.so.1` into the path on the Pi (eg `/usr/lib`)
+- Select the `Debug (Remote Pi)` configuration
+- Hit F5 to debug - code will be run on the Pi
+
+### Local Dev (VSCode on local machine, Pi functionality mocked out)
+In this mode, you can work on business logic etc without needing to run on the Pi  
+- Select the `Debug (Local with mocks)` configuration
+- Hit F5 to run
+- A debug interface will be available on http://localhost:5000/mocks  
+  This will allow you to simulate GPIO button presses.
+- In this mode, all LOOP type animations will only last for 1 second, as it has no way of knowing how long the animation is
+- What the Pi would be playing on the screen is shown in the Debug Console of the IDE
+
+### Hardware notes
+This code is currently designed for a Pi (I use a Zero W 2) with an Electrodragon Active-3 matrix driver **which has channel 3 disabled** (De-solder the 3rd chip). **If you are using all 3 channels, then be sure to set the Pin list in `ButtonPins.cs` to empty, or do not use the QuickMedia functionality**  
+Disabling the 3rd channel frees up GPIO pins 2, 3, 14, 16, 21 + 26  
+However, it is worth noting that pins 2+3 do not seem to be usable (They are high by default)  
+Pin 14 apparently can fluctuate by default  
+In order to fix this, you can add lines like so in `/boot/firmware/config.cfg`: `gpio=14=op,dl`

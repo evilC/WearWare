@@ -1,0 +1,104 @@
+@page "/log"
+@using Serilog.Events
+@using WearWare.Services.Logging
+@rendermode InteractiveServer
+@inject InMemoryLogService LogService
+
+
+<div class="log-page-container">
+    <div class="log-controls">
+        <label for="logLevel" class="mb-0">Log Level:</label>
+        <select id="logLevel" @bind="selectedLevel" class="form-select w-auto">
+            @foreach (var level in logLevels)
+            {
+                <option value="@level">@level</option>
+            }
+        </select>
+        <div class="form-check ms-3">
+            <input type="checkbox" id="autoscroll" @bind="autoscrollEnabled" class="form-check-input" />
+            <label for="autoscroll" class="form-check-label">Autoscroll</label>
+        </div>
+    </div>
+
+    <div class="log-entries" @ref="logEntriesDiv">
+        @foreach (var entry in logEntries)
+        {
+            <div class="log-entry">@FormatLogEntry(entry)</div>
+        }
+    </div>
+</div>
+
+@inject IJSRuntime JSRuntime
+
+@code {
+    private LogEventLevel _selectedLevel = LogEventLevel.Warning;
+    private LogEventLevel selectedLevel
+    {
+        get => _selectedLevel;
+        set
+        {
+            if (_selectedLevel != value)
+            {
+                _selectedLevel = value;
+                // Reload all entries at this level
+                logEntries.Clear();
+                lastIndex = 0;
+                var allEntries = LogService.GetLogEvents(_selectedLevel, 0, out var newLastIndex);
+                logEntries.AddRange(allEntries);
+                lastIndex = newLastIndex;
+                shouldScroll = true;
+                StateHasChanged();
+            }
+        }
+    }
+    private List<Serilog.Events.LogEvent> logEntries = new();
+    private long lastIndex = 0;
+    private readonly LogEventLevel[] logLevels = (LogEventLevel[])Enum.GetValues(typeof(LogEventLevel));
+    private System.Threading.Timer? timer;
+    private ElementReference logEntriesDiv;
+    private bool shouldScroll = false;
+    private bool autoscrollEnabled = true;
+
+    protected override void OnInitialized()
+    {
+        timer = new System.Threading.Timer(_ =>
+        {
+            InvokeAsync(UpdateLog);
+        }, null, 0, 1000);
+    }
+
+    private void UpdateLog()
+    {
+        var newEntries = LogService.GetLogEvents(selectedLevel, lastIndex, out var newLastIndex);
+        if (newEntries.Count > 0)
+        {
+            logEntries.AddRange(newEntries);
+            lastIndex = newLastIndex;
+            shouldScroll = true;
+            StateHasChanged();
+        }
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (shouldScroll)
+        {
+            shouldScroll = false;
+            if (autoscrollEnabled)
+            {
+                await JSRuntime.InvokeVoidAsync("logAutoscroll", logEntriesDiv);
+            }
+        }
+    }
+
+    private string FormatLogEntry(Serilog.Events.LogEvent entry)
+    {
+        return $"[{entry.Timestamp:HH:mm:ss} {entry.Level}] {entry.RenderMessage()}";
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
+}

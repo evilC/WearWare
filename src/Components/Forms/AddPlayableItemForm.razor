@@ -1,0 +1,104 @@
+@inject IJSRuntime JS
+@using WearWare.Common.Media
+@using WearWare.Services.Library
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("import", "/js/ScrollbarHider.js");
+            await JS.InvokeVoidAsync("modalScrollLock.lock");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("modalScrollLock.unlock");
+    }
+    [Parameter] public IReadOnlyList<LibraryItem>? LibraryItems { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<(int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue)> OnAdd { get; set; }
+    [Parameter] public int InsertIndex { get; set; }
+    [Parameter] public string PageTitle { get; set; } = "Playlist";
+
+    private Dictionary<string, int> playModeOptions = new()
+    {
+        { "Loop", (int)PlayMode.LOOP },
+        { "Duration", (int)PlayMode.DURATION },
+        { "Forever", (int)PlayMode.FOREVER }
+    };
+
+    private int selectedPlayMode = (int)PlayMode.LOOP;
+    private int selectedPlayModeValue = 1;
+
+    private void OnSelectPlayMode(int value)
+    {
+        selectedPlayMode = value;
+        if (selectedPlayMode == (int)PlayMode.FOREVER)
+        {
+            selectedPlayModeValue = 1;
+        }
+    }
+
+    private void OnSelectPlayModeValue(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+            selectedPlayModeValue = v;
+    }
+
+    private void AddItem(LibraryItem libItem)
+    {
+        OnAdd.InvokeAsync((InsertIndex, libItem, (PlayMode)selectedPlayMode, selectedPlayModeValue));
+    }
+
+    public async Task UnlockScrollAsync()
+    {
+        await JS.InvokeVoidAsync("modalScrollLock.unlock");
+    }
+}
+
+<div class="add-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
+    <div class="add-dialog__content" @onclick:stopPropagation>
+        <h2>Add @PageTitle</h2>
+        <div class="add-dialog-row">
+            <div class="add-dialog-section">
+                <div class="add-dialog-options">
+                    @foreach (var mode in playModeOptions)
+                    {
+                        <label class="add-dialog-radio-label">
+                            <span class="add-dialog-mode-text">@mode.Key</span>
+                            <input type="radio" name="playMode" value="@mode.Value" @onchange="() => OnSelectPlayMode(mode.Value)" checked="@(selectedPlayMode == mode.Value)" class="add-dialog-radio" />
+                        </label>
+                    }
+                </div>
+            </div>
+            <div class="add-dialog-section">
+                <label class="add-dialog-label">Value</label>
+                <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.FOREVER)" @onchange="OnSelectPlayModeValue" />
+            </div>
+        </div>
+        @if (LibraryItems is null || !LibraryItems.Any())
+        {
+            <div>No items found.</div>
+        }
+        else
+        {
+            <div class="add-dialog__list">
+                <ul>
+                    @foreach (var libItem in LibraryItems)
+                    {
+                        <li class="add-dialog__item" @onclick="() => AddItem(libItem)">
+                            <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
+                            <div>
+                                <strong>@libItem.Name</strong><br />
+                                <span class="add-dialog__item-type">@libItem.MediaType</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <button type="button" @onclick="() => OnCancel.InvokeAsync(null)" class="add-dialog__cancel-button">Cancel</button>
+        }
+    </div>
+</div>

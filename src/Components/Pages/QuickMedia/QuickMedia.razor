@@ -1,0 +1,217 @@
+@page "/quickmedia"
+@using Iot.Device.GoPiGo3.Sensors
+@using System.Threading.Tasks
+@using WearWare.Services.Library
+@using WearWare.Services.QuickMedia
+@using WearWare.Components.Pages.Shared.PlaylistItem
+@using WearWare.Common.Media
+@rendermode InteractiveServer
+
+@inject QuickMediaService QuickMediaService
+@inject WearWare.Services.Library.LibraryService LibraryService
+@inject IJSRuntime JSRuntime
+@inject WearWare.Services.StreamConverter.IStreamConverterService StreamConverterService
+
+@code {
+    // ================================================== Common ==================================================
+    private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
+    private IReadOnlyList<LibraryItem>? libraryItems;
+
+    protected override void OnInitialized()
+    {
+        try
+        {
+            quickButtons = QuickMediaService?.GetQuickMediaButtons() ?? Array.Empty<IQuickMediaButton?>();
+        }
+        catch
+        {
+            quickButtons = Array.Empty<IQuickMediaButton?>();
+        }
+        libraryItems = LibraryService.Items;
+        if (QuickMediaService != null)
+            QuickMediaService.StateChanged += OnStateChanged;
+    }
+
+    /// <summary>
+    /// Handler for QuickMediaService StateChanged event.
+    /// Currently, this is not used for anything (See notes in the Service)
+    /// It's OK to remove the subscription, but do not remove the event itself from the service as the Mock page uses it.
+    /// </summary>
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        if (QuickMediaService != null)
+            QuickMediaService.StateChanged -= OnStateChanged;
+    }
+
+    
+
+    // ================================================== Add Dialog  ==================================================
+    private bool showAddDialog = false;
+    private int addDialogInsertIndex = 0;
+    private AddPlayableItemForm? addFormRef;
+
+    void AddQuickMediaButton(int index)
+    {
+        addDialogInsertIndex = index;
+        showAddDialog = true;
+    }
+
+    void OnAddDialogCancel()
+    {
+        showAddDialog = false;
+        StateHasChanged();
+    }
+
+    async void OnAddDialogAdd((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue) args)
+    {
+        QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue);
+        showAddDialog = false;
+        StateHasChanged();
+        await Task.Yield();
+        if (addFormRef is not null)
+            await addFormRef.UnlockScrollAsync();
+    }
+
+    // ================================================== Edit Dialog  ==================================================
+    private Boolean showEditDialog = false;
+    private int editingIndex = -1;
+    private PlayableItem? editingItem = null;
+    private IQuickMediaButton? editingButton = null;
+    private EditPlayableItemForm? editFormRef;
+    void EditQuickMediaButton(IQuickMediaButton button, int index)
+    {
+        editingIndex = index;
+        editingItem = button.Item;
+        editingButton = button;
+        showEditDialog = true;
+    }
+
+    public async Task OnEditQuickMediaButton((int editingIndex, PlayableItem item) args)
+    {
+        if (editingButton is null) return;
+        QuickMediaService.EditQuickMediaButton(editingButton, args.item.PlayMode, args.item.PlayModeValue);
+        showEditDialog = false;
+        editingItem = null;
+        editingButton = null;
+        StateHasChanged();
+        await Task.Yield();
+		if (editFormRef is not null)
+			await editFormRef.UnlockScrollAsync();
+	}
+
+    async Task HideEditDialog()
+    {
+        showEditDialog = false;
+        editingItem = null;
+        StateHasChanged();
+        await Task.Yield();
+		if (editFormRef is not null)
+			await editFormRef.UnlockScrollAsync();
+		
+	}
+    private async Task<WearWare.Common.TaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options)
+    {
+        if (editingIndex < 0)
+        {
+            return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No quickmedia selected" };
+        }
+        var btn = quickButtons.ElementAtOrDefault(editingIndex);
+        if (btn?.Item is null)
+        {
+            return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "Selected quickmedia button has no item" };
+        }
+        try
+        {
+            var folder = System.IO.Path.Combine(WearWare.Config.PathConfig.QuickMediaPath, editingIndex.ToString());
+            return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, options);
+        }
+        catch (Exception ex)
+        {
+            return new WearWare.Common.TaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed" };
+        }
+    }
+    // ================================================= Delete Item ==================================================
+    void DeleteQuickMediaButton(int index)
+    {
+        QuickMediaService.DeleteQuickMediaButton(index);
+        StateHasChanged();
+    }
+
+    private async Task ConfirmDeleteQuickMediaButton(int index)
+    {
+        var btn = quickButtons.ElementAtOrDefault(index);
+        var name = btn?.Item?.Name ?? $"Button {index+1}";
+        var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete quick-media button '{name}'?");
+        if (ok)
+        {
+            DeleteQuickMediaButton(index);
+        }
+    }
+}
+
+<PageTitle>Quick Media</PageTitle>
+
+@if (quickButtons is null || quickButtons.Count == 0)
+{
+	<p>No quick-media buttons available.</p>
+}
+else
+{
+	<div class="qm-button-list">
+		@for (int i = 0; i < quickButtons.Count; i++)
+		{
+			var btn = quickButtons[i];
+			var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
+			<div class="qm-button-item">
+				<span class="qm-button-title">B@(i + 1)</span>
+				<div class="qm-item-controls">
+					@if (btn is null)
+					{
+						<button class="btn btn-sm btn-outline-primary" @onclick="() => AddQuickMediaButton(index)">Add</button>
+					}
+					else
+					{
+						<button class="btn btn-sm btn-outline-primary" @onclick="() => EditQuickMediaButton(btn, index)">Edit</button>
+					}
+                    @if (btn?.Item is not null)
+                    {
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteQuickMediaButton(index)">Delete</button>
+                    }
+				</div>
+				@if (btn?.Item is not null)
+				{
+					<PlaylistItem ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")" Item="btn.Item" />
+				}
+			</div>
+		}
+	</div>
+}
+
+@if (showAddDialog)
+{
+	<AddPlayableItemForm 
+		@ref="addFormRef"
+		LibraryItems="libraryItems"
+		InsertIndex="addDialogInsertIndex"
+		PageTitle="@($"QuickMedia Button {addDialogInsertIndex+1}")"
+		OnCancel="OnAddDialogCancel"
+		OnAdd="OnAddDialogAdd" />
+}
+
+@if (showEditDialog && editingItem is not null)
+{
+    <EditPlayableItemForm
+        @ref="editFormRef"
+        EditingItem="editingItem"
+        EditingIndex="editingIndex"
+        ImageUrl="@($"/quickmedia-images/{editingIndex}/{editingItem.SourceFileName}")"
+        PageTitle="@($"QuickMedia Button {editingIndex+1}")"
+        OnCancel="HideEditDialog"
+        OnSave="OnEditQuickMediaButton"
+        OnReprocessAsync="ReprocessQuickMediaButtonAsync" />
+}

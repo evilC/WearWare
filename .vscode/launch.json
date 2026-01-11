@@ -1,0 +1,52 @@
+{
+    // See https://code.visualstudio.com/docs/editor/debugging#_launch-configurations
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug (Remote Pi)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "/root/dev/${workspaceFolderBasename}/bin/${workspaceFolderBasename}",
+            "args": [],
+            "cwd": "/root/dev/${workspaceFolderBasename}/bin",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "pipeTransport": {
+                "pipeCwd": "${workspaceFolder}",
+                "pipeProgram": "wsl",
+                "pipeArgs": ["ssh", "root@DietPi"],
+                "debuggerPath": "~/vsdbg/vsdbg"
+            },
+            "env": {
+                // This environment variable tells the app to use the Pi-specific configuration
+                // It affects:
+                // - Which path the PathConfig returns (eg ../playlists)
+                // - Program.cs will load Pi-specific services (e.g., RPiStreamPlayer)
+                "ASPNETCORE_ENVIRONMENT": "Pi"
+            },
+            "sourceFileMap": {
+                "/root/dev/${workspaceFolderBasename}": "${workspaceFolder}"
+            },
+            "preLaunchTask": "deploy-to-pi"
+        },
+        {
+            "name": "Debug (Local with mocks)",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/bin/desktop-publish/WearWare.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/src/bin/desktop-publish",
+            "stopAtEntry": false,
+            "console": "internalConsole",
+            "env": {
+                // This environment variable tells the app to use the Desktop-specific configuration
+                // This configuration uses mock services (e.g., MockStreamPlayer, MockButtonFactory) instead of real hardware.
+                // It affects:
+                // - Which path the PathConfig returns (eg ../../../playlists)
+                // - Program.cs will load Desktop-specific services (e.g., MockStreamPlayer)
+                "ASPNETCORE_ENVIRONMENT": "Desktop"
+            },
+            "preLaunchTask": "publish-desktop-mock"
+        }
+    ]
+}

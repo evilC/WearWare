@@ -1,0 +1,484 @@
+@page "/playlist"
+@using WearWare.Services.Playlist
+@using WearWare.Components.Pages.Shared.PlaylistItem
+@using WearWare.Common.Media
+@using WearWare.Services.Library
+@rendermode InteractiveServer
+
+@inject PlaylistService PlaylistService
+@inject LibraryService LibraryService
+@inject IJSRuntime JSRuntime
+
+@code {
+
+    // ================================================== Common ==================================================
+    /// <summary> The list of available playlist names </summary>
+    private List<string>? availablePlaylists;
+    /// <summary> The playlist being edited </summary>
+    private PlaylistItems? _playlist;
+
+    /// <summary> The list of PlayableItems in the current playlist</summary>
+    private List<PlayableItem>? _items;
+
+    private string? activePlaylist;
+
+    protected override void OnInitialized()
+    {
+        availablePlaylists = PlaylistService.GetPlaylistNames();
+        _editingPlaylist = PlaylistService.GetPlaylistBeingEdited()?.Name;
+        // Set activePlaylist to the currently active playlist, if any
+        activePlaylist = PlaylistService.GetActivePlaylistName();
+        _playlist = PlaylistService.GetPlaylistBeingEdited();
+        if (_playlist is not null)
+        {
+            _items = _playlist.GetPlaylistItems();
+        }
+        libraryItems = LibraryService.Items;
+        PlaylistService.StateChanged += OnStateChanged;
+    }
+
+    /// <summary>
+    /// Handler for PlaylistService StateChanged event.
+    /// The MediaControllerService raises it's own StateChanged when playback fails for an item
+    /// which PlaylistService listens to and raises it's own StateChanged event.
+    /// This allows UIs to update when an item is disabled due to playback failure.
+    /// </summary>
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        PlaylistService.StateChanged -= OnStateChanged;
+    }
+
+    private async Task<WearWare.Common.TaskResult> ReprocessPlaylistItemAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts)
+    {
+        if (_playlist is null || editingIndex < 0)
+        {
+            return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected" };
+        }
+        return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, opts);
+    }
+
+    private void OnActivePlaylistChanged(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString();
+        if (newValue == "")
+            newValue = null;
+        if (activePlaylist != newValue)
+        {
+            activePlaylist = newValue;
+            if (newValue is null)
+            {
+                PlaylistService.SetActivePlaylistState(false);
+            }
+            else
+            {
+                PlaylistService.SetActivePlaylistState(true, newValue);
+            }
+            // Optionally, you can load the playlist or update UI here
+            StateHasChanged();
+        }
+    }
+
+    // ================================================== Add Dialog  ==================================================
+    /// <summary> Whether to show the Add Item dialog </summary>
+    private bool showAddDialog = false;
+
+    /// <summary> The index to insert the new item at when adding to the playlist </summary>
+    private int addDialogInsertIndex = 0;
+    
+    /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
+    private IReadOnlyList<LibraryItem>? libraryItems;
+    /// <summary> Reference to the AddPlayableItemForm component </summary>
+    private AddPlayableItemForm? addFormRef;
+    // Handler for AddPlayableItemForm component's OnAdd event
+
+    /// <summary>
+    /// Shows the Add Item dialog to add an item at the specified index
+    /// </summary>
+    /// <param name="insertIndex"></param> The index to insert the item at
+    void ShowAddDialog(int insertIndex)
+    {
+        addDialogInsertIndex = insertIndex;
+        showAddDialog = true;
+    }
+
+    /// <summary>
+    /// Hides the Add Item dialog - called on Cancel
+    /// </summary>
+    async void HideAddDialog()
+    {
+        showAddDialog = false;
+        StateHasChanged();
+        // Wait for the UI to update and the dialog to be removed
+        await Task.Yield();
+        if (addFormRef is not null)
+            await addFormRef.UnlockScrollAsync();
+    }
+
+    /// <summary>
+    /// Adds the selected LibraryItem to the playlist at the specified index
+    /// </summary>
+    /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue)
+    async void OnAddPlayableItem((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue) args)
+    {
+        if (_playlist is null) return;
+        PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue);
+        _items = _playlist?.GetPlaylistItems();
+        showAddDialog = false;
+        StateHasChanged();
+        await Task.Yield();
+        if (addFormRef is not null)
+            await addFormRef.UnlockScrollAsync();
+    }
+
+    // ================================================== Edit Dialog  ==================================================
+    /// <summary> Whether to show the Edit Item dialog </summary>
+    private bool showEditDialog = false;
+
+    /// <summary> The PlayableItem being edited in the Edit dialog </summary>
+    private PlayableItem? editingItem;
+
+    /// <summary> Reference to the EditPlayableItemForm component </summary>
+    private EditPlayableItemForm? editFormRef;
+
+    /// <summary> The index of the PlayableItem being edited in the Edit dialog </summary>
+    private int editingIndex;
+
+    /// <summary>
+    /// Shows the Edit Item dialog for the specified item
+    /// </summary>
+    /// <param name="item"></param> The PlayableItem to edit
+    /// <param name="itemIndex"></param> The index of the PlayableItem to edit
+    void EditPlaylistItem(PlayableItem item, int itemIndex)
+    {
+        editingItem = item;
+        editingIndex = itemIndex;
+        showEditDialog = true;
+        // ToDo: Need to know which playlist is being edited so we can call save on the right playlist
+    }
+
+    /// <summary>
+    /// Saves the edited PlayableItem to the playlist
+    /// </summary>
+    /// <param name="args"></param> Tuple of (editingIndex, updatedItem)
+    async void OnEditPlayableItem((int editingIndex, PlayableItem updatedItem) args)
+    {
+        if (_playlist is null) return;
+        // Update the item in the playlist
+        _items![args.editingIndex] = args.updatedItem;
+        PlaylistService.PlaylistItemUpdated(_playlist, args.editingIndex);
+        showEditDialog = false;
+        editingItem = null;
+        StateHasChanged();
+        await Task.Yield();
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
+    }
+
+    /// <summary>
+    /// Hides the Edit Item dialog - called on Cancel
+    /// </summary>
+    async void HideEditDialog()
+    {
+        showEditDialog = false;
+        editingItem = null;
+        StateHasChanged();
+        // Wait for the UI to update and the dialog to be removed
+        await Task.Yield();
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
+    }
+
+    // ================================================= Delete Item ==================================================
+
+    /// <summary>
+    /// Deletes the specified item from the playlist
+    /// </summary>
+    /// <param name="itemIndex"></param> The index of the item to delete
+    void DeletePlaylistItem(int itemIndex)
+    {
+        if (_playlist is null)
+            return;
+        var removed = PlaylistService.RemovePlaylistItem(_playlist, itemIndex);
+        if (removed)
+        {
+            _items = _playlist?.GetPlaylistItems();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmDeletePlaylistItem(int itemIndex)
+    {
+        if (_playlist is null) return;
+        var name = _playlist.GetPlaylistItems()[itemIndex].Name;
+        var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete playlist item '{name}'?");
+        if (ok)
+        {
+            DeletePlaylistItem(itemIndex);
+        }
+    }
+
+    // ================================================== Enable Toggle ==================================================
+
+    /// <summary>
+    /// Called when the item's enabled checkbox is toggled
+    /// </summary>
+    /// <param name="item"></param> The PlayableItem being toggled
+    /// <param name="itemIndex"></param> The index of the PlayableItem being toggled
+    /// <param name="newState"></param> The new enabled state
+    void ItemEnableToggled(PlayableItem item, int itemIndex, bool newState)
+    {
+        if (_playlist is null)
+            return;
+        item.Enabled = newState;
+        PlaylistService.PlaylistItemUpdated(_playlist, itemIndex);
+        StateHasChanged();
+    }
+
+    // ================================================== Item Image Clicked ==================================================
+    /// <summary>
+    /// Handles when a PlaylistItem image is clicked - jumps to that item in the playlist
+    /// </summary>
+    /// <param name="item"></param> The PlayableItem that was clicked
+    /// <param name="index"></param> The index of the PlayableItem that was clicked
+    void OnPlaylistItemImageClicked(PlayableItem item, int index)
+    {
+        if (_playlist is null)
+            return;
+        PlaylistService.JumpToPlaylistItem(_playlist, index);
+    }
+
+    // ============================================ Active Playlist controls ==== ===========================================
+    
+    private void StartActivePlaylist()
+    {
+        if (!string.IsNullOrEmpty(activePlaylist))
+        {
+            PlaylistService.SetActivePlaylistState(true, activePlaylist);
+        }
+    }
+
+    private void StopActivePlaylist()
+    {
+        if (!string.IsNullOrEmpty(activePlaylist))
+        {
+            PlaylistService.SetActivePlaylistState(false);
+        }
+    }
+
+
+    // ============================================ Editing Playlist controls ===============================================
+    // Dropdown for selecting which playlist to edit
+    private string? _editingPlaylist;
+
+    /// <summary>
+    /// Handles when the editing playlist selection is changed
+    /// </summary>
+    private void OnEditingPlaylistChanged(ChangeEventArgs e)
+    {
+        var newValue = e.Value?.ToString();
+        if (_editingPlaylist != newValue)
+        {
+            _editingPlaylist = newValue;
+            PlaylistService.OnEditingPlaylistChanged(_editingPlaylist);
+            if (!string.IsNullOrEmpty(_editingPlaylist))
+            {
+                _playlist = PlaylistService.GetPlaylist(_editingPlaylist);
+                _items = _playlist?.GetPlaylistItems();
+            }
+            else
+            {
+                _playlist = null;
+                _items = null;
+            }
+            StateHasChanged();
+        }
+    }
+
+    // Add Playlist Modal
+    private bool showAddPlaylistModal = false;
+    private string newPlaylistName = string.Empty;
+    private string? addPlaylistError = null;
+
+    private void AddPlaylist()
+    {
+        newPlaylistName = string.Empty;
+        addPlaylistError = null;
+        showAddPlaylistModal = true;
+    }
+
+    private void CancelAddPlaylist()
+    {
+        showAddPlaylistModal = false;
+        newPlaylistName = string.Empty;
+        addPlaylistError = null;
+    }
+
+    private void ConfirmAddPlaylist()
+    {
+        // Replace spaces and invalid folder characters with '-'
+        if (string.IsNullOrWhiteSpace(newPlaylistName))
+        {
+            addPlaylistError = "Name cannot be empty.";
+            return;
+        }
+        string sanitized = string.Concat(newPlaylistName.Select(c =>
+            char.IsLetterOrDigit(c) ? c : '-'));
+        sanitized = sanitized.Replace(' ', '-');
+        sanitized = sanitized.Trim('-');
+        if (string.IsNullOrWhiteSpace(sanitized))
+        {
+            addPlaylistError = "Name must contain at least one valid character.";
+            return;
+        }
+        PlaylistService.AddPlaylist(sanitized);
+        availablePlaylists = PlaylistService.GetPlaylistNames();
+        // Automatically select the new playlist in the Editing DDL by firing the change event only
+        OnEditingPlaylistChanged(new ChangeEventArgs { Value = sanitized });
+        showAddPlaylistModal = false;
+        newPlaylistName = string.Empty;
+        addPlaylistError = null;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Deletes the currently editing playlist
+    /// </summary>
+    private void DeletePlaylist()
+    {
+        if (!string.IsNullOrEmpty(_editingPlaylist))
+        {
+            // If the playlist being deleted is also active, reset the active DDL
+            if (activePlaylist == _editingPlaylist)
+            {
+                activePlaylist = null;
+            }
+            PlaylistService.DeletePlaylist(_editingPlaylist);
+            availablePlaylists = PlaylistService.GetPlaylistNames();
+            _editingPlaylist = null;
+            _playlist = null;
+            _items = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmDeletePlaylist()
+    {
+        if (string.IsNullOrEmpty(_editingPlaylist)) return;
+        var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete playlist '{_editingPlaylist}' and all its files?");
+        if (ok)
+        {
+            DeletePlaylist();
+        }
+    }
+}
+
+<PageTitle>Playlist</PageTitle>
+
+<div class="config-controls">
+    <div class="config-controls-row">
+        <label for="activePlaylist">Playing</label>
+        <select id="activePlaylist" value="@activePlaylist" @onchange="OnActivePlaylistChanged">
+            <option value="">(None)</option>
+            @if (availablePlaylists != null)
+            {
+                foreach (var name in availablePlaylists)
+                {
+                    <option value="@name">@name</option>
+                }
+            }
+        </select>
+        <button class="config-btn" type="button" @onclick="StartActivePlaylist">Start</button>
+        <button class="config-btn" type="button" @onclick="StopActivePlaylist">Stop</button>
+    </div>
+    <div class="config-controls-row">
+        <label for="editingPlaylist">Editing</label>
+        <select id="editingPlaylist" value="@_editingPlaylist" @onchange="OnEditingPlaylistChanged">
+            <option value="">(None)</option>
+            @if (availablePlaylists != null)
+            {
+                foreach (var name in availablePlaylists)
+                {
+                    <option value="@name">@name</option>
+                }
+            }
+        </select>
+        <button class="config-btn" type="button" @onclick="AddPlaylist">Add</button>
+        <button class="config-btn" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
+    </div>
+
+    @if (showAddPlaylistModal)
+    {
+        <div class="modal-backdrop">
+            <div class="modal add-playlist-modal">
+                <h4>Add Playlist</h4>
+                <input type="text" class="form-control" @bind="newPlaylistName" placeholder="Playlist name" />
+                @if (!string.IsNullOrEmpty(addPlaylistError))
+                {
+                    <div class="text-danger">@addPlaylistError</div>
+                }
+                <div class="modal-actions">
+                    <button class="btn btn-primary" @onclick="ConfirmAddPlaylist">Add</button>
+                    <button class="btn btn-secondary" @onclick="CancelAddPlaylist">Cancel</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* Normal Playlist View: *@
+@if (_playlist is not null && _items is not null)
+{
+    <button class="playlist-add-button" @onclick="() => ShowAddDialog(0)">Add new item at start</button>
+    <div class="playlist-list">
+        @for (int i = 0; i < _items.Count; i++)
+        {
+            var item = _items[i];
+            var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
+            <div class="playlist-item">
+                <div class="playlist-item-controls">
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => EditPlaylistItem(item, index)">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeletePlaylistItem(index)">Delete</button>
+                </div>
+                <div class="playlist-item-enabled">
+                    <span>On</span>
+                    <input type="checkbox" class="checkbox" checked="@item.Enabled" @onchange="(e) => ItemEnableToggled(item, index, ((ChangeEventArgs)e).Value is bool b && b)" />
+                </div>
+                <PlaylistItem ImageSrc="@($"/playlist-images/{_playlist.Name}/{item.SourceFileName}")" Item="item" ImageClicked="@(() => OnPlaylistItemImageClicked(item, index))" />
+            </div>
+            <button class="playlist-add-button" @onclick="() => ShowAddDialog(index+1)">@((index == _items.Count - 1) ? "Add new item at end" : "Add new item here")</button>
+        }
+    </div>
+}
+
+@* Add Dialog:*@
+@if (showAddDialog)
+{
+    <AddPlayableItemForm @ref="addFormRef"
+        LibraryItems="libraryItems"
+        OnCancel="HideAddDialog"
+        OnAdd="OnAddPlayableItem"
+        InsertIndex="addDialogInsertIndex"
+        PageTitle="Playlist item" />
+}
+@using WearWare.Components.Forms
+
+@* Edit Dialog:*@
+@if (showEditDialog && editingItem is not null)
+{
+    <EditPlayableItemForm
+        @ref="editFormRef"
+        EditingItem="editingItem"
+        EditingIndex="editingIndex"
+        ImageUrl="@($"/playlist-images/{_playlist?.Name}/{editingItem.SourceFileName}")"
+        OnCancel="HideEditDialog"
+        OnSave="OnEditPlayableItem"
+    OnReprocessAsync="ReprocessPlaylistItemAsync"
+        PageTitle="Playlist item" />
+}
+
+

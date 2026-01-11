@@ -1,0 +1,670 @@
+@using WearWare.Services.MatrixConfig
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+@using WearWare.Common
+@using RPiRgbLEDMatrix
+
+<div class="mw-matrix-options-modal">
+    <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+
+    <div class="card">
+        <div class="card-header">
+            <h2>@(!string.IsNullOrEmpty(Title) ? Title : $"Matrix Options for {Action}")</h2>
+            @if (ShowFieldSelectors)
+            {
+                <span>The checkbox at the start of each row controls whether the option shows on other pages (Import, Library etc)</span>
+            }
+        </div>
+		<div class="card-body">
+				@* Processing/result overlay is rendered as a full-window overlay below so it covers the entire form *@
+               <div class="mw-matrix-form-fields">
+    @if (ShowBrightness || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.Brightness)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="BrightnessEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Brightness</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Brightness" placeholder="@($"(Default: {_defaults.Brightness})")" />
+        </div>
+    }
+
+    @if (ShowChainLength || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.ChainLength)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="ChainLengthEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Chain Length</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.ChainLength" placeholder="@($"(Default: {_defaults.ChainLength})")" />
+        </div>
+    }
+
+    @if (ShowCols || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.Cols)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="ColsEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Cols</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Cols" placeholder="@($"(Default: {_defaults.Cols})")" />
+        </div>
+    }
+
+    @if (ShowDisableHardwarePulsing || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="DisableHardwarePulsingEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Disable Hardware Pulsing</label>
+            <InputCheckbox class="form-check-input" @bind-Value="DisableHardwarePulsingChecked" />
+        </div>
+    }
+
+    @if (ShowGpioSlowdown || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="GpioSlowdownEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Gpio Slowdown</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="GpioSlowdownSelectValue">
+                <option value="0">0</option>
+                <option value="">(Default: 1)</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowHardwareMapping || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="HardwareMappingEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Hardware Mapping</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="HardwareMappingSelectValue">
+                <option value="">(Default: regular)</option>
+                <option value="adafruit-hat">adafruit-hat</option>
+                <option value="adafruit-hat-pwm">adafruit-hat-pwm</option>
+                <option value="compute-module">compute-module</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowInverseColors || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="InverseColorsEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Inverse Colors</label>
+            <InputCheckbox class="form-check-input" @bind-Value="InverseColorsChecked" />
+        </div>
+    }
+
+    @if (ShowLedRgbSequence || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="LedRgbSequenceEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Led RGB Sequence</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="LedRgbSequenceSelectValue">
+                <option value="">(Default: RGB)</option>
+                <option value="RBG">RBG</option>
+                <option value="GRB">GRB</option>
+                <option value="GBR">GBR</option>
+                <option value="BRG">BRG</option>
+                <option value="BGR">BGR</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowLimitRefreshRateHz || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.LimitRefreshRateHz)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="LimitRefreshRateHzEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Limit Refresh Rate Hz</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
+        </div>
+    }
+
+    @if (ShowMultiplexing || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="MultiplexingEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Multiplexing</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="MultiplexingSelectValue">
+                <option value="0">(Default: Direct)</option>
+                <option value="1">1 — Stripe</option>
+                <option value="2">2 — Checkered</option>
+                <option value="3">3 — Spiral</option>
+                <option value="4">4 — ZStripe</option>
+                <option value="5">5 — ZnMirrorZStripe</option>
+                <option value="6">6 — coreman</option>
+                <option value="7">7 — Kaler2Scan</option>
+                <option value="8">8 — ZStripeUneven</option>
+                <option value="9">9 — P10-128x4-Z</option>
+                <option value="10">10 — QiangLiQ8</option>
+                <option value="11">11 — InversedZStripe</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowPanelType || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="PanelTypeEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Panel Type</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="PanelTypeSelectValue">
+                <option value="">(Default: HUB75)</option>
+                <option value="FM6126A">FM6126A</option>
+                <option value="FM6127">FM6127</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowParallel || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.Parallel)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="ParallelEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Parallel</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Parallel" placeholder="@($"(Default: {_defaults.Parallel})")" />
+        </div>
+    }
+
+    @if (ShowPixelMapperConfig || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="PixelMapperConfigEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Pixel Mapper Config</label>
+            <InputText class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
+        </div>
+    }
+
+    @if (ShowPwmBits || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="PwmBitsEnabledChecked" />
+            }
+            <label class="mw-matrix-label">PWM Bits</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" placeholder="@($"(Default: {_defaults.PwmBits})")" />
+        </div>
+    }
+
+    @if (ShowPwmDitherBits || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="PwmDitherBitsEnabledChecked" />
+            }
+            <label class="mw-matrix-label">PWM Dither Bits</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="PwmDitherBitsSelectValue">
+                <option value="0">(Default: 0)</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowPwmLsbNanoseconds || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.PwmLsbNanoseconds)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="PwmLsbNanosecondsEnabledChecked" />
+            }
+            <label class="mw-matrix-label">PWM LSB Nanoseconds</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
+        </div>
+    }
+
+    @if (ShowRowAddressType || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="RowAddressTypeEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Row Address Type</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="RowAddressTypeSelectValue">
+                <option value="0">(Default: 0)</option>
+                <option value="1">1 — AB</option>
+                <option value="2">2 — Direct row select</option>
+                <option value="3">3 — ABC</option>
+                <option value="4">4 — ABC Shift + DE direct</option>
+                <option value="5">5 — ABC Alternate</option>
+            </InputSelect>
+        </div>
+    }
+
+    @if (ShowRows || ShowFieldSelectors)
+    {
+        <div class="mw-field-validation">
+            <ValidationMessage For="@(() => Options.Rows)" />
+        </div>
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="RowsEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Rows</label>
+            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Rows" placeholder="@($"(Default: {_defaults.Rows})")" />
+        </div>
+    }
+
+    @if (ShowScanMode || ShowFieldSelectors)
+    {
+        <div class="mw-matrix-form-row">
+            @if (ShowFieldSelectors)
+            {
+                <InputCheckbox class="me-2" @bind-Value="ScanModeEnabledChecked" />
+            }
+            <label class="mw-matrix-label">Scan Mode</label>
+            <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="ScanModeSelectValue">
+                <option value="0">(Default: Progressive)</option>
+                <option value="1">1 — Interlaced</option>
+            </InputSelect>
+        </div>
+    }
+
+    
+    </div>
+        </div>
+
+        <div class="card-footer text-end">
+            <div class="mw-args-preview-inline mb-2">
+                <label class="mw-matrix-label mw-args-inline-label">CLI Arguments Preview</label>
+                <textarea class="form-control mw-args-preview-textarea" rows="2" readonly>@ArgsPreview</textarea>
+            </div>
+            <button type="button" class="btn btn-secondary me-2" @onclick="HandleOk">Cancel</button>
+            <button type="submit" class="btn btn-primary" disabled="@_hasValidationErrors">@Action</button>
+        </div>
+	</div>
+
+	</EditForm>
+
+	@if (importing || operationResult != null)
+	{
+		<div class="mw-matrix-overlay">
+			<div class="card mw-overlay-card">
+				<div class="card-body">
+					@if (importing)
+					{
+						<div class="d-flex align-items-center" style="gap:0.75rem;">
+							<div class="spinner-border" role="status" aria-hidden="true"></div>
+							<div>Processing...</div>
+						</div>
+					}
+					else if (operationResult != null)
+					{
+						if (operationResult.ExitCode == 0)
+						{
+							<div class="alert alert-success mb-0">Stream converted successfully.</div>
+							<div class="text-end mt-2">
+								<button type="button" class="btn btn-primary" @onclick="HandleOk">OK</button>
+							</div>
+						}
+						else
+						{
+							var cls = "alert-danger";
+							<div class="alert @cls mb-0">@operationResult.Message@if(!string.IsNullOrEmpty(operationResult.Error)){<div><strong>Error:</strong> @operationResult.Error</div>}</div>
+							<div class="text-end mt-2">
+								<button type="button" class="btn btn-primary" @onclick="HandleOk">OK</button>
+							</div>
+						}
+					}
+				</div>
+			</div>
+		</div>
+	}
+</div>
+
+
+@code {
+    [Parameter]
+    public string Action { get; set; } = "Save";
+
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public LedMatrixOptionsConfig Options { get; set; } = new LedMatrixOptionsConfig();
+
+    // Controls whether all fields are shown and checkboxes are rendered (for options page)
+    [Parameter]
+    public bool ShowFieldSelectors { get; set; } = false;
+
+    // Defaults from the underlying native options - used to show cue text when
+    // a nullable option is left empty.
+    private readonly RGBLedMatrixOptions _defaults = new RGBLedMatrixOptions();
+
+    [Parameter]
+    public EventCallback<LedMatrixOptionsConfig> OnValidSubmit { get; set; }
+
+    // Optional async submit delegate that returns an operation `TaskResult` to display
+    [Parameter]
+    public Func<LedMatrixOptionsConfig, Task<TaskResult>>? OnValidSubmitAsync { get; set; }
+
+    private bool importing = false;
+    private TaskResult? operationResult;
+
+    private EditContext? _editContext;
+    private bool _hasValidationErrors = false;
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // Recreate the EditContext when the Options instance changes so validation is wired correctly.
+        if (_editContext == null || _editContext.Model != Options)
+        {
+            if (_editContext != null)
+            {
+                _editContext.OnValidationStateChanged -= HandleValidationStateChanged;
+                _editContext.OnFieldChanged -= HandleFieldChanged;
+            }
+
+            _editContext = new EditContext(Options);
+            _editContext.OnValidationStateChanged += HandleValidationStateChanged;
+            _editContext.OnFieldChanged += HandleFieldChanged;
+            // initial error state
+            _hasValidationErrors = _editContext.GetValidationMessages().Any();
+            UpdateArgsPreview();
+        }
+    }
+
+    private string ArgsPreview { get; set; } = string.Empty;
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    {
+        UpdateArgsPreview();
+    }
+
+    private void UpdateArgsPreview()
+    {
+        ArgsPreview = Options?.ToArgsString() ?? string.Empty;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
+    {
+        if (_editContext == null) return;
+        _hasValidationErrors = _editContext.GetValidationMessages().Any();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool FieldHasErrors(string propertyName)
+    {
+        if (_editContext == null) return false;
+        var fi = new FieldIdentifier(Options, propertyName);
+        return _editContext.GetValidationMessages(fi).Any();
+    }
+
+    public void Dispose()
+    {
+        if (_editContext != null)
+        {
+            _editContext.OnValidationStateChanged -= HandleValidationStateChanged;
+            _editContext.OnFieldChanged -= HandleFieldChanged;
+        }
+    }
+
+    // Helper properties for rendering
+    private bool ShowBrightness => Options.BrightnessEnabled ?? false;
+    private bool ShowRows => Options.RowsEnabled ?? false;
+    private bool ShowCols => Options.ColsEnabled ?? false;
+    private bool ShowChainLength => Options.ChainLengthEnabled ?? false;
+    private bool ShowParallel => Options.ParallelEnabled ?? false;
+    private bool ShowPwmBits => Options.PwmBitsEnabled ?? false;
+    private bool ShowPwmLsbNanoseconds => Options.PwmLsbNanosecondsEnabled ?? false;
+    private bool ShowPwmDitherBits => Options.PwmDitherBitsEnabled ?? false;
+    private bool ShowHardwareMapping => Options.HardwareMappingEnabled ?? false;
+    private bool ShowDisableHardwarePulsing => Options.DisableHardwarePulsingEnabled ?? false;
+    
+    private bool ShowInverseColors => Options.InverseColorsEnabled ?? false;
+    private bool ShowLedRgbSequence => Options.LedRgbSequenceEnabled ?? false;
+    private bool ShowPixelMapperConfig => Options.PixelMapperConfigEnabled ?? false;
+    private bool ShowPanelType => Options.PanelTypeEnabled ?? false;
+    private bool ShowLimitRefreshRateHz => Options.LimitRefreshRateHzEnabled ?? false;
+    private bool ShowGpioSlowdown => Options.GpioSlowdownEnabled ?? false;
+    private bool ShowRowAddressType => Options.RowAddressTypeEnabled ?? false;
+    private bool ShowScanMode => Options.ScanModeEnabled ?? false;
+    private bool ShowMultiplexing => Options.MultiplexingEnabled ?? false;
+
+    // Checkbox helpers for full options page
+    private bool BrightnessEnabledChecked
+    {
+        get => Options.BrightnessEnabled ?? false;
+        set => Options.BrightnessEnabled = value ? true : null;
+    }
+    private bool RowsEnabledChecked
+    {
+        get => Options.RowsEnabled ?? false;
+        set => Options.RowsEnabled = value ? true : null;
+    }
+    private bool ColsEnabledChecked
+    {
+        get => Options.ColsEnabled ?? false;
+        set => Options.ColsEnabled = value ? true : null;
+    }
+    private bool ChainLengthEnabledChecked
+    {
+        get => Options.ChainLengthEnabled ?? false;
+        set => Options.ChainLengthEnabled = value ? true : null;
+    }
+    private bool ParallelEnabledChecked
+    {
+        get => Options.ParallelEnabled ?? false;
+        set => Options.ParallelEnabled = value ? true : null;
+    }
+    private bool PwmBitsEnabledChecked
+    {
+        get => Options.PwmBitsEnabled ?? false;
+        set => Options.PwmBitsEnabled = value ? true : null;
+    }
+    private bool PwmLsbNanosecondsEnabledChecked
+    {
+        get => Options.PwmLsbNanosecondsEnabled ?? false;
+        set => Options.PwmLsbNanosecondsEnabled = value ? true : null;
+    }
+    private bool PwmDitherBitsEnabledChecked
+    {
+        get => Options.PwmDitherBitsEnabled ?? false;
+        set => Options.PwmDitherBitsEnabled = value ? true : null;
+    }
+    // Wrapper for PwmDitherBits select: 0 => null (use default)
+    private int PwmDitherBitsSelectValue
+    {
+        get => Options.PwmDitherBits ?? 0;
+        set => Options.PwmDitherBits = value == 0 ? null : value;
+    }
+    private bool HardwareMappingEnabledChecked
+    {
+        get => Options.HardwareMappingEnabled ?? false;
+        set => Options.HardwareMappingEnabled = value ? true : null;
+    }
+    // Wrapper for HardwareMapping select: empty => null (use default)
+    private string HardwareMappingSelectValue
+    {
+        get => Options.HardwareMapping ?? string.Empty;
+        set => Options.HardwareMapping = string.IsNullOrEmpty(value) ? null : value;
+    }
+    // Wrapper for LedRgbSequence select: empty => null (use default)
+    private string LedRgbSequenceSelectValue
+    {
+        get => Options.LedRgbSequence ?? string.Empty;
+        set => Options.LedRgbSequence = string.IsNullOrEmpty(value) ? null : value;
+    }
+    private bool DisableHardwarePulsingEnabledChecked
+    {
+        get => Options.DisableHardwarePulsingEnabled ?? false;
+        set => Options.DisableHardwarePulsingEnabled = value ? true : null;
+    }
+    
+    private bool InverseColorsEnabledChecked
+    {
+        get => Options.InverseColorsEnabled ?? false;
+        set => Options.InverseColorsEnabled = value ? true : null;
+    }
+    private bool LedRgbSequenceEnabledChecked
+    {
+        get => Options.LedRgbSequenceEnabled ?? false;
+        set => Options.LedRgbSequenceEnabled = value ? true : null;
+    }
+    private bool PixelMapperConfigEnabledChecked
+    {
+        get => Options.PixelMapperConfigEnabled ?? false;
+        set => Options.PixelMapperConfigEnabled = value ? true : null;
+    }
+    private bool PanelTypeEnabledChecked
+    {
+        get => Options.PanelTypeEnabled ?? false;
+        set => Options.PanelTypeEnabled = value ? true : null;
+    }
+    // Wrapper for PanelType select: empty => null (use default)
+    private string PanelTypeSelectValue
+    {
+        get => Options.PanelType ?? string.Empty;
+        set => Options.PanelType = string.IsNullOrEmpty(value) ? null : value;
+    }
+    private bool LimitRefreshRateHzEnabledChecked
+    {
+        get => Options.LimitRefreshRateHzEnabled ?? false;
+        set => Options.LimitRefreshRateHzEnabled = value ? true : null;
+    }
+    private bool GpioSlowdownEnabledChecked
+    {
+        get => Options.GpioSlowdownEnabled ?? false;
+        set => Options.GpioSlowdownEnabled = value ? true : null;
+    }
+    // Wrapper for GpioSlowdown select: empty => null (use library default, typically 1)
+    private string GpioSlowdownSelectValue
+    {
+        get => Options.GpioSlowdown?.ToString() ?? string.Empty;
+        set => Options.GpioSlowdown = string.IsNullOrEmpty(value) ? null : int.Parse(value);
+    }
+    private bool RowAddressTypeEnabledChecked
+    {
+        get => Options.RowAddressTypeEnabled ?? false;
+        set => Options.RowAddressTypeEnabled = value ? true : null;
+    }
+    // Wrapper for select UI: 0 represents 'default' and stores null in Options.RowAddressType
+    private int RowAddressTypeSelectValue
+    {
+        get => Options.RowAddressType ?? 0;
+        set => Options.RowAddressType = value == 0 ? null : value;
+    }
+    // Wrapper for Multiplexing select: store numeric string or null for default
+    private int MultiplexingSelectValue
+    {
+        get => int.TryParse(Options.Multiplexing, out var v) ? v : 0;
+        set => Options.Multiplexing = value == 0 ? null : value.ToString();
+    }
+    private bool ScanModeEnabledChecked
+    {
+        get => Options.ScanModeEnabled ?? false;
+        set => Options.ScanModeEnabled = value ? true : null;
+    }
+    private bool MultiplexingEnabledChecked
+    {
+        get => Options.MultiplexingEnabled ?? false;
+        set => Options.MultiplexingEnabled = value ? true : null;
+    }
+
+    // Wrapper for ScanMode select: 0 => default (null), otherwise store enum name
+    private int ScanModeSelectValue
+    {
+        get => (Options.ScanMode != null && Enum.TryParse<ScanModes>(Options.ScanMode, out var v)) ? (int)v : 0;
+        set => Options.ScanMode = value == 0 ? null : Enum.GetName(typeof(ScanModes), value);
+    }
+
+    private async Task HandleOk()
+    {
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync(null);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (OnValidSubmitAsync != null)
+        {
+            importing = true;
+            StateHasChanged();
+            operationResult = await OnValidSubmitAsync(Options);
+            importing = false;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        if (OnValidSubmit.HasDelegate)
+        {
+            await OnValidSubmit.InvokeAsync(Options);
+        }
+    }
+
+    private bool DisableHardwarePulsingChecked
+    {
+        get => Options.DisableHardwarePulsing ?? false;
+        set => Options.DisableHardwarePulsing = value ? true : null;
+    }
+    
+    private bool InverseColorsChecked
+    {
+        get => Options.InverseColors ?? false;
+        set => Options.InverseColors = value ? true : null;
+    }
+}

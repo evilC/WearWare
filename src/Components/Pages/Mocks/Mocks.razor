@@ -1,0 +1,60 @@
+@page "/mocks"
+@using WearWare.Services.QuickMedia
+@using WearWare.Services.MediaController
+
+@rendermode InteractiveServer
+
+@inject QuickMediaService QuickMediaService
+@inject MediaControllerService MediaController
+
+@implements IDisposable
+
+@code {
+    protected override void OnInitialized()
+    {
+        QuickMediaService.StateChanged += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        QuickMediaService.StateChanged -= OnStateChanged;
+    }
+}
+
+
+<PageTitle>Mock Quick Media</PageTitle>
+
+@* Use the same layout and styling as QuickMedia *@
+<link href="/src/Components/Pages/Mocks/Mocks.razor.css" rel="stylesheet" />
+
+@if (QuickMediaService.GetQuickMediaButtons() is null || QuickMediaService.GetQuickMediaButtons().Length == 0)
+{
+    <p>No quick-media buttons available.</p>
+}
+else
+{
+    <h2>Mock Quick Media Buttons</h2>
+    <div class="qm-button-instructions">Clicking images simulates pressing the corresponding QuickMedia button on the Pi.</div>
+    <div class="qm-button-list">
+        @for (int i = 0; i < QuickMediaService.GetQuickMediaButtons().Length; i++)
+        {
+            var button = QuickMediaService.GetQuickMediaButtons()[i];
+            var index = i;
+            <div class="qm-button-item">
+                <span class="qm-button-title">B@(i + 1)</span>
+                @if (button?.Item is not null)
+                {
+                    <PlaylistItem 
+                        ImageSrc="@($"/quickmedia-images/{index}/{button.Item.SourceFileName}")" 
+                        Item="@button.Item" 
+                        ImageClicked="@(() => MediaController.PlayQuickMedia(button.Item))" />
+                }
+            </div>
+        }
+    </div>
+}

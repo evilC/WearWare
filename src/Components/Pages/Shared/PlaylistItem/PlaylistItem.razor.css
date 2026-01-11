@@ -1,0 +1,36 @@
+.playlist-item-image-and-info {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.playlist-item-image {
+	max-width: 64px !important;
+	max-height: 64px !important;
+	border-radius: 8px;
+	box-shadow: 0 1px 8px rgba(0,0,0,0.12);
+	background: #eee;
+	flex-shrink: 0;
+}
+
+.playlist-item-info {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin-left: 0.5em;
+}
+
+.playlist-item-title {
+	font-size: 1.1rem;
+	color: #222;
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.playlist-item-mode {
+	margin-top: 0.25rem;
+	font-size: 0.95em;
+	color: #444;
+	display: inline-block;
+}

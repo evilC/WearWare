@@ -1,0 +1,56 @@
+@page "/options"
+@using WearWare.Services.MatrixConfig
+@inject MatrixConfigService MatrixConfigService
+
+@rendermode InteractiveServer
+
+<PageTitle>Options</PageTitle>
+
+
+@if (!showForm)
+{
+    <div class="mb-3">
+        <button class="btn btn-primary" style="width: 100%;" @onclick="ShowForm">Configure Matrix Options</button>
+    </div>
+}
+else
+{
+    <MatrixOptionsForm Options="modalOptions" ShowFieldSelectors="true" Action="Save" OnValidSubmit="OnSaveFromForm" OnCancel="OnCancelFromForm" Title="Global Matrix Options" />
+}
+
+@code {
+    private LedMatrixOptionsConfig options = new();
+    private bool showForm = false;
+    private LedMatrixOptionsConfig modalOptions = new();
+
+    protected override void OnInitialized()
+    {
+        options = MatrixConfigService.CloneOptions();
+    }
+
+    private Task ShowForm()
+    {
+        modalOptions = MatrixConfigService.CloneOptions();
+        showForm = true;
+        return Task.CompletedTask;
+    }
+
+    private Task OnSaveFromForm(LedMatrixOptionsConfig updated)
+    {
+        MatrixConfigService.UpdateOptions(updated);
+        options = MatrixConfigService.CloneOptions();
+        showForm = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnCancelFromForm()
+    {
+        // Close the form without saving
+        showForm = false;
+        // revert modal options (not strictly necessary)
+        modalOptions = MatrixConfigService.CloneOptions();
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}
