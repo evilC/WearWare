@@ -1,4 +1,9 @@
 using WearWare.Common.Media;
+using WearWare.Config;
+using WearWare.Services.Playlist;
+using WearWare.Utils;
+record PlaylistDto(PlaylistConfig PlaylistConfig, List<PlayableItem> PlaylistItems);
+
 namespace WearWare.Services.Playlist
 {
 
@@ -166,5 +171,58 @@ namespace WearWare.Services.Playlist
 
             return true;
         }
+
+        public static PlaylistItems? Deserialize(string playlistName)
+        {
+            var path = Path.Combine(PathConfig.PlaylistPath, playlistName, "playlist.json");
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+            // return JsonUtils.FromJsonFile<PlaylistItems>(path);
+            var json = File.ReadAllText(path);  
+            var dto = JsonUtils.FromJson<PlaylistDto>(json);
+            // ToDo: need error handling here
+            if (dto == null) return null;
+            if (dto.PlaylistConfig == null) return null;
+            foreach (var item in dto.PlaylistItems){
+                // CheckPlayableMediaItemExists(GetPlaylistPath(new PlaylistItems(playlistName, dto.PlaylistConfig, [])), item);
+                CheckPlayableMediaItemExists(Path.Combine(PathConfig.PlaylistPath, playlistName), item);
+            }
+            return new PlaylistItems(playlistName, dto.PlaylistConfig, dto.PlaylistItems);
+        }
+
+        public void Serialize()
+        {
+            var outPath = Path.Combine(PathConfig.PlaylistPath, Name, "playlist.json");
+            var dto = new PlaylistDto(PlaylistConfig, _items);
+            JsonUtils.ToJsonFile(outPath, dto);
+        }
+
+        /// <summary>
+        /// Checks that the media file for the given playable item exists in the given folder
+        /// </summary>
+        /// <param name="folder"></param> The folder to check
+        /// <param name="item"></param> The playable item to check
+        public static void CheckPlayableMediaItemExists(string folder, PlayableItem item)
+        {
+            var filename = $"{folder}/{$"{item.Name}.stream"}";
+            if (!File.Exists(filename))
+            {
+                throw new Exception($"Media file {filename} for playlist item {item.Name} does not exist in playlist folder {folder}");
+            }
+        }
+
+        /// <summary>
+        /// Gets the path to the playlist folder
+        /// </summary>
+        /// <param name="playlist"></param>
+        /// <returns></returns>
+        public string GetPlaylistPath()
+        {
+            return Path.Combine(PathConfig.PlaylistPath, Name);
+        }
+
+
     }
 }

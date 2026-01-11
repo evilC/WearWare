@@ -2,10 +2,6 @@ using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.Library;
 using WearWare.Services.MediaController;
-using WearWare.Services.Playlist;
-using WearWare.Utils;
-
-record PlaylistDto(PlaylistConfig PlaylistConfig, List<PlayableItem> PlaylistItems);
 
 namespace WearWare.Services.Playlist
 {
@@ -75,7 +71,7 @@ namespace WearWare.Services.Playlist
         {
             try
             {
-                var deserializedPlaylist = DeserializePlaylist(playlistName);
+                var deserializedPlaylist = PlaylistItems.Deserialize(playlistName);
                 if (deserializedPlaylist == null)
                 {
                     _logger.LogError("{LogTag} Failed to load playlist: {PlaylistName}", _logTag, playlistName);
@@ -90,15 +86,6 @@ namespace WearWare.Services.Playlist
             }
             // _playlistBeingEdited = _playlists[playlistName];
 
-        }
-
-        /// <summary>
-        /// Saves the specified playlist to disk
-        /// </summary>
-        /// <param name="playlist"></param> The playlist to save
-        public void SavePlayList(PlaylistItems playlist)
-        {
-            SerializePlaylist(playlist);
         }
 
         /// <summary>
@@ -145,16 +132,6 @@ namespace WearWare.Services.Playlist
                 : null;
         }
 
-        /// <summary>
-        /// Gets the path to the playlist folder
-        /// </summary>
-        /// <param name="playlist"></param>
-        /// <returns></returns>
-        private string GetPlaylistPath(PlaylistItems playlist)
-        {
-            return Path.Combine(PathConfig.PlaylistPath, playlist.Name);
-        }
-
         public bool PlaylistIsPlaying(PlaylistItems playlist)
         {
             var currentPlaylist = _mediaController.GetCurrentPlaylist();
@@ -198,7 +175,8 @@ namespace WearWare.Services.Playlist
             // Create PlayableItem from LibraryItem
             var item = new PlayableItem(
                 name: libraryItem.Name,
-                parentFolder: GetPlaylistPath(playlist),
+                // parentFolder: GetPlaylistPath(playlist),
+                parentFolder: playlist.GetPlaylistPath(),
                 mediaType: libraryItem.MediaType,
                 sourceFileName: libraryItem.SourceFileName,
                 playMode: playMode,
@@ -217,13 +195,14 @@ namespace WearWare.Services.Playlist
             }
             // ToDo: Check if playlist returns true
             playlist.AddItem(insertIndex, item);
-            SerializePlaylist(playlist);
+            playlist.Serialize();
             if (restartMediaController)
             {
                 _mediaController.Start();
             }
         }
 
+        // ToDo: Should the bulk of this not be in PlaylistItems?
         /// <summary>
         /// Removes a playlist item from the playlist being edited
         /// </summary>
@@ -260,7 +239,7 @@ namespace WearWare.Services.Playlist
             }
             if (deleteFiles)
             {
-                var path = GetPlaylistPath(playlist);
+                var path = playlist.GetPlaylistPath();
                 File.Delete(Path.Combine(path, $"{item.Name}.stream"));
                 File.Delete(Path.Combine(path, item.SourceFileName));
             }
@@ -268,7 +247,7 @@ namespace WearWare.Services.Playlist
             // Actually remove the item from the playlist
             var removed = playlist.RemoveItem(removedIndex);
             // ToDo: Check if removed
-            SerializePlaylist(playlist);
+            playlist.Serialize();
 
             // Restart media controller if there are still items to play
             if (restartMediaController && playlist.GetCurrentItem() != null)
@@ -285,7 +264,7 @@ namespace WearWare.Services.Playlist
         public async Task<WearWare.Common.TaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options = null)
         {
             var item = playlist.GetPlaylistItems()[itemIndex];
-            var folder = GetPlaylistPath(playlist);
+            var folder = playlist.GetPlaylistPath();
             // var restartMediaController = false;
             // if (PlaylistIsPlaying(playlist))
             // {
@@ -344,60 +323,13 @@ namespace WearWare.Services.Playlist
                     }
                 }
             }
-            SerializePlaylist(playlist);
+            playlist.Serialize();
             // Restart media controller if there are still items to play
             if (restartMediaController && playlist.GetCurrentItem() != null)
             {
                 _mediaController.Start();
             }
             return true;
-        }
-
-        /// <summary>
-        /// Serializes the playlist to disk
-        /// </summary>
-        /// <param name="playlist"></param> The playlist to serialize
-        public void SerializePlaylist(PlaylistItems playlist)
-        {
-            var dir = GetPlaylistPath(playlist);
-            Directory.CreateDirectory(dir);
-            var outPath = Path.Combine(dir, "playlist.json");
-            var dto = new PlaylistDto(playlist.PlaylistConfig, playlist.GetPlaylistItems());
-            JsonUtils.ToJsonFile(outPath, dto);
-        }
-
-        /// <summary>
-        /// Deserializes the playlist from disk
-        /// </summary>
-        /// <param name="playlistName"></param> The name of the playlist to deserialize
-        /// <returns>A playlist object if successful, null otherwise</returns>
-        private PlaylistItems? DeserializePlaylist(string playlistName)
-        {
-            var path = Path.Combine(PathConfig.PlaylistPath, playlistName, "playlist.json");
-            if (!File.Exists(path)) return null;
-            var json = File.ReadAllText(path);  
-            var dto = JsonUtils.FromJson<PlaylistDto>(json);
-            // ToDo: need error handling here
-            if (dto == null) return null;
-            if (dto.PlaylistConfig == null) return null;
-            foreach (var item in dto.PlaylistItems){
-                CheckPlayableMediaItemExists(GetPlaylistPath(new PlaylistItems(playlistName, dto.PlaylistConfig, [])), item);
-            }
-            return new PlaylistItems(playlistName, dto.PlaylistConfig, dto.PlaylistItems);
-        }
-
-        /// <summary>
-        /// Checks that the media file for the given playable item exists in the given folder
-        /// </summary>
-        /// <param name="folder"></param> The folder to check
-        /// <param name="item"></param> The playable item to check
-        public static void CheckPlayableMediaItemExists(string folder, PlayableItem item)
-        {
-            var filename = $"{folder}/{$"{item.Name}.stream"}";
-            if (!File.Exists(filename))
-            {
-                throw new Exception($"Media file {filename} for playlist item {item.Name} does not exist in playlist folder {folder}");
-            }
         }
 
         /// <summary>
@@ -456,7 +388,7 @@ namespace WearWare.Services.Playlist
             // Create playlist folder
             var path = Path.Combine(PathConfig.PlaylistPath, playlistName);
             Directory.CreateDirectory(path);
-            SerializePlaylist(playlist);
+            playlist.Serialize();
         }
 
         /// <summary>

@@ -17,6 +17,8 @@
 - Config files
   - AppConfig is currently only for Playlists (Storing currently active playlist etc) - rename?  
     Is also in Program.cs, should be moved
+- PlaylistService
+  - A bunch of stuff in here should be moved to PlaylistItems
 - Disaster recovery
   - Some way to restore last known good?
 - Error handling
