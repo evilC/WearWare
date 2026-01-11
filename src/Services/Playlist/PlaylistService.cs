@@ -383,7 +383,7 @@ namespace WearWare.Services.Playlist
         {
             if (string.IsNullOrEmpty(playlistName) || _playlists.ContainsKey(playlistName))
                 return;
-            var playlist = new PlaylistItems(playlistName, new PlaylistConfig(), []);
+            var playlist = new PlaylistItems(playlistName, new PlaylistItemsConfig(), []);
             _playlists[playlistName] = playlist;
             // Create playlist folder
             var path = Path.Combine(PathConfig.PlaylistPath, playlistName);

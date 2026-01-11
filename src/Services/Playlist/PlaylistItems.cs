@@ -2,7 +2,7 @@ using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.Playlist;
 using WearWare.Utils;
-record PlaylistDto(PlaylistConfig PlaylistConfig, List<PlayableItem> PlaylistItems);
+record PlaylistDto(PlaylistItemsConfig PlaylistConfig, List<PlayableItem> PlaylistItems);
 
 namespace WearWare.Services.Playlist
 {
@@ -20,11 +20,11 @@ namespace WearWare.Services.Playlist
 
         // ToDo: PlaylistConfig is currently not used. It should be used to store current item index, so that playback resumes on the same item after app restart
         // There is a concern though that storing current item could cause problems if shutdown occurs while writing to the config file
-        public PlaylistConfig PlaylistConfig { get; init; }
+        public PlaylistItemsConfig PlaylistConfig { get; init; }
         private int _currentIndex;
 
 
-        public PlaylistItems(string name, PlaylistConfig playlistConfig, List<PlayableItem> items)
+        public PlaylistItems(string name, PlaylistItemsConfig playlistConfig, List<PlayableItem> items)
         {
             Name = name;
             PlaylistConfig = playlistConfig;
