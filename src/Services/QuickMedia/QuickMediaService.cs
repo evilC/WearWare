@@ -180,9 +180,17 @@ public class QuickMediaService
     {
         var path = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString(), "quickmedia.json");
         if (!File.Exists(path)) return null;
-        var json = File.ReadAllText(path);  
-        var dto = JsonUtils.FromJson<QuickMediaDto>(json);
-        if (dto == null) return null;
-        return _buttonFactory.Create(_mediaController, dto.ButtonNumber, dto.Item);
+        try
+        {
+            var json = File.ReadAllText(path);  
+            var dto = JsonUtils.FromJson<QuickMediaDto>(json);
+            if (dto == null) return null;
+            return _buttonFactory.Create(_mediaController, dto.ButtonNumber, dto.Item);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{tag} Error deserializing Quick Media button from file {filename}: {message}", _logTag, path, ex.Message);
+            return null;
+        }
     }
 }

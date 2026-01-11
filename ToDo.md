@@ -13,12 +13,6 @@
   - A bunch of stuff in here should be moved to PlaylistItems
 - Disaster recovery
   - Some way to restore last known good?
-- Error handling
-  - Load of JSON
-  - If playback fails for a QuickMedia item...  
-    ... we should maybe disable the QuickMedia item like we do for a Playlist item.  
-    However, no enabled checkbox is present on the QuickMedia page  
-    Do we need to deal with this?
 - Should we not move to using the `ParentFolder` property of PlayableItem to get path?
 - Lots of instances where it is possible to add duplicate items
   Where things are indexed by name etc
