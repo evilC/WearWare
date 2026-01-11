@@ -160,20 +160,16 @@ namespace WearWare.Services.MediaController
                         if (resuming && currentItem != null)
                         {
                             item = currentItem;
-                            resuming = false;
                         }
                         else
                         {
                             item = _playlist!.MoveNext();
                         }
-                        if (item == null)
-                        {
-                            break; // No more items in playlist
-                        }
+                        resuming = false;
                     }
                     if (item == null)
                     {
-                        break;
+                        break;  // No more items in playlist
                     }
                     _currentItem = item;
                     var success =_streamPlayer.PlayStream(item, ct);

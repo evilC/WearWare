@@ -14,10 +14,19 @@ namespace WearWare.Services.Playlist
         private readonly ILogger<PlaylistService> _logger;
         private static readonly string _logTag = "[PLAYLISTSERV]";
         private readonly AppConfig _appConfig;
+        // Logger factory for injecting loggers for PlaylistItems
+        private readonly ILoggerFactory _loggerFactory;
 
-        public PlaylistService(ILogger<PlaylistService> logger, AppConfig appConfig, MediaControllerService mediaController, StreamConverter.IStreamConverterService streamConverterService)
+        public PlaylistService(
+            ILogger<PlaylistService> logger,
+            AppConfig appConfig,
+            MediaControllerService mediaController,
+            StreamConverter.IStreamConverterService streamConverterService,
+            ILoggerFactory loggerFactory
+            )
         {
             _logger = logger;
+            _loggerFactory = loggerFactory;
             _appConfig = appConfig;
             _mediaController = mediaController;
             _mediaController.StateChanged += OnMediaControllerStateChanged;
@@ -71,7 +80,7 @@ namespace WearWare.Services.Playlist
         {
             try
             {
-                var deserializedPlaylist = PlaylistItems.Deserialize(playlistName);
+                var deserializedPlaylist = PlaylistItems.Deserialize(_loggerFactory.CreateLogger<PlaylistItems>(), playlistName);
                 if (deserializedPlaylist == null)
                 {
                     _logger.LogError("{LogTag} Failed to load playlist: {PlaylistName}", _logTag, playlistName);
@@ -383,7 +392,7 @@ namespace WearWare.Services.Playlist
         {
             if (string.IsNullOrEmpty(playlistName) || _playlists.ContainsKey(playlistName))
                 return;
-            var playlist = new PlaylistItems(playlistName, new PlaylistItemsConfig(), []);
+            var playlist = new PlaylistItems(_loggerFactory.CreateLogger<PlaylistItems>(), playlistName, new PlaylistItemsConfig(), []);
             _playlists[playlistName] = playlist;
             // Create playlist folder
             var path = Path.Combine(PathConfig.PlaylistPath, playlistName);

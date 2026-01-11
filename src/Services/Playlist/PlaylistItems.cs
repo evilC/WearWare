@@ -1,8 +1,6 @@
 using WearWare.Common.Media;
 using WearWare.Config;
-using WearWare.Services.Playlist;
 using WearWare.Utils;
-record PlaylistDto(PlaylistItemsConfig PlaylistConfig, List<PlayableItem> PlaylistItems);
 
 namespace WearWare.Services.Playlist
 {
@@ -18,13 +16,13 @@ namespace WearWare.Services.Playlist
         public string Name { get; init; }
         private readonly List<PlayableItem> _items = [];
 
-        // ToDo: PlaylistConfig is currently not used. It should be used to store current item index, so that playback resumes on the same item after app restart
-        // There is a concern though that storing current item could cause problems if shutdown occurs while writing to the config file
         private PlaylistItemsConfig _config { get; init; }
+        ILogger<PlaylistItems> _logger;
+        private static readonly string _logTag = "[PLAYLISTITEMS]";
 
-
-        public PlaylistItems(string name, PlaylistItemsConfig playlistConfig, List<PlayableItem> items)
+        public PlaylistItems(ILogger<PlaylistItems> logger, string name, PlaylistItemsConfig playlistConfig, List<PlayableItem> items)
         {
+            _logger = logger;
             Name = name;
             _config = playlistConfig;
             if (_config.CurrentItem >= items.Count || _config.CurrentItem < -1)
@@ -32,6 +30,7 @@ namespace WearWare.Services.Playlist
                 _config.CurrentItem = -1;
             }
             _items = items;
+            _logger.LogInformation("{tag} Playlist {playlist} initialized with {itemCount} items. Current item index: {currentItemIndex}", _logTag, Name, _items.Count, _config.CurrentItem);
             // if (_config.CurrentItem == -1)
             // {
             //     MoveNext();
@@ -55,11 +54,11 @@ namespace WearWare.Services.Playlist
             {
                 // No next item found
                 _config.CurrentItem = -1;
-                Serialize();
+                _config.Serialize(Name);
                 return null;
             }
             _config.CurrentItem = nextIndex.Value;
-            Serialize();
+            _config.Serialize(Name);
             return GetCurrentItem();
         }
 
@@ -101,7 +100,7 @@ namespace WearWare.Services.Playlist
             if (index < 0 || index >= _items.Count) return false;
             if (!_items[index].Enabled) return false;
             _config.CurrentItem = index;
-            Serialize();
+            _config.Serialize(Name);
             return true;
         }
 
@@ -142,8 +141,9 @@ namespace WearWare.Services.Playlist
             {
                 // Adjust current index if necessary
                 _config.CurrentItem++;
-                Serialize();
+                _config.Serialize(Name);
             }
+            Serialize();
             return true;
         }
 
@@ -164,7 +164,7 @@ namespace WearWare.Services.Playlist
                 {
                     // Last item removed, reset current index
                     _config.CurrentItem = -1;
-                    Serialize();
+                    _config.Serialize(Name);
                 }
                 else
                 {
@@ -178,37 +178,39 @@ namespace WearWare.Services.Playlist
             {
                 // Adjust current index if necessary
                 _config.CurrentItem--;
-                Serialize();
+                _config.Serialize(Name);
             }
-
+            Serialize();
             return true;
         }
 
-        public static PlaylistItems? Deserialize(string playlistName)
+        public static PlaylistItems? Deserialize(ILogger<PlaylistItems> logger, string playlistName)
         {
-            var path = Path.Combine(PathConfig.PlaylistPath, playlistName, "playlist.json");
+            var path = Path.Combine(PathConfig.PlaylistPath, playlistName, "playlistitems.json");
             if (!File.Exists(path))
             {
                 return null;
             }
-            // return JsonUtils.FromJsonFile<PlaylistItems>(path);
-            var json = File.ReadAllText(path);  
-            var dto = JsonUtils.FromJson<PlaylistDto>(json);
-            // ToDo: need error handling here
-            if (dto == null) return null;
-            if (dto.PlaylistConfig == null) return null;
-            foreach (var item in dto.PlaylistItems){
-                // CheckPlayableMediaItemExists(GetPlaylistPath(new PlaylistItems(playlistName, dto.PlaylistConfig, [])), item);
-                CheckPlayableMediaItemExists(Path.Combine(PathConfig.PlaylistPath, playlistName), item);
+            var config = PlaylistItemsConfig.Deserialize(playlistName);
+            var items = JsonUtils.FromJsonFile<List<PlayableItem>>(path);
+            if (items == null)
+            {
+                return null;
             }
-            return new PlaylistItems(playlistName, dto.PlaylistConfig, dto.PlaylistItems);
+            foreach (var item in items){
+                if (!CheckPlayableMediaItemExists(Path.Combine(PathConfig.PlaylistPath, playlistName), item))
+                {
+                    items.Remove(item);
+                    logger.LogWarning("{tag} Media file for item {item} does not exist in playlist {playlist}, removing item from playlist.", _logTag, item.Name, playlistName);
+                }
+            }
+            return new PlaylistItems(logger, playlistName, config, items);
         }
 
         public void Serialize()
         {
-            var outPath = Path.Combine(PathConfig.PlaylistPath, Name, "playlist.json");
-            var dto = new PlaylistDto(_config, _items);
-            JsonUtils.ToJsonFile(outPath, dto);
+            var outPath = Path.Combine(PathConfig.PlaylistPath, Name, "playlistitems.json");
+            JsonUtils.ToJsonFile(outPath, _items);
         }
 
         /// <summary>
@@ -216,13 +218,10 @@ namespace WearWare.Services.Playlist
         /// </summary>
         /// <param name="folder"></param> The folder to check
         /// <param name="item"></param> The playable item to check
-        public static void CheckPlayableMediaItemExists(string folder, PlayableItem item)
+        public static bool CheckPlayableMediaItemExists(string folder, PlayableItem item)
         {
             var filename = $"{folder}/{$"{item.Name}.stream"}";
-            if (!File.Exists(filename))
-            {
-                throw new Exception($"Media file {filename} for playlist item {item.Name} does not exist in playlist folder {folder}");
-            }
+            return File.Exists(filename);
         }
 
         /// <summary>
