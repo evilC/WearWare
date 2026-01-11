@@ -1,19 +1,14 @@
 # ToDo list
 
 - Start from scratch  
-  - Create folders on service start
-    - incoming
-    - library
-    - quickmedia
-    - tools
-    - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
-      Restart and it is OK  
-      This is because some Matrix options (eg RowAddressType) cannot be changed  
-      PR `matrix-reset-01` submitted to rectify this
-    - If cannot play items in playlist (Wrong matrix config), it goes forever in a loop and chugs whole system  
-      This is because GetNext() in streamplayer returns false if it is an invalid stream.  
-      It cannot detect the difference between end of stream and invalid stream  
-      PR `c#-content-streamer-iscompatible` submitted to rectify this
+  - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
+    Restart and it is OK  
+    This is because some Matrix options (eg RowAddressType) cannot be changed  
+    PR `matrix-reset-01` submitted to rectify this
+  - If cannot play items in playlist (Wrong matrix config), it goes forever in a loop and chugs whole system  
+    This is because GetNext() in streamplayer returns false if it is an invalid stream.  
+    It cannot detect the difference between end of stream and invalid stream  
+    PR `c#-content-streamer-iscompatible` submitted to rectify this
 - PlaylistService
   - A bunch of stuff in here should be moved to PlaylistItems
 - Disaster recovery

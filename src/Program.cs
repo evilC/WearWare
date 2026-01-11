@@ -13,7 +13,6 @@ using System.Net;
 using Serilog;
 using Serilog.Events;
 using WearWare.Services.Logging;
-using WearWare.Utils;
 using WearWare.Services.ShutdownService;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
@@ -23,10 +22,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHostedService<ShutdownService>();
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
+// Create folders
+Directory.CreateDirectory(PathConfig.ConfigPath);
+Directory.CreateDirectory(PathConfig.IncomingPath);
+Directory.CreateDirectory(PathConfig.LibraryPath);
+Directory.CreateDirectory(PathConfig.PlaylistPath);
+Directory.CreateDirectory(PathConfig.QuickMediaPath);
+Directory.CreateDirectory(PathConfig.LogPath);
+Directory.CreateDirectory(PathConfig.ToolsPath);
+
 // Configure Serilog
-var logDir = PathConfig.LogPath;
-var logFilePath = Path.Combine(logDir, "log.txt");
-Directory.CreateDirectory(logDir);
+var logFilePath = Path.Combine(PathConfig.LogPath, "log.txt");
 
 // Create and register the custom in-memory sink
 var blazorInMemorySink = new BlazorInMemoryLogSink();
@@ -46,7 +52,6 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 Log.Information("{sep} Starting on {Environment} {sep}", LogTools.HeaderHeadTail, Dns.GetHostName(), LogTools.HeaderHeadTail);
 
-Directory.CreateDirectory(PathConfig.ConfigPath);
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(blazorInMemorySink);
