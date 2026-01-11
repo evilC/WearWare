@@ -13,13 +13,12 @@ namespace WearWare.Services.Playlist
         public event Action? StateChanged;
         private readonly ILogger<PlaylistService> _logger;
         private static readonly string _logTag = "[PLAYLISTSERV]";
-        private readonly AppConfig _appConfig;
+        private readonly PlaylistsConfig _config;
         // Logger factory for injecting loggers for PlaylistItems
         private readonly ILoggerFactory _loggerFactory;
 
         public PlaylistService(
             ILogger<PlaylistService> logger,
-            AppConfig appConfig,
             MediaControllerService mediaController,
             StreamConverter.IStreamConverterService streamConverterService,
             ILoggerFactory loggerFactory
@@ -27,7 +26,14 @@ namespace WearWare.Services.Playlist
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
-            _appConfig = appConfig;
+            var config = PlaylistsConfig.Deserialize();
+            if (config == null)
+            {
+                _logger.LogWarning("{LogTag} Failed to load app config, creating default.", _logTag);
+                config = new PlaylistsConfig();
+                config.Serialize();
+            }
+            _config = config;
             _mediaController = mediaController;
             _mediaController.StateChanged += OnMediaControllerStateChanged;
             _streamConverterService = streamConverterService;
@@ -55,20 +61,30 @@ namespace WearWare.Services.Playlist
             }
             _logger.LogInformation("{LogTag} Loaded playlists.", _logTag);
             // Load editing playlist if set
-            if (string.IsNullOrEmpty(_appConfig.EditingPlaylist) || !_playlists.ContainsKey(_appConfig.EditingPlaylist))
+            var serialize = false;
+            if (string.IsNullOrEmpty(_config.EditingPlaylist) || !_playlists.ContainsKey(_config.EditingPlaylist))
             {
-                _appConfig.EditingPlaylist = null; // Clear invalid editing playlist
+                _logger.LogInformation("{LogTag} Non-existent editing playlist: {EditingPlaylist}, clearing", _logTag, _config.EditingPlaylist);
+                _config.EditingPlaylist = null; // Clear invalid editing playlist
+                serialize = true;
             }
-            if (string.IsNullOrEmpty(_appConfig.ActivePlaylist) || !_playlists.ContainsKey(_appConfig.ActivePlaylist))
+            if (string.IsNullOrEmpty(_config.ActivePlaylist) || !_playlists.ContainsKey(_config.ActivePlaylist))
             {
-                _appConfig.ActivePlaylist = null; // Clear invalid active playlist
+                _logger.LogInformation("{LogTag} Non-existent active playlist: {ActivePlaylist}, clearing", _logTag, _config.ActivePlaylist);
+                _config.ActivePlaylist = null; // Clear invalid active playlist
+                serialize = true;
             }
             else
             {
-                var activePlaylist = _playlists[_appConfig.ActivePlaylist];
-                _logger.LogInformation("{LogTag} Starting MediaController with active playlist: {PlaylistName}", _logTag, _appConfig.ActivePlaylist);
+                var activePlaylist = _playlists[_config.ActivePlaylist];
+                _logger.LogInformation("{LogTag} Starting MediaController with active playlist: {PlaylistName}", _logTag, _config.ActivePlaylist);
                 _mediaController.LoadPlaylist(activePlaylist);
                 _mediaController.Start();
+            }
+            if (serialize)
+            {
+                // Bad config detected, re-save
+                _config.Serialize();
             }
         }
 
@@ -125,8 +141,8 @@ namespace WearWare.Services.Playlist
         /// </summary>
         public string? GetActivePlaylistName()
         {
-            return !string.IsNullOrEmpty(_appConfig.ActivePlaylist) && _playlists.ContainsKey(_appConfig.ActivePlaylist)
-                ? _appConfig.ActivePlaylist
+            return !string.IsNullOrEmpty(_config.ActivePlaylist) && _playlists.ContainsKey(_config.ActivePlaylist)
+                ? _config.ActivePlaylist
                 : null;
         }
 
@@ -136,8 +152,8 @@ namespace WearWare.Services.Playlist
         /// <returns></returns>
         public PlaylistItems? GetPlaylistBeingEdited()
         {
-            return !string.IsNullOrEmpty(_appConfig.EditingPlaylist) && _playlists.ContainsKey(_appConfig.EditingPlaylist)
-                ? _playlists[_appConfig.EditingPlaylist]
+            return !string.IsNullOrEmpty(_config.EditingPlaylist) && _playlists.ContainsKey(_config.EditingPlaylist)
+                ? _playlists[_config.EditingPlaylist]
                 : null;
         }
 
@@ -347,8 +363,8 @@ namespace WearWare.Services.Playlist
         /// <param name="playlistName"></param>
         public void OnEditingPlaylistChanged(string? playlistName)
         {
-            _appConfig.EditingPlaylist = playlistName;
-            _appConfig.Serialize();
+            _config.EditingPlaylist = playlistName;
+            _config.Serialize();
         }
 
         /// <summary>
@@ -368,8 +384,8 @@ namespace WearWare.Services.Playlist
                     return;
                 }
             }
-            _appConfig.ActivePlaylist = playlistName;
-            _appConfig.Serialize();
+            _config.ActivePlaylist = playlistName;
+            _config.Serialize();
             
             if (newState)
             {
@@ -409,17 +425,17 @@ namespace WearWare.Services.Playlist
             if (string.IsNullOrEmpty(playlistName) || !_playlists.ContainsKey(playlistName))
                 return;
             // If the playlist is active, stop it
-            if (_appConfig.ActivePlaylist == playlistName)
+            if (_config.ActivePlaylist == playlistName)
             {
                 _mediaController.Stop();
-                _appConfig.ActivePlaylist = null;
+                _config.ActivePlaylist = null;
             }
             // If the playlist is being edited, clear it
-            if (_appConfig.EditingPlaylist == playlistName)
+            if (_config.EditingPlaylist == playlistName)
             {
-                _appConfig.EditingPlaylist = null;
+                _config.EditingPlaylist = null;
             }
-            _appConfig.Serialize();
+            _config.Serialize();
             _playlists.Remove(playlistName);
             // Delete the playlist folder
             var path = Path.Combine(PathConfig.PlaylistPath, playlistName);

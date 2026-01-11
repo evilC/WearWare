@@ -14,9 +14,6 @@
       This is because GetNext() in streamplayer returns false if it is an invalid stream.  
       It cannot detect the difference between end of stream and invalid stream  
       PR `c#-content-streamer-iscompatible` submitted to rectify this
-- Config files
-  - AppConfig is currently only for Playlists (Storing currently active playlist etc) - rename?  
-    Is also in Program.cs, should be moved
 - PlaylistService
   - A bunch of stuff in here should be moved to PlaylistItems
 - Disaster recovery

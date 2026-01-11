@@ -47,39 +47,10 @@ builder.Host.UseSerilog();
 Log.Information("{sep} Starting on {Environment} {sep}", LogTools.HeaderHeadTail, Dns.GetHostName(), LogTools.HeaderHeadTail);
 
 Directory.CreateDirectory(PathConfig.ConfigPath);
-var appConfigFile = Path.Combine(PathConfig.ConfigPath, "appconfig.json");
-AppConfig appConfig;
-AppConfig? loadedConfig = null;
-try {
-    if (File.Exists(appConfigFile))
-    {
-        loadedConfig = JsonUtils.FromJsonFile<AppConfig>(appConfigFile);
-        if (loadedConfig != null)
-        {
-            Log.Information("Loaded app config from {ConfigFile}", appConfigFile);
-        }
-        else
-        {
-            Log.Warning("Tried to load {ConfigFile}, but it was invalid, re-creating...", appConfigFile);
-        }
-    }
-}
-catch (Exception ex)
-{
-    Log.Error(ex, "Error loading app config file {ConfigFile}, re-creating...", appConfigFile);
-}
-if (loadedConfig == null)
-{
-    loadedConfig = new AppConfig();
-    JsonUtils.ToJsonFile(appConfigFile, loadedConfig);
-    Log.Information("Created default app config file at {ConfigFile}", appConfigFile);
-}
-appConfig = loadedConfig;
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(blazorInMemorySink);
 builder.Services.AddSingleton<MatrixConfigService>();
-builder.Services.AddSingleton(appConfig);
 builder.Services.AddSingleton<PlaylistService>();
 builder.Services.AddSingleton<InMemoryLogService>();
 builder.Services.AddScoped<ImportService>();
