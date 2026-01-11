@@ -1,12 +1,9 @@
 using WearWare.Common.Media;
-using WearWare.Services.MediaController;
 namespace WearWare.Services.Playlist
 {
 
     // Contains a list of playable items in a playlist
     // Abstracts away the implementation of getting next item, adding and removing items, etc.
-    // Currently uses OrderedDictionary to maintain order, allow lookup by name or index, and allow removal of items in the middle
-    // Retreival of items should be done by nmame or get next. Because removal of items in the middle can change indices
     // This can happen, for example, when an item is deleted from the playlist whilst it is playing
     public class PlaylistItems
     {
@@ -14,11 +11,10 @@ namespace WearWare.Services.Playlist
         /// The name of the playlist
         /// </summary>
         public string Name { get; init; }
-        // System.Collections.Specialized.OrderedDictionary is not available in .NET 8
-        // Needs .NET 9 or higher
-        // private readonly OrderedDictionary<string, PlayableItem> _items = [];
         private readonly List<PlayableItem> _items = [];
 
+        // ToDo: PlaylistConfig is currently not used. It should be used to store current item index, so that playback resumes on the same item after app restart
+        // There is a concern though that storing current item could cause problems if shutdown occurs while writing to the config file
         public PlaylistConfig PlaylistConfig { get; init; }
         private int _currentIndex;
 
@@ -106,26 +102,6 @@ namespace WearWare.Services.Playlist
             return _items;
         }
 
-        
-        /// <summary>
-        /// Checks if the playlist is in exclusive mode
-        /// </summary>
-        /// <returns></returns>
-        // public bool InExclusiveMode()
-        // {
-        //     return PlaylistConfig.ExclusiveItem != null;
-        // }
-
-        /// <summary>
-        /// Gets the index of the exclusive item
-        /// </summary>
-        /// <returns>The index of the exclusive item, or null if not in exclusive mode</returns>
-        // public int? GetExclusiveItem()
-        // {
-        //     return PlaylistConfig.ExclusiveItem;
-        // }
-        
-
         /// <summary>
         /// Adds an item to the playlist at the specified index
         /// </summary>
@@ -149,12 +125,6 @@ namespace WearWare.Services.Playlist
             {
                 MoveNext();
             }
-            // if (PlaylistConfig.ExclusiveItem != null
-            //  && insertIndex <= PlaylistConfig.ExclusiveItem)
-            // {
-            //     // Adjust exclusive item index if necessary
-            //     PlaylistConfig.ExclusiveItem++;
-            // }
             return true;
         }
 
@@ -194,20 +164,6 @@ namespace WearWare.Services.Playlist
                 _currentIndex--;
             }
 
-            // Update exclusive item index if necessary
-            // if (PlaylistConfig.ExclusiveItem != null)
-            // {
-            //     if (removedIndex == PlaylistConfig.ExclusiveItem)
-            //     {
-            //         // Removed item was the exclusive item, disable exclusive mode
-            //         PlaylistConfig.ExclusiveItem = null;
-            //     }
-            //     else if (removedIndex < PlaylistConfig.ExclusiveItem)
-            //     {
-            //         // Exclusive item index was after removed item, decrement it
-            //         PlaylistConfig.ExclusiveItem--;
-            //     }
-            // }
             return true;
         }
     }

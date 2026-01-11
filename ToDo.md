@@ -15,8 +15,8 @@
       It cannot detect the difference between end of stream and invalid stream  
       PR `c#-content-streamer-iscompatible` submitted to rectify this
 - Config files
-  - App config?  
-    Current playlist etc? Or maybe store this in playlist service
+  - AppConfig is currently only for Playlists (Storing currently active playlist etc) - rename?  
+    Is also in Program.cs, should be moved
 - Disaster recovery
   - Some way to restore last known good?
 - Error handling

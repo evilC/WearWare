@@ -13,13 +13,13 @@ namespace WearWare.Services.Playlist
     {
         private Dictionary<string, PlaylistItems> _playlists = [];
         private readonly MediaControllerService _mediaController;
-        private readonly WearWare.Services.StreamConverter.IStreamConverterService _streamConverterService;
+        private readonly StreamConverter.IStreamConverterService _streamConverterService;
         public event Action? StateChanged;
         private readonly ILogger<PlaylistService> _logger;
         private static readonly string _logTag = "[PLAYLISTSERV]";
         private readonly AppConfig _appConfig;
 
-        public PlaylistService(ILogger<PlaylistService> logger, AppConfig appConfig, MediaControllerService mediaController, WearWare.Services.StreamConverter.IStreamConverterService streamConverterService)
+        public PlaylistService(ILogger<PlaylistService> logger, AppConfig appConfig, MediaControllerService mediaController, StreamConverter.IStreamConverterService streamConverterService)
         {
             _logger = logger;
             _appConfig = appConfig;
