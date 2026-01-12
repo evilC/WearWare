@@ -210,7 +210,7 @@ namespace WearWare.Services.Playlist
 
         public void Serialize()
         {
-            var outPath = Path.Combine(PathConfig.PlaylistPath, Name, _configFileName);
+            var outPath = Path.Combine(GetPlaylistPath(), _configFileName);
             JsonUtils.ToJsonFile(outPath, _items);
         }
 
