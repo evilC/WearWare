@@ -262,8 +262,8 @@ namespace WearWare.Services.Playlist
             if (deleteFiles)
             {
                 var path = playlist.GetPlaylistPath();
-                File.Delete(Path.Combine(path, $"{item.Name}.stream"));
-                File.Delete(Path.Combine(path, item.SourceFileName));
+                File.Delete(item.GetStreamFilePath());
+                File.Delete(item.GetSourceFilePath());
             }
 
             // Actually remove the item from the playlist
