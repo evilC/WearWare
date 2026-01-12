@@ -23,11 +23,4 @@
 - Preview for library items  
   Would need some way to cancel. Cannot just new up a PlayableItem on each click, as instance would not be the same.  
   Also would maybe need to handle the scenario where no playlist is playing?
-- Change `ParentFolder` in `PlayableItem` to relative path (eg `playlist/default`)  
-  Will enable
-  - Duplication of playlists (Will need to rewrite with new location)  
-  - Moving folder
-- Add `GetPath()` to `PlayableItem`?  
-  Less combines elsewhere in code  
-  Maybe add `GetStreamPath()` and `GetSourceFilePath()`?  
-  Maybe add equivalent to `LibraryItem`?
+- Enable duplication of playlists (Will need to rewrite `ParentFolder` of each `PlayableItem` with new location)  
