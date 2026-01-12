@@ -19,6 +19,7 @@ namespace WearWare.Services.Playlist
         private PlaylistItemsConfig _config { get; init; }
         ILogger<PlaylistItems> _logger;
         private static readonly string _logTag = "[PLAYLISTITEMS]";
+        private static readonly string _configFileName = "playlistitems.json";
 
         public PlaylistItems(ILogger<PlaylistItems> logger, string name, PlaylistItemsConfig playlistConfig, List<PlayableItem> items)
         {
@@ -186,7 +187,7 @@ namespace WearWare.Services.Playlist
 
         public static PlaylistItems? Deserialize(ILogger<PlaylistItems> logger, string playlistName)
         {
-            var path = Path.Combine(PathConfig.PlaylistPath, playlistName, "playlistitems.json");
+            var path = Path.Combine(PathConfig.PlaylistPath, playlistName, _configFileName);
             if (!File.Exists(path))
             {
                 return null;
@@ -198,7 +199,7 @@ namespace WearWare.Services.Playlist
                 return null;
             }
             foreach (var item in items){
-                if (!CheckPlayableMediaItemExists(Path.Combine(PathConfig.PlaylistPath, playlistName), item))
+                if (!File.Exists(item.GetStreamFilePath()))
                 {
                     items.Remove(item);
                     logger.LogWarning("{tag} Media file for item {item} does not exist in playlist {playlist}, removing item from playlist.", _logTag, item.Name, playlistName);
@@ -209,19 +210,8 @@ namespace WearWare.Services.Playlist
 
         public void Serialize()
         {
-            var outPath = Path.Combine(PathConfig.PlaylistPath, Name, "playlistitems.json");
+            var outPath = Path.Combine(PathConfig.PlaylistPath, Name, _configFileName);
             JsonUtils.ToJsonFile(outPath, _items);
-        }
-
-        /// <summary>
-        /// Checks that the media file for the given playable item exists in the given folder
-        /// </summary>
-        /// <param name="folder"></param> The folder to check
-        /// <param name="item"></param> The playable item to check
-        public static bool CheckPlayableMediaItemExists(string folder, PlayableItem item)
-        {
-            var filename = $"{folder}/{$"{item.Name}.stream"}";
-            return File.Exists(filename);
         }
 
         /// <summary>
