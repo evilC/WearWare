@@ -27,3 +27,7 @@
   Will enable
   - Duplication of playlists (Will need to rewrite with new location)  
   - Moving folder
+- Add `GetPath()` to `PlayableItem`?  
+  Less combines elsewhere in code  
+  Maybe add `GetStreamPath()` and `GetSourceFilePath()`?  
+  Maybe add equivalent to `LibraryItem`?

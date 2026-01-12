@@ -200,8 +200,7 @@ namespace WearWare.Services.Playlist
             // Create PlayableItem from LibraryItem
             var item = new PlayableItem(
                 name: libraryItem.Name,
-                // parentFolder: GetPlaylistPath(playlist),
-                parentFolder: playlist.GetPlaylistPath(),
+                parentFolder: Path.Combine(PathConfig.PlaylistFolder, playlist.Name),
                 mediaType: libraryItem.MediaType,
                 sourceFileName: libraryItem.SourceFileName,
                 playMode: playMode,

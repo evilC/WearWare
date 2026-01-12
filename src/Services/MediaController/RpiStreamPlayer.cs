@@ -1,5 +1,6 @@
 using RPiRgbLEDMatrix;
 using WearWare.Common.Media;
+using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Services.MediaController
@@ -144,7 +145,7 @@ namespace WearWare.Services.MediaController
 
         private string GetStreamPath(PlayableItem playableItem)
         {
-            return Path.Combine(playableItem.ParentFolder, $"{playableItem.Name}.stream");
+            return Path.Combine(PathConfig.Root, playableItem.ParentFolder, $"{playableItem.Name}.stream");
         }
     }
 }

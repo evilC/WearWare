@@ -78,7 +78,7 @@ public class QuickMediaService
 
         var item = new PlayableItem(
             libItem.Name,
-            Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString()),
+            Path.Combine(PathConfig.QuickMediaFolder, buttonNumber.ToString()),
             libItem.MediaType,
             libItem.SourceFileName,
             playMode,
