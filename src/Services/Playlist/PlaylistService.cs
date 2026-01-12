@@ -207,15 +207,13 @@ namespace WearWare.Services.Playlist
                 playModeValue: playModeValue);
             
             // Copy file from library to playlist folder
-            var sourcePath = Path.Combine(PathConfig.LibraryPath, item.SourceFileName);
-            var destPath = Path.Combine(PathConfig.PlaylistPath, playlist.Name, item.SourceFileName);
+            var destPath = item.GetSourceFilePath();
             if (!File.Exists(destPath)){
-                File.Copy(sourcePath, destPath, overwrite: true);
+                File.Copy(libraryItem.GetSourceFilePath(), destPath, overwrite: true);
             }
-            destPath = Path.Combine(PathConfig.PlaylistPath, playlist.Name, $"{item.Name}.stream");
+            destPath = item.GetStreamFilePath();
             if (!File.Exists(destPath)){
-                sourcePath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.stream");
-                File.Copy(sourcePath, destPath, overwrite: true);
+                File.Copy(libraryItem.GetStreamFilePath(), destPath, overwrite: true);
             }
             // ToDo: Check if playlist returns true
             playlist.AddItem(insertIndex, item);
