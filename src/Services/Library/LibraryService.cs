@@ -67,28 +67,26 @@ namespace WearWare.Services.Library
             LoadLibraryItems();
         }
 
-            /// <summary>
-            /// Deletes the specified library item files and metadata, then reloads the library.
-            /// </summary>
-            /// <param name="item"></param>
-            public void DeleteLibraryItem(LibraryItem item)
+        /// <summary>
+        /// Deletes the specified library item files and metadata, then reloads the library.
+        /// </summary>
+        /// <param name="item"></param>
+        public void DeleteLibraryItem(LibraryItem item)
+        {
+            try
             {
-                try
-                {
-                    var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
-                    var streamPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.stream");
-                    var sourcePath = Path.Combine(PathConfig.LibraryPath, item.SourceFileName ?? "");
+                var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
 
-                    if (File.Exists(jsonPath)) File.Delete(jsonPath);
-                    if (File.Exists(streamPath)) File.Delete(streamPath);
-                    if (!string.IsNullOrEmpty(item.SourceFileName) && File.Exists(sourcePath)) File.Delete(sourcePath);
-                }
-                catch
-                {
-                    // Swallow errors - deletion failure shouldn't crash the UI.
-                }
-                // Reload the library to refresh the UI
-                Reload();
+                if (File.Exists(jsonPath)) File.Delete(jsonPath);
+                if (File.Exists(item.GetStreamFilePath())) File.Delete(item.GetStreamFilePath());
+                if (File.Exists(item.GetSourceFilePath())) File.Delete(item.GetSourceFilePath());
             }
+            catch
+            {
+                // Swallow errors - deletion failure shouldn't crash the UI.
+            }
+            // Reload the library to refresh the UI
+            Reload();
+        }
     }
 }
