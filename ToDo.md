@@ -20,7 +20,4 @@
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
   Investigate "lazy loading" next?
-- Preview for library items  
-  Would need some way to cancel. Cannot just new up a PlayableItem on each click, as instance would not be the same.  
-  Also would maybe need to handle the scenario where no playlist is playing?
-- Enable duplication of playlists (Will need to rewrite `ParentFolder` of each `PlayableItem` with new location)  
+

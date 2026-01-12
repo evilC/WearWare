@@ -1,61 +1,68 @@
 using System.Text.Json;
+using WearWare.Common.Media;
 using WearWare.Config;
+using WearWare.Services.MediaController;
 
 namespace WearWare.Services.Library
 {
     public class LibraryService
     {
         public event Action? ItemsChanged;
-        private List<LibraryItem> _items = new();
-        private bool _isInitialized = false;
+        private readonly SortedList<string, LibraryItem> _items = [];
+        private readonly Dictionary<string, PlayableItem> _previewItems = [];
 
         public IReadOnlyList<LibraryItem> Items
         {
             get
             {
-                if (!_isInitialized)
-                {
-                    LoadLibraryItems();
-                }
-                return _items;
+                return _items.Values.ToList();
             }
         }
 
         private readonly ILogger<LibraryService> _logger;
+        private readonly MediaControllerService _mediaControllerService;
 
-        public LibraryService(ILogger<LibraryService> logger)
+        public LibraryService(ILogger<LibraryService> logger, MediaControllerService mediaControllerService)
         {
             _logger = logger;
+            _mediaControllerService = mediaControllerService;
+            LoadLibraryItems();
             _logger.LogInformation("LibraryService initialized.");
         }
 
         private void LoadLibraryItems()
         {
             _items.Clear();
-            _isInitialized = false;
+            _previewItems.Clear();
             if (!Directory.Exists(PathConfig.LibraryPath))
                 return;
 
             var jsonFiles = Directory.EnumerateFiles(PathConfig.LibraryPath, "*.json", SearchOption.TopDirectoryOnly);
             foreach (var file in jsonFiles)
             {
-                LibraryItem? item = null;
+                LibraryItem? libraryItem;
                 try
                 {
                     var json = File.ReadAllText(file);
-                    item = JsonSerializer.Deserialize<LibraryItem>(json);
+                    libraryItem = JsonSerializer.Deserialize<LibraryItem>(json);
                 }
                 catch
                 {
                     // Optionally log or handle errors
                     continue;
                 }
-                if (item != null)
-                    _items.Add(item);
+                if (libraryItem != null){
+                    _items.Add(libraryItem.Name, libraryItem);
+                    _previewItems.Add(libraryItem.Name, new PlayableItem(
+                        name: libraryItem.Name,
+                        parentFolder: PathConfig.LibraryPath,
+                        mediaType: libraryItem.MediaType,
+                        sourceFileName: libraryItem.SourceFileName,
+                        playMode: PlayMode.FOREVER,
+                        playModeValue: 1)
+                    );
+                }
             }
-            // Sort items alphabetically by name (case-insensitive) for consistent ordering
-            _items = _items.OrderBy(i => i.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            _isInitialized = true;
             ItemsChanged?.Invoke();
         }
 
@@ -87,6 +94,15 @@ namespace WearWare.Services.Library
             }
             // Reload the library to refresh the UI
             Reload();
+        }
+
+        public void PlayPreviewItem(LibraryItem libItem)
+        {
+            _previewItems.TryGetValue(libItem.Name, out var playableItem);
+            if (playableItem is not null)
+            {
+                _mediaControllerService.PlayQuickMedia(playableItem);
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 @page "/library"
+@using WearWare.Common
 @using WearWare.Services.Library
 @using WearWare.Services.MatrixConfig
 @using WearWare.Services.StreamConverter
@@ -13,7 +14,7 @@
 <PageTitle>Library</PageTitle>
 
 <h3>Library Items</h3>
-
+<span style="display:block; margin-bottom:1em;">Click on an image to play a preview as a QuickMedia item in FOREVER mode. Click the item again to stop the preview.</span>
 @if (items == null)
 {
     <p>Loading...</p>
@@ -27,10 +28,10 @@ else
     <ul class="library-list" style="list-style:none; padding:0; margin:0;">
         @foreach (var item in items)
         {
-            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.75em;">
+            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.75em; cursor:pointer;" @onclick="() => LibraryService.PlayPreviewItem(item)">
                 <div style="display:flex; flex-direction:column; gap:0.25em;">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowReconvert(item)">ReConvert</button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)">Delete</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick:stopPropagation @onclick="() => ShowReconvert(item)">ReConvert</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick:stopPropagation @onclick="() => ConfirmDelete(item)">Delete</button>
                 </div>
                 <img src="/library-image/@item.SourceFileName" alt="@item.Name" style="max-width:64px; max-height:64px; border-radius:8px; box-shadow:0 1px 8px #0002; background:#eee;" />
                 <div>
@@ -47,7 +48,6 @@ else
     protected override void OnInitialized()
     {
         LibraryService.ItemsChanged += OnItemsChanged;
-        LibraryService.Reload();
         items = LibraryService.Items;
     }
 
@@ -93,7 +93,7 @@ else
 
     private async Task<WearWare.Common.TaskResult> OnLibraryReconvertAsync(LedMatrixOptionsConfig options)
     {
-        if (editingItem is null) return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No item selected" };
+        if (editingItem is null) return new TaskResult { ExitCode = -1, Error = "Invalid", Message = "No item selected" };
         try
         {
             var folder = PathConfig.LibraryPath;
@@ -101,7 +101,7 @@ else
         }
         catch (Exception ex)
         {
-            return new WearWare.Common.TaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed" };
+            return new TaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed" };
         }
     }
 }
