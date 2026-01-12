@@ -1,3 +1,4 @@
+using WearWare.Config;
 using WearWare.Services.Library;
 
 namespace WearWare.Common.Media
@@ -15,6 +16,16 @@ namespace WearWare.Common.Media
             ParentFolder = parentFolder;
             PlayMode = playMode;
             PlayModeValue = playModeValue;
+        }
+
+        public new string GetStreamFilePath()
+        {
+            return Path.Combine(PathConfig.Root, ParentFolder, $"{Name}.stream");
+        }
+
+        public new string GetSourceFilePath()
+        {
+            return Path.Combine(PathConfig.Root, ParentFolder, SourceFileName);
         }
     }
 }

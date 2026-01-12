@@ -1,4 +1,5 @@
 using WearWare.Common.Media;
+using WearWare.Config;
 
 namespace WearWare.Services.Library
 {
@@ -13,6 +14,16 @@ namespace WearWare.Services.Library
             Name = name;
             MediaType = mediaType;
             SourceFileName = sourceFileName;
+        }
+
+        public string GetSourceFilePath()
+        {
+            return Path.Combine(PathConfig.LibraryPath, SourceFileName);
+        }
+
+        public string GetStreamFilePath()
+        {
+            return Path.Combine(PathConfig.LibraryPath, $"{Name}.stream");
         }
     }
 }

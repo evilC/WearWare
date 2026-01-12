@@ -5,7 +5,9 @@ namespace WearWare.Config
         public static readonly string Root;
         public static readonly string ConfigPath;
         public static readonly string IncomingPath;
+        public static readonly string IncomingFolder = "incoming";
         public static readonly string LibraryPath;
+        public static readonly string LibraryFolder = "library";
         public static readonly string PlaylistPath;
         public static readonly string PlaylistFolder = "playlists";
         public static readonly string QuickMediaPath;
@@ -24,8 +26,8 @@ namespace WearWare.Config
                 Root = Path.GetFullPath(Path.Combine(exePath, ".."));
 
             ConfigPath = Path.Combine(Root, "config");
-            IncomingPath = Path.Combine(Root, "incoming");
-            LibraryPath = Path.Combine(Root, "library");
+            IncomingPath = Path.Combine(Root, IncomingFolder);
+            LibraryPath = Path.Combine(Root, LibraryFolder);
             PlaylistPath = Path.Combine(Root, PlaylistFolder);
             QuickMediaPath = Path.Combine(Root, QuickMediaFolder);
             ToolsPath = Path.Combine(Root, "tools");
