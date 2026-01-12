@@ -1,6 +1,8 @@
+using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.Library;
+using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 
 namespace WearWare.Services.Playlist
@@ -283,7 +285,7 @@ namespace WearWare.Services.Playlist
         /// Re-processes the specified playlist item using the provided matrix options.
         /// Overwrites the existing .stream in the playlist folder.
         /// </summary>
-        public async Task<WearWare.Common.TaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options = null)
+        public async Task<TaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, LedMatrixOptionsConfig? options = null)
         {
             var item = playlist.GetPlaylistItems()[itemIndex];
             var folder = playlist.GetPlaylistPath();
