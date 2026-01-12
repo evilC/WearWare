@@ -14,10 +14,15 @@
   - A bunch of stuff in here should be moved to PlaylistItems
 - Disaster recovery
   - Some way to restore last known good?
-- Should we not move to using the `ParentFolder` property of PlayableItem to get path?
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
 - Mock Import (Just copy, don't convert)
 - UI pages not responsive immediately after loading  
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
   Investigate "lazy loading" next?
+- Preview for library items  
+  Would need some way to cancel. Cannot just new up a PlayableItem on each click, as instance would not be the same.  
+  Also would maybe need to handle the scenario where no playlist is playing?
+- Remove `ParentFolder` from `PlayableItem` - will enable:  
+  - Duplication of playlists  
+  - Moving folder
