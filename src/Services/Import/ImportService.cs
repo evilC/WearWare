@@ -65,22 +65,22 @@ namespace WearWare.Services.Import
             StateChanged?.Invoke();
         }
 
-        public async Task<TaskResult> ImportLibraryItem(string odldFileName, string newFileNameNoExt, LedMatrixOptionsConfig? options = null)
+        public async Task<TaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, LedMatrixOptionsConfig? options = null)
         {
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
                 return new TaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Import failed - unknown media type." };
             }
-            var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, odldFileName, PathConfig.LibraryPath, newFileNameNoExt, options);
+            var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, oldFileName, PathConfig.LibraryPath, newFileNameNoExt, options);
             if (result.ExitCode != 0)
             {
                 return result;
             }
             // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
-            var ext = Path.GetExtension(odldFileName);
+            var ext = Path.GetExtension(oldFileName);
             var destPath = Path.Combine(PathConfig.LibraryPath, $"{newFileNameNoExt}{ext}");
             try {
-                var sourcePath = Path.Combine(PathConfig.IncomingPath, odldFileName);
+                var sourcePath = Path.Combine(PathConfig.IncomingPath, oldFileName);
                 if (File.Exists(destPath))
                 {
                     File.Delete(destPath);
