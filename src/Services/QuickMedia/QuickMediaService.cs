@@ -16,6 +16,7 @@ public class QuickMediaService
     private readonly IQuickMediaButtonFactory _buttonFactory;
     private readonly ILogger<QuickMediaService> _logger;
     private readonly string _logTag = "[QUICKMEDIA]";
+    private static readonly string _configFileName = "quickmedia.json";
 
     public QuickMediaService(ILogger<QuickMediaService> logger, MediaControllerService mediaController, IQuickMediaButtonFactory buttonFactory)
     {
@@ -76,26 +77,26 @@ public class QuickMediaService
         if (buttonNumber < 0 || buttonNumber >= _maxButtons) return false;
         if (_buttons[buttonNumber] != null) return false;
 
-        var item = new PlayableItem(
+        var qmItem = new PlayableItem(
             libItem.Name,
-            Path.Combine(PathConfig.QuickMediaFolder, buttonNumber.ToString()),
+            GetQuickMediaPath(buttonNumber),
             libItem.MediaType,
             libItem.SourceFileName,
             playMode,
             playModeValue);
             try
         {
-            var sourcePath = Path.Combine(PathConfig.LibraryPath, item.SourceFileName);
-            var destPath = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString(), item.SourceFileName);
-            if (!File.Exists(destPath)){
-                File.Copy(sourcePath, destPath, overwrite: true);
+            if (!Directory.Exists(GetQuickMediaPath(buttonNumber)))
+            {
+                Directory.CreateDirectory(GetQuickMediaPath(buttonNumber));
             }
-            destPath = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString(), $"{item.Name}.stream");
-            if (!File.Exists(destPath)){
-                sourcePath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.stream");
-                File.Copy(sourcePath, destPath, overwrite: true);
+            if (!File.Exists(qmItem.GetSourceFilePath())){
+                File.Copy(libItem.GetSourceFilePath(), qmItem.GetSourceFilePath(), overwrite: true);
             }
-            var button = _buttonFactory.Create(_mediaController, buttonNumber, item);
+            if (!File.Exists(qmItem.GetStreamFilePath())){
+                File.Copy(libItem.GetStreamFilePath(), qmItem.GetStreamFilePath(), overwrite: true);
+            }
+            var button = _buttonFactory.Create(_mediaController, buttonNumber, qmItem);
             button.Initialize();
             _buttons[buttonNumber] = button;
             SerializeQuickMediaButton(button);
@@ -143,12 +144,10 @@ public class QuickMediaService
         }   
 
         // Delete associated files
-        var dir = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString());
+        var dir = GetQuickMediaPath(buttonNumber);
         if (Directory.Exists(dir))
         {
-            File.Delete(Path.Combine(dir, "quickmedia.json"));
-            File.Delete(Path.Combine(dir, button.Item.SourceFileName));
-            File.Delete(Path.Combine(dir, $"{button.Item.Name}.stream"));
+            Directory.Delete(dir, recursive: true);
         }
         // Remove button
         button.Dispose();
@@ -169,16 +168,14 @@ public class QuickMediaService
 
     public void SerializeQuickMediaButton(IQuickMediaButton button)
     {
-        var dir = Path.Combine(PathConfig.QuickMediaPath, button.ButtonNumber.ToString());
-        Directory.CreateDirectory(dir);
-        var outPath = Path.Combine(dir, "quickmedia.json");
+        Directory.CreateDirectory(GetQuickMediaPath(button.ButtonNumber));
         var dto = new QuickMediaDto(button.ButtonNumber, button.Item);
-        JsonUtils.ToJsonFile(outPath, dto);
+        JsonUtils.ToJsonFile(GetQuickMediaConfigFilePath(button.ButtonNumber), dto);
     }
 
     public IQuickMediaButton? DeserializeQuickMediaButton(int buttonNumber)
     {
-        var path = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString(), "quickmedia.json");
+        var path = GetQuickMediaConfigFilePath(buttonNumber);
         if (!File.Exists(path)) return null;
         try
         {
@@ -192,5 +189,15 @@ public class QuickMediaService
             _logger.LogError(ex, "{tag} Error deserializing Quick Media button from file {filename}: {message}", _logTag, path, ex.Message);
             return null;
         }
+    }
+
+    public string GetQuickMediaPath(int buttonNumber)
+    {
+        return Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString());
+    }
+
+    public string GetQuickMediaConfigFilePath(int buttonNumber)
+    {
+        return Path.Combine(GetQuickMediaPath(buttonNumber), _configFileName);
     }
 }
