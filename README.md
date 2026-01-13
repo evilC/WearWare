@@ -61,4 +61,12 @@ This code is currently designed for a Pi (I use a Zero W 2) with an Electrodrago
 Disabling the 3rd channel frees up GPIO pins 2, 3, 14, 16, 21 + 26  
 However, it is worth noting that pins 2+3 do not seem to be usable (They are high by default)  
 Pin 14 apparently can fluctuate by default  
-In order to fix this, you can add lines like so in `/boot/firmware/config.cfg`: `gpio=14=op,dl`
+In order to fix this, you can add lines like so in `/boot/firmware/config.cfg`: `gpio=14=ip`
+
+## Using the app  
+- Upload some GIFs or images to the `incoming` folder of the Pi
+- Point a web browser at port 5000 (eg `http://dietpi:5000`)
+- Go to the Options page, click the `Matrix Options` button and set the matrix options for your panel (You may need to restart the app after)  
+- Go to the `Import` page and import files into the library. This will convert them to a stream
+- Go to the `Playlist` page, create a playlist, and add items to it from the library
+- Optionally, go to the `QuickMedia` page and assign items to the buttons (You may need to edit `ButtonPins.cs` to set which pins your buttons are connected to)
