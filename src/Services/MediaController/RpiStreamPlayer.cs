@@ -77,6 +77,12 @@ namespace WearWare.Services.MediaController
                 {
                     var streamPath = GetStreamPath(playableItem);
                     reader = new ContentStreamer(streamPath);
+                    if (!reader.IsCompatible(_canvas.Handle))
+                    {
+                        // Stream is incompatible with the current matrix configuration
+                        _logger.LogError("{logTag} Stream {StreamPath} is incompatible with the current matrix configuration.", _logTag, streamPath);
+                        return false;
+                    }
                     var loopNum = 0u;
                     long endTime = 0;
                     if (playableItem.PlayMode == PlayMode.DURATION)
