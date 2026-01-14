@@ -1,6 +1,8 @@
 @page "/options"
 @using WearWare.Services.MatrixConfig
 @inject MatrixConfigService MatrixConfigService
+@using WearWare.Services.MediaController
+@inject MediaControllerService MediaControllerService
 
 @rendermode InteractiveServer
 
@@ -37,10 +39,26 @@ else
 
     private Task OnSaveFromForm(LedMatrixOptionsConfig updated)
     {
+        var wasRunning = false;
+        try
+        {
+            wasRunning = MediaControllerService.IsRunning();
+        }
+        catch { }
+        if (wasRunning)
+        {
+            try { MediaControllerService.Stop(); } catch { }
+        }
+
         MatrixConfigService.UpdateOptions(updated);
         options = MatrixConfigService.CloneOptions();
         showForm = false;
         StateHasChanged();
+
+        if (wasRunning)
+        {
+            try { MediaControllerService.Start(); } catch { }
+        }
         return Task.CompletedTask;
     }
 
