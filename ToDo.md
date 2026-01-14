@@ -23,3 +23,4 @@
   Investigate "lazy loading" next?
 - Upload
 - Reconvert all for library, playlist, quickmedia
+- If we trigger QuickMedia while the playlist is stopped, after it finishes playing, it should not start
