@@ -20,4 +20,8 @@
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
   Investigate "lazy loading" next?
-
+- Upload
+- Clicking save on matrix options page does not close the options  
+  Matrix options will not re-open after
+- Clicking button before ready breaks button until refresh
+- Reconvert all for library, playlist, quickmedia
