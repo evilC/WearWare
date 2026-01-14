@@ -122,13 +122,17 @@ QuickMediaImageEndpoints.MapEndpoints(app);
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-var quickMediaService = app.Services.GetRequiredService<QuickMediaService>();
 
-var playlistService = app.Services.GetRequiredService<PlaylistService>();
 // Load the playlist and initialize the MediaControllerService
+// This will cause the MediaController to start playing the playlist
+// If we do not do this, then the MediaControllerSercie will not start playing until we visit the Playlist page
+var playlistService = app.Services.GetRequiredService<PlaylistService>();
 playlistService.Initialize();
-// Initializes the QuickMedia buttons
+
+// Initialize the QuickMedia buttons
+// Without this, QuickMedia buttons will not be enabled until we visit the QuickMedia page
 // We do this after the MediaControllerService has been started, to give floating buttons a chance to fire and be ignored
+var quickMediaService = app.Services.GetRequiredService<QuickMediaService>();
 quickMediaService.Initialize();
 
 app.Run();
