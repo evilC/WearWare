@@ -21,7 +21,6 @@
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
   Investigate "lazy loading" next?
-- Upload
 - Reconvert all for library, playlist, quickmedia
 - If we trigger QuickMedia while the playlist is stopped, after it finishes playing, it should not start
 - General refactor of MediaController Start / Stop etc  

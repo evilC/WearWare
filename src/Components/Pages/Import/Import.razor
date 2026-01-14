@@ -6,6 +6,9 @@
 @using WearWare.Common
 @inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
 @inject IJSRuntime JSRuntime
+@using Microsoft.AspNetCore.Components.Forms
+@inject HttpClient Http
+@inject NavigationManager Navigation
 
 <h3>Import</h3>
 @using static WearWare.Common.Media.MediaTypeMappings
@@ -29,6 +32,10 @@ else if (!importFiles.Any())
 }
 else
 {
+    <div class="mb-3">
+        <button type="button" class="btn btn-primary" @onclick="TriggerFileInput">Upload new file</button>
+        <InputFile id="@inputId" style="display:none;" OnChange="HandleFileSelected" />
+    </div>
     <ul class="import-list" style="list-style:none; padding:0; margin:0;">
         @foreach (var file in importFiles)
         {
@@ -53,6 +60,7 @@ else
     private bool showOptionsForm = false;
     private WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? modalOptions;
     private string? pendingNewFileName;
+    private string inputId = "fileInput_" + System.Guid.NewGuid().ToString("N");
 
     protected override void OnInitialized()
     {
@@ -122,5 +130,52 @@ else
         pendingNewFileName = null;
         selectedFileName = null;
         return Task.CompletedTask;
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null)
+            return;
+
+        var content = new MultipartFormDataContent();
+        var stream = file.OpenReadStream(long.MaxValue);
+        var streamContent = new StreamContent(stream);
+        streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
+        content.Add(streamContent, "file", file.Name);
+
+        try
+        {
+            var uploadUrl = Navigation.BaseUri.TrimEnd('/') + "/incoming-media/upload";
+            var resp = await Http.PostAsync(uploadUrl, content);
+            if (!resp.IsSuccessStatusCode)
+            {
+                var msg = await resp.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Upload failed: {msg}");
+            }
+            else
+            {
+                // Refresh local list (endpoint will also notify ImportService)
+                importFiles = ImportService.GetImportFiles();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Upload error: {ex.Message}");
+        }
+    }
+
+    private async Task TriggerFileInput()
+    {
+        // Use a small eval to click the hidden file input by id
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval", $"document.getElementById('{inputId}').click();");
+        }
+        catch
+        {
+            // Ignore JS errors
+        }
     }
 }

@@ -14,9 +14,9 @@ namespace WearWare.Services.Import
     {
         public event Action? StateChanged;
         private readonly MatrixConfigService _matrixConfigService;
-        private readonly WearWare.Services.StreamConverter.IStreamConverterService _streamConverterService;
-        private readonly WearWare.Services.Library.LibraryService _libraryService;
-        public ImportService(MatrixConfigService matrixConfigService, WearWare.Services.StreamConverter.IStreamConverterService streamConverterService, WearWare.Services.Library.LibraryService libraryService)
+        private readonly IStreamConverterService _streamConverterService;
+        private readonly LibraryService _libraryService;
+        public ImportService(MatrixConfigService matrixConfigService, IStreamConverterService streamConverterService, LibraryService libraryService)
         {
             _matrixConfigService = matrixConfigService;
             _matrixConfigService.OptionsChanged += OnMatrixOptionsChanged;
@@ -62,6 +62,14 @@ namespace WearWare.Services.Import
             {
                 // Swallow errors to avoid crashing UI; callers can refresh/listen to StateChanged
             }
+            StateChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Public helper to notify listeners that the import state changed (e.g. a new incoming file was uploaded).
+        /// </summary>
+        public void NotifyStateChanged()
+        {
             StateChanged?.Invoke();
         }
 
