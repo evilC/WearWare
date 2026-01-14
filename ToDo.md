@@ -22,3 +22,5 @@
   Investigate "lazy loading" next?
 - Upload
 - Reconvert all for library, playlist, quickmedia
+- Is Initialize in Program.cs for Playlist and QuickMedia services still needed?  
+  Think this was previously needed because of circular dependencies
