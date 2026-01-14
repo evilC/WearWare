@@ -24,3 +24,26 @@
 - Upload
 - Reconvert all for library, playlist, quickmedia
 - If we trigger QuickMedia while the playlist is stopped, after it finishes playing, it should not start
+- General refactor of MediaController Start / Stop etc  
+  - New interface:
+    - PlaylistRunning: true if playlist is set to play
+    - QuickMediaPlaying: true if QuickMedia currently playing
+    - MediaPlaying: true if Playlist or QuickMedia is playing
+    - Start / Stop to private
+    - SetPlaylistState starts or stops playlist
+    - PlayQuickMedia plays QuickMedia
+  - Things that need to speak to MediaController:
+    - Options page
+      - Stop all playback, update options, then resume playback
+    - QuickMediaServic
+      - Stop playback of button if Button is deleted while being playing
+      - Stop playback of button if edited while playing, then restart
+    - PlaylistService
+      - Jump to playlist item
+      - Add / Remove playlist item
+        - If item is before currently playing item, needs to stop and restart, else current index could be off
+      - Update item
+        - If item set to disabled while playing, will need to move to next
+      - Change of playlist
+      - Delete playlist
+    - Shutdown servive - stop all
