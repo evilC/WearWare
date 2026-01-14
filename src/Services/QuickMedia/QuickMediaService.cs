@@ -61,10 +61,9 @@ public class QuickMediaService
     /// </summary>
     public void Initialize()
     {
-        for (int i = 0; i < _maxButtons; i++)
-        {
-            _buttons[i]?.Initialize();
-        }
+        // Nothing to do
+        // Do not delete this method though, as Program.cs calls it to ensure that the QuickMedia service is loaded.
+        // Without this, QuickMedia buttons will not be enabled until we visit the QuickMedia page
     }
 
     public IQuickMediaButton?[] GetQuickMediaButtons()
@@ -97,7 +96,6 @@ public class QuickMediaService
                 File.Copy(libItem.GetStreamFilePath(), qmItem.GetStreamFilePath(), overwrite: true);
             }
             var button = _buttonFactory.Create(_mediaController, buttonNumber, qmItem);
-            button.Initialize();
             _buttons[buttonNumber] = button;
             SerializeQuickMediaButton(button);
             StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page

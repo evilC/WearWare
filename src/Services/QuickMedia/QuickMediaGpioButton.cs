@@ -2,6 +2,7 @@ using System.Device.Gpio;
 using Iot.Device.Button;
 using WearWare.Common.Media;
 using WearWare.Services.MediaController;
+using System.Threading;
 
 namespace WearWare.Services.QuickMedia
 {
@@ -43,11 +44,14 @@ namespace WearWare.Services.QuickMedia
             // {
             //     Console.WriteLine( $"({DateTime.Now}) Button {ButtonNumber} up");
             // };
-        }
 
-        public void Initialize()
-        {
-            _initialized = true;
+            // Delay initialization of the button to avoid false triggers on startup
+            var t = new Thread(() =>
+            {
+                Thread.Sleep(100);
+                _initialized = true;
+            }) { IsBackground = true };
+            t.Start();
         }
 
         public void Dispose()

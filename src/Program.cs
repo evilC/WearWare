@@ -131,7 +131,6 @@ playlistService.Initialize();
 
 // Initialize the QuickMedia buttons
 // Without this, QuickMedia buttons will not be enabled until we visit the QuickMedia page
-// We do this after the MediaControllerService has been started, to give floating buttons a chance to fire and be ignored
 var quickMediaService = app.Services.GetRequiredService<QuickMediaService>();
 quickMediaService.Initialize();
 

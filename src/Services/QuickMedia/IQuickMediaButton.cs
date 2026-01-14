@@ -6,6 +6,5 @@ namespace WearWare.Services.QuickMedia
     {
         int ButtonNumber { get; }
         PlayableItem Item { get; }
-        void Initialize();
     }
 }
