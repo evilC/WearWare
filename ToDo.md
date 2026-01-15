@@ -23,6 +23,13 @@
   Investigate "lazy loading" next?
 - Reconvert all for library, playlist, quickmedia
 - If we trigger QuickMedia while the playlist is stopped, after it finishes playing, it should not start
+- Buttons  
+  - Add button config  
+  - QuickActions
+    - Start / Stop playlist  
+    - Shutdown
+  - QuickActions and QuickMedia would need to share same GPIO handler  
+    So that they do not try to subscribe to same button
 - General refactor of MediaController Start / Stop etc  
   - New interface:
     - PlaylistRunning: true if playlist is set to play
