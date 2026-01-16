@@ -18,7 +18,7 @@ using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1));
 builder.Services.AddHostedService<ShutdownService>();
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
