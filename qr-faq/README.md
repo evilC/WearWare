@@ -8,7 +8,7 @@ This page is intended to answer various questions I get asked when wearing my t-
 
 - How long did it take?  
   300+ hours. Mostly the programming and CAD  
-    To rebuild it from scratch now that I have the code and CAD would probably take me 2-3 days
+  To rebuild it from scratch now that I have the code and CAD would probably take me 2-3 days
 
 - How much did it cost?  
   I have spent over £300 to get to this point, but I spent a bunch of money on dead-ends and things I did not end up using.  
@@ -22,18 +22,15 @@ This page is intended to answer various questions I get asked when wearing my t-
   (No seriously, I get asked this a lot)  
   No, it's not a screen in the normal sense, it's an "LED Matrix" - literally individual LEDs soldered to a flexible circuit board. They are generally used to make advertising hoardings.
 
-- What does it consist of?  
-  
+- What does it consist of?    
   - Two 128x64 pixel panels, one on top of another
   - A Raspberry Pi miniature computer running Linux
     This runs custom software that I wrote
   - A LED matrix driver board to run the panels
   - Other sundry electronics
 
-- How do you control it?
-  
-  The Pi computer runs a WiFi hotspot, which I connect my phone to.  
-  
+- How do you control it?    
+  The Pi computer runs a WiFi hotspot, which I connect my phone to.    
   It also runs a web server which has a UI on it that allows me to control what is in the playlist, and configure the 4 "QuickMedia" buttons that I have on the case of the Pi. These allow me to play quick contextual animations ("Hello" etc) that interrupt the normal playlist.
 
 - Is it heavy?  
