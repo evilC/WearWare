@@ -4,7 +4,27 @@
 <div id="content"></div>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script>
-fetch('https://raw.githubusercontent.com/evilC/WearWare/main/qr-faq/README.md')
+const RAW_BASE = 'https://raw.githubusercontent.com/evilC/WearWare/main/';
+
+function makeAbsolute(url){
+  if(!url) return url;
+  if (/^(https?:|\/\/|data:|mailto:)/.test(url)) return url;
+  return RAW_BASE + url.replace(/^\/+/, '');
+}
+
+const renderer = new marked.Renderer();
+renderer.image = (href, title, text) => {
+  const src = makeAbsolute(href);
+  const titleAttr = title ? ` title="${title}"` : '';
+  return `<img src="${src}" alt="${text}"${titleAttr}>`;
+};
+renderer.link = (href, title, text) => {
+  const href2 = makeAbsolute(href);
+  const titleAttr = title ? ` title="${title}"` : '';
+  return `<a href="${href2}"${titleAttr}>${text}</a>`;
+};
+
+fetch(RAW_BASE + 'qr-faq/README.md')
   .then(r => r.text())
-  .then(t => { document.getElementById('content').innerHTML = marked.parse(t) });
+  .then(t => { document.getElementById('content').innerHTML = marked.parse(t, { renderer }) });
 </script>
