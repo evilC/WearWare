@@ -3,12 +3,23 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>README</title>
 <style>
-  html,body{margin:0;padding:0}
-  #content{box-sizing:border-box;padding:1rem;max-width:100%;}
+  html,body{margin:0;padding:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#dbe9f5}
+  body{background:#0b0f14}
+  #content{box-sizing:border-box;padding:1rem;max-width:900px;margin:0 auto}
   /* Make images fill the page width but keep aspect ratio */
-  #content img{display:block;width:100%;height:auto;max-width:100%;}
-  /* Prevent very large fonts or overflow from long code blocks */
-  #content pre, #content code{max-width:100%;overflow:auto}
+  #content img{display:block;width:100%;height:auto;max-width:100%;border:0}
+  /* Typography */
+  #content h1,#content h2,#content h3,#content h4{color:#ffffff;margin-top:1.25rem}
+  #content p, #content li {color:#dbe9f5}
+  a{color:#58a6ff}
+  a:hover{text-decoration:underline}
+  blockquote{color:#9fb3c8;border-left:4px solid rgba(255,255,255,0.06);padding-left:1rem;margin:0.75rem 0}
+  /* Code and pre */
+  #content pre, #content code{background:#021019;color:#e6f0f6;border-radius:6px;padding:.25rem;max-width:100%;overflow:auto}
+  #content pre{padding:1rem}
+  /* Tables */
+  #content table{border-collapse:collapse;width:100%;margin:0.5rem 0}
+  #content th,#content td{border:1px solid rgba(255,255,255,0.06);padding:.4rem .6rem}
 </style>
 <div id="content"></div>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
