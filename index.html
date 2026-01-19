@@ -12,7 +12,9 @@ function makeAbsolute(url){
   return RAW_BASE + url.replace(/^\/+/, '');
 }
 
-fetch(RAW_BASE + 'qr-faq/README.md')
+const README_DIR = RAW_BASE + 'qr-faq/';
+
+fetch(README_DIR + 'README.md')
   .then(r => r.text())
   .then(t => {
     const html = marked.parse(t);
@@ -22,14 +24,14 @@ fetch(RAW_BASE + 'qr-faq/README.md')
     container.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src');
       if (src && !/^(https?:|\/\/|data:|mailto:)/.test(src)) {
-        img.src = RAW_BASE + src.replace(/^\/+/, '');
+        img.src = README_DIR + src.replace(/^\/+/, '');
       }
     });
 
     container.querySelectorAll('a').forEach(a => {
       const href = a.getAttribute('href');
       if (href && !/^(https?:|\/\/|mailto:|#)/.test(href)) {
-        a.href = RAW_BASE + href.replace(/^\/+/, '');
+        a.href = README_DIR + href.replace(/^\/+/, '');
       }
     });
   });
