@@ -1,4 +1,4 @@
-If you have reached this page, you probably scanned a QR code off my t-shirt
+This page is intended to answer various questions I get asked when wearing my t-shirt, and provide some general information about it.
 
 # General FAQ
 
@@ -7,8 +7,7 @@ If you have reached this page, you probably scanned a QR code off my t-shirt
   It took knowledge of computer programming, Computer Aided Design (CAD), 3D printing and electronics.
 
 - How long did it take?  
-  
-  + 300+ hours. Mostly the programming and CAD  
+  300+ hours. Mostly the programming and CAD  
     To rebuild it from scratch now that I have the code and CAD would probably take me 2-3 days
 
 - How much did it cost?  
