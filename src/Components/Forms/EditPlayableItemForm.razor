@@ -9,7 +9,7 @@
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem)> OnSave { get; set; }
-    [Parameter] public Func<LedMatrixOptionsConfig, Task<WearWare.Common.TaskResult>>? OnReprocessAsync { get; set; }
+    [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.TaskResult>>? OnReprocessAsync { get; set; }
     [Parameter] public string PageTitle { get; set; } = "Playlist";
 
     private Dictionary<string, int> playModeOptions = new()
@@ -113,7 +113,7 @@
     {
         if (OnReprocessAsync != null)
         {
-            var res = await OnReprocessAsync(opts);
+            var res = await OnReprocessAsync(opts, selectedRelativeBrightness);
             lastReprocessResult = res;
             if (res.ExitCode == 0)
             {

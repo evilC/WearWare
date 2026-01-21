@@ -16,8 +16,11 @@
   When you reconvert, will apply this as a divisor to selected brightness  
   Will require adding field to PlayableItem  
   May require library items to have JSON file
-  - ToDo: If user clicks cancel after changing relative brightness and reconverting, the incorrect value will be stored  
-    Disable cancel?
+  - ToDo
+    - If user clicks cancel after changing relative brightness and reconverting, the incorrect value will be stored  
+      Disable cancel?
+    - Add Current Brightness to playlist item readout  
+      Matrix Options could have been changed since last convert, so relative brightness does not give actual value
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
 - UI pages not responsive immediately after loading  
   Need some way to disable the page until it has fully loaded  

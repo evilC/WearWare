@@ -114,7 +114,7 @@
 			await editFormRef.UnlockScrollAsync();
 		
 	}
-    private async Task<WearWare.Common.TaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options)
+    private async Task<WearWare.Common.TaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options, int relativeBrightness)
     {
         if (editingIndex < 0)
         {
@@ -128,7 +128,7 @@
         try
         {
             var folder = System.IO.Path.Combine(WearWare.Config.PathConfig.QuickMediaPath, editingIndex.ToString());
-            return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, btn.Item.RelativeBrightness, options);
+            return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, relativeBrightness, options);
         }
         catch (Exception ex)
         {

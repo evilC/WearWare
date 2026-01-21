@@ -53,13 +53,13 @@
         PlaylistService.StateChanged -= OnStateChanged;
     }
 
-    private async Task<WearWare.Common.TaskResult> ReprocessPlaylistItemAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts)
+    private async Task<WearWare.Common.TaskResult> ReprocessPlaylistItemAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts, int relativeBrightness)
     {
         if (_playlist is null || editingIndex < 0)
         {
             return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected" };
         }
-        return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, _playlist.GetPlaylistItems()[editingIndex].RelativeBrightness, opts);
+        return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, relativeBrightness, opts);
     }
 
     private void OnActivePlaylistChanged(ChangeEventArgs e)
@@ -477,7 +477,7 @@
         ImageUrl="@($"/playlist-images/{_playlist?.Name}/{editingItem.SourceFileName}")"
         OnCancel="HideEditDialog"
         OnSave="OnEditPlayableItem"
-    OnReprocessAsync="ReprocessPlaylistItemAsync"
+        OnReprocessAsync="ReprocessPlaylistItemAsync"
         PageTitle="Playlist item" />
 }
 
