@@ -12,7 +12,7 @@
     <div class="card">
         <div class="card-header">
             <h2>@(!string.IsNullOrEmpty(Title) ? Title : $"Matrix Options for {Action}")</h2>
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <span>The checkbox at the start of each row controls whether the option shows on other pages (Import, Library etc)</span>
             }
@@ -20,13 +20,13 @@
 		<div class="card-body">
 				@* Processing/result overlay is rendered as a full-window overlay below so it covers the entire form *@
                <div class="mw-matrix-form-fields">
-    @if (ShowBrightness || ShowFieldSelectors)
+    @if (ShowBrightness || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Brightness)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="BrightnessEnabledChecked" />
             }
@@ -34,20 +34,25 @@
             <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Brightness" placeholder="@($"(Default: {_defaults.Brightness})")" />
         </div>
     }
-
+    @if (!OnGlobalOptionsForm)
+    {
+        // Helper fields to show current relative and calculated brightness
+        <div class="mw-matrix-form-row">
+            <label class="mw-matrix-label">Relative Brightness %</label>
+            <input type="number" class="form-control mw-matrix-input" value="@RelativeBrightness" disabled />
+        </div>
         <div class="mw-matrix-form-row">
             <label class="mw-matrix-label">Actual Brightness %</label>
             <input type="number" class="form-control mw-matrix-input" value="@ActualBrightness" disabled />
         </div>
-
-
-    @if (ShowChainLength || ShowFieldSelectors)
+    }
+    @if (ShowChainLength || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.ChainLength)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="ChainLengthEnabledChecked" />
             }
@@ -56,13 +61,13 @@
         </div>
     }
 
-    @if (ShowCols || ShowFieldSelectors)
+    @if (ShowCols || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Cols)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="ColsEnabledChecked" />
             }
@@ -71,10 +76,10 @@
         </div>
     }
 
-    @if (ShowDisableHardwarePulsing || ShowFieldSelectors)
+    @if (ShowDisableHardwarePulsing || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="DisableHardwarePulsingEnabledChecked" />
             }
@@ -83,10 +88,10 @@
         </div>
     }
 
-    @if (ShowGpioSlowdown || ShowFieldSelectors)
+    @if (ShowGpioSlowdown || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="GpioSlowdownEnabledChecked" />
             }
@@ -101,10 +106,10 @@
         </div>
     }
 
-    @if (ShowHardwareMapping || ShowFieldSelectors)
+    @if (ShowHardwareMapping || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="HardwareMappingEnabledChecked" />
             }
@@ -118,10 +123,10 @@
         </div>
     }
 
-    @if (ShowInverseColors || ShowFieldSelectors)
+    @if (ShowInverseColors || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="InverseColorsEnabledChecked" />
             }
@@ -130,10 +135,10 @@
         </div>
     }
 
-    @if (ShowLedRgbSequence || ShowFieldSelectors)
+    @if (ShowLedRgbSequence || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="LedRgbSequenceEnabledChecked" />
             }
@@ -149,13 +154,13 @@
         </div>
     }
 
-    @if (ShowLimitRefreshRateHz || ShowFieldSelectors)
+    @if (ShowLimitRefreshRateHz || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.LimitRefreshRateHz)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="LimitRefreshRateHzEnabledChecked" />
             }
@@ -164,10 +169,10 @@
         </div>
     }
 
-    @if (ShowMultiplexing || ShowFieldSelectors)
+    @if (ShowMultiplexing || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="MultiplexingEnabledChecked" />
             }
@@ -189,10 +194,10 @@
         </div>
     }
 
-    @if (ShowPanelType || ShowFieldSelectors)
+    @if (ShowPanelType || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="PanelTypeEnabledChecked" />
             }
@@ -205,13 +210,13 @@
         </div>
     }
 
-    @if (ShowParallel || ShowFieldSelectors)
+    @if (ShowParallel || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Parallel)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="ParallelEnabledChecked" />
             }
@@ -220,10 +225,10 @@
         </div>
     }
 
-    @if (ShowPixelMapperConfig || ShowFieldSelectors)
+    @if (ShowPixelMapperConfig || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="PixelMapperConfigEnabledChecked" />
             }
@@ -232,10 +237,10 @@
         </div>
     }
 
-    @if (ShowPwmBits || ShowFieldSelectors)
+    @if (ShowPwmBits || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="PwmBitsEnabledChecked" />
             }
@@ -244,10 +249,10 @@
         </div>
     }
 
-    @if (ShowPwmDitherBits || ShowFieldSelectors)
+    @if (ShowPwmDitherBits || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="PwmDitherBitsEnabledChecked" />
             }
@@ -260,13 +265,13 @@
         </div>
     }
 
-    @if (ShowPwmLsbNanoseconds || ShowFieldSelectors)
+    @if (ShowPwmLsbNanoseconds || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.PwmLsbNanoseconds)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="PwmLsbNanosecondsEnabledChecked" />
             }
@@ -275,10 +280,10 @@
         </div>
     }
 
-    @if (ShowRowAddressType || ShowFieldSelectors)
+    @if (ShowRowAddressType || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="RowAddressTypeEnabledChecked" />
             }
@@ -294,13 +299,13 @@
         </div>
     }
 
-    @if (ShowRows || ShowFieldSelectors)
+    @if (ShowRows || OnGlobalOptionsForm)
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Rows)" />
         </div>
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="RowsEnabledChecked" />
             }
@@ -309,10 +314,10 @@
         </div>
     }
 
-    @if (ShowScanMode || ShowFieldSelectors)
+    @if (ShowScanMode || OnGlobalOptionsForm)
     {
         <div class="mw-matrix-form-row">
-            @if (ShowFieldSelectors)
+            @if (OnGlobalOptionsForm)
             {
                 <InputCheckbox class="me-2" @bind-Value="ScanModeEnabledChecked" />
             }
@@ -390,9 +395,11 @@
     [Parameter]
     public int RelativeBrightness { get; set; }
 
-    // Controls whether all fields are shown and checkboxes are rendered (for options page)
+    // True if we are on the Global version of the Matrix Options form
+    // Only on this page are all fields shown, and checkboxes rendered to enable/disable each option
+    // Also when on the Global form, the Relative and Actual Brightness fields are not shown
     [Parameter]
-    public bool ShowFieldSelectors { get; set; } = false;
+    public bool OnGlobalOptionsForm { get; set; } = false;
 
     // Defaults from the underlying native options - used to show cue text when
     // a nullable option is left empty.
@@ -401,12 +408,12 @@
     [Parameter]
     public EventCallback<LedMatrixOptionsConfig> OnValidSubmit { get; set; }
 
-    // Optional async submit delegate that returns an operation `TaskResult` to display
+    // Optional async submit delegate that returns an operation `ReConvertTaskResult` to display
     [Parameter]
-    public Func<LedMatrixOptionsConfig, Task<TaskResult>>? OnValidSubmitAsync { get; set; }
+    public Func<LedMatrixOptionsConfig, Task<ReConvertTaskResult>>? OnValidSubmitAsync { get; set; }
 
     private bool importing = false;
-    private TaskResult? operationResult;
+    private ReConvertTaskResult? operationResult;
 
     private EditContext? _editContext;
     private bool _hasValidationErrors = false;

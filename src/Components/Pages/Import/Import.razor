@@ -112,10 +112,10 @@ else
         return Task.CompletedTask;
     }
 
-    private async Task<TaskResult> OnOptionsConfirmedAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig editedOptions)
+    private async Task<ReConvertTaskResult> OnOptionsConfirmedAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig editedOptions)
     {
         showOptionsForm = false;
-        TaskResult result = new TaskResult { ExitCode = -1, Error = "", Message = "Unknown" };
+        ReConvertTaskResult result = new ReConvertTaskResult { ExitCode = -1, Error = "", Message = "Unknown", ActualBrightness = 0 };
         if (pendingNewFileName != null && selectedFileName != null)
         {
             result = await ImportService.ImportLibraryItem(selectedFileName, pendingNewFileName, pendingRelativeBrightness, editedOptions);

@@ -51,6 +51,7 @@ namespace WearWare.Services.Library
                     // Optionally log or handle errors
                     continue;
                 }
+                // Add dummy PlayableItem for previewing
                 if (libraryItem != null){
                     _items.Add(libraryItem.Name, libraryItem);
                     _previewItems.Add(libraryItem.Name, new PlayableItem(
@@ -59,7 +60,9 @@ namespace WearWare.Services.Library
                         mediaType: libraryItem.MediaType,
                         sourceFileName: libraryItem.SourceFileName,
                         playMode: PlayMode.FOREVER,
-                        playModeValue: 1)
+                        playModeValue: 1,
+                        relativeBrightness: libraryItem.RelativeBrightness,
+                        currentBrightness: libraryItem.CurrentBrightness)
                     );
                 }
             }

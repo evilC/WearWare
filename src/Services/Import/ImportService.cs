@@ -73,11 +73,12 @@ namespace WearWare.Services.Import
             StateChanged?.Invoke();
         }
 
-        public async Task<TaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<ReConvertTaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
-                return new TaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Import failed - unknown media type." };
+                int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
+                return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Import failed - unknown media type.", ActualBrightness = actual };
             }
             var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, oldFileName, PathConfig.LibraryPath, newFileNameNoExt, relativeBrightness, options);
             if (result.ExitCode != 0)
@@ -97,9 +98,14 @@ namespace WearWare.Services.Import
             }
             catch (Exception ex)
             {
-                return new TaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to copy original file." };
+                int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
+                return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to copy original file.", ActualBrightness = actual };
             }
-            var item = new LibraryItem(newFileNameNoExt, mediaType.Value, Path.GetFileName(destPath), relativeBrightness);
+            var item = new LibraryItem(newFileNameNoExt,
+                mediaType.Value, 
+                Path.GetFileName(destPath), 
+                relativeBrightness, 
+                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness));
             // Serialize item to JSON and write to libraryPath as name.json
             try
             {
@@ -118,10 +124,12 @@ namespace WearWare.Services.Import
             }
             catch (Exception ex)
             {
-                return new TaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to write JSON metadata." };
+                int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
+                return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to write JSON metadata.", ActualBrightness = actual };
             }
-            
-            return new TaskResult { ExitCode = 0, Error = "", Message = "Import successful." };
+
+            int finalActual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
+            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Import successful.", ActualBrightness = finalActual };
         }
     }
 }

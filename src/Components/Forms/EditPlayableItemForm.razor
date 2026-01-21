@@ -1,5 +1,6 @@
 @inject IJSRuntime JS
 @inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
+@using WearWare.Common
 @using WearWare.Common.Media
 @using WearWare.Services.MatrixConfig
 
@@ -9,7 +10,7 @@
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem)> OnSave { get; set; }
-    [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.TaskResult>>? OnReprocessAsync { get; set; }
+    [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
     [Parameter] public string PageTitle { get; set; } = "Playlist";
 
     private Dictionary<string, int> playModeOptions = new()
@@ -21,12 +22,26 @@
 
     private int selectedPlayMode;
     private int selectedPlayModeValue;
+    // The currently selected relative brightness in the form
     private int selectedRelativeBrightness;
-    private int originalRelativeBrightness;
-    private bool brightnessModified = false;
+    // True if relative brightness has been modified since load/save...
+    // ... and we have not reprocessed yet
+    private bool saveDisabled = false;
+    // Holds the adjusted brightness based on current matrix options and selected relative brightness
+    // Also, if we used ReConvert, this is updated to reflect the actual brightness used
+    private int adjustedBrightness;
+    // Holds the current brightness that the stream was last converted with
+    // If the user has reconverted with different brightness, this will differ from EditingItem.CurrentBrightness
+    // In which case, disable the Cancel button to prevent loss of current brightness change
+    private int streamCurrentBrightness;
+    // True if the stream's brightness has been changed since load/save
+    // Either changing relative brightness or reprocessing may change actual brightness
+    // If true, then Cancel is disabled to prevent loss of actual brightness change
+    private bool cancelDisabled = false;
+
     private bool showOptionsForm = false;
     private LedMatrixOptionsConfig? modalOptions;
-    private WearWare.Common.TaskResult? lastReprocessResult;
+    private WearWare.Common.ReConvertTaskResult? lastReprocessResult;
 
     protected override void OnInitialized()
     {
@@ -35,8 +50,9 @@
             selectedPlayMode = (int)EditingItem.PlayMode;
             selectedPlayModeValue = EditingItem.PlayModeValue;
             selectedRelativeBrightness = EditingItem.RelativeBrightness;
-            originalRelativeBrightness = selectedRelativeBrightness;
-            brightnessModified = false;
+            streamCurrentBrightness = EditingItem.CurrentBrightness;
+            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(MatrixConfigService.CloneOptions().Brightness ?? 100, selectedRelativeBrightness);
+            saveDisabled = false;
         }
     }
 
@@ -74,6 +90,7 @@
             selectedPlayModeValue = v;
     }
 
+    // Setter is called when the Relative Brightness input is changed
     public int SelectedRelativeBrightness
     {
         get => selectedRelativeBrightness;
@@ -82,9 +99,44 @@
             if (selectedRelativeBrightness != value)
             {
                 selectedRelativeBrightness = value;
-                brightnessModified = (selectedRelativeBrightness != originalRelativeBrightness);
+                // Recalculate actual brightness using current matrix options
+                var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
+                adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, selectedRelativeBrightness);
+                SetSaveCancelButtonStates();
+                InvokeAsync(StateHasChanged);
             }
         }
+    }
+
+    // Called once ReProcess has completed
+    private async Task<WearWare.Common.ReConvertTaskResult> HandleReprocessAsync(LedMatrixOptionsConfig opts)
+    {
+        if (OnReprocessAsync != null)
+        {
+            var res = await OnReprocessAsync(opts, selectedRelativeBrightness);
+            lastReprocessResult = res;
+            if (res.ExitCode == 0)
+            {
+                streamCurrentBrightness = res.ActualBrightness;
+                adjustedBrightness = res.ActualBrightness;
+                SetSaveCancelButtonStates();
+            }
+            return res;
+        }
+        var noop = new WearWare.Common.ReConvertTaskResult { ExitCode = 0, Error = "", Message = "No reprocess handler provided.", ActualBrightness = (EditingItem?.CurrentBrightness ?? 0) };
+        lastReprocessResult = noop;
+        return noop;
+    }
+
+    private void SetSaveCancelButtonStates()
+    {
+        // Cancel is disabled if stream brightness has been modified since load/save...
+        cancelDisabled = streamCurrentBrightness != EditingItem!.CurrentBrightness;
+        // Save is disabled if relative brightness has been modified since load/save, and we have not reprocessed yet...
+        // ... ie streamCurrentBrightness is not equal to adjustedBrightness...
+        // ... AND streamCurrentBrightness is not equal to actualBrightness (ie this is detecting if we have reprocessed yet)
+        saveDisabled = ((selectedRelativeBrightness != EditingItem!.CurrentBrightness)
+            && (streamCurrentBrightness != adjustedBrightness));
     }
 
     private void SaveEdit()
@@ -94,9 +146,7 @@
             EditingItem.PlayMode = (PlayMode)selectedPlayMode;
             EditingItem.PlayModeValue = selectedPlayModeValue;
             EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
-            // update original and clear modified flag after save
-            originalRelativeBrightness = EditingItem.RelativeBrightness;
-            brightnessModified = false;
+            EditingItem.CurrentBrightness = streamCurrentBrightness;
             OnSave.InvokeAsync((EditingIndex, EditingItem));
         }
     }
@@ -107,26 +157,6 @@
         // clear any previous result and show the options form
         lastReprocessResult = null;
         showOptionsForm = true;
-    }
-
-    private async Task<WearWare.Common.TaskResult> HandleReprocessAsync(LedMatrixOptionsConfig opts)
-    {
-        if (OnReprocessAsync != null)
-        {
-            var res = await OnReprocessAsync(opts, selectedRelativeBrightness);
-            lastReprocessResult = res;
-            if (res.ExitCode == 0)
-            {
-                // ToDo: If user clicks Cancel at this point, the brightness change will be lost. Need to handle that case.
-                // Disable cancel?
-                originalRelativeBrightness = selectedRelativeBrightness;
-                brightnessModified = false;
-            }
-            return res;
-        }
-        var noop = new WearWare.Common.TaskResult { ExitCode = 0, Error = "", Message = "No reprocess handler provided." };
-        lastReprocessResult = noop;
-        return noop;
     }
 
     private Task OnOptionsOk()
@@ -161,11 +191,6 @@
                     <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.FOREVER)" @onchange="OnSelectPlayModeValue" />
                 </div>
             </div>
-            <div class="add-dialog-row" style="margin-top:1rem;">
-                <label class="add-dialog-label">Relative Brightness (%)
-                    <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
-                </label>
-            </div>
             <div class="add-dialog__list">
                 <div style="display:flex; align-items:center; gap:1rem;">
                     <img class="add-dialog__item-image" src="@ImageUrl" alt="@EditingItem?.Name" />
@@ -175,10 +200,25 @@
                     </div>
                 </div>
             </div>
+            <div class="add-dialog-row" style="margin-top:1rem;">
+                <label class="add-dialog-label">Stream Current Brightness (%)
+                    <input type="number" disabled class="add-dialog-number" @bind="streamCurrentBrightness"/>
+                </label>
+            </div>
+            <div class="add-dialog-row" style="margin-top:1rem;">
+                <label class="add-dialog-label">Relative Brightness (%)
+                    <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
+                </label>
+            </div>
+            <div class="add-dialog-row" style="margin-top:1rem;">
+                <label class="add-dialog-label">Adjusted Brightness (%)
+                    <input type="number" disabled class="add-dialog-number" @bind="adjustedBrightness" @bind:event="oninput" min="1" max="100" />
+                </label>
+            </div>
             <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
                 <div style="display:flex; gap:0.5rem;">
-                    <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
-                    <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit" disabled="@brightnessModified">Save</button>
+                    <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)" disabled="@cancelDisabled">Cancel</button>
+                    <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit" disabled="@saveDisabled">Save</button>
                     <button type="button" class="add-dialog__cancel-button" @onclick="ShowReprocess">ReConvert</button>
                 </div>
             </div>

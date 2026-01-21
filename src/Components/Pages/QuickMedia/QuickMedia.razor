@@ -67,9 +67,9 @@
         StateHasChanged();
     }
 
-    async void OnAddDialogAdd((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness) args)
+    async void OnAddDialogAdd((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
-        QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness);
+        QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
         showAddDialog = false;
         StateHasChanged();
         await Task.Yield();
@@ -94,7 +94,7 @@
     public async Task OnEditQuickMediaButton((int editingIndex, PlayableItem item) args)
     {
         if (editingButton is null) return;
-        QuickMediaService.EditQuickMediaButton(editingButton, args.item.PlayMode, args.item.PlayModeValue);
+        QuickMediaService.EditQuickMediaButton(editingButton, args.item.PlayMode, args.item.PlayModeValue, args.item.RelativeBrightness, args.item.CurrentBrightness);
         showEditDialog = false;
         editingItem = null;
         editingButton = null;
@@ -114,16 +114,16 @@
 			await editFormRef.UnlockScrollAsync();
 		
 	}
-    private async Task<WearWare.Common.TaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options, int relativeBrightness)
+    private async Task<WearWare.Common.ReConvertTaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options, int relativeBrightness)
     {
         if (editingIndex < 0)
         {
-            return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No quickmedia selected" };
+            return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No quickmedia selected", ActualBrightness = 0 };
         }
         var btn = quickButtons.ElementAtOrDefault(editingIndex);
         if (btn?.Item is null)
         {
-            return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "Selected quickmedia button has no item" };
+            return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "Selected quickmedia button has no item", ActualBrightness = 0 };
         }
         try
         {
@@ -132,7 +132,7 @@
         }
         catch (Exception ex)
         {
-            return new WearWare.Common.TaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed" };
+            return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed", ActualBrightness = 0 };
         }
     }
     // ================================================= Delete Item ==================================================

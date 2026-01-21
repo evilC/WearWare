@@ -10,8 +10,15 @@ namespace WearWare.Common.Media
         public string ParentFolder { get; init; }
         public bool Enabled { get; set; } = true;
 
-        public PlayableItem(string name, string parentFolder, MediaType mediaType, string sourceFileName, PlayMode playMode, int playModeValue, int relativeBrightness = 100)
-            : base(name, mediaType, sourceFileName, relativeBrightness)
+        public PlayableItem(string name, 
+            string parentFolder, 
+            MediaType mediaType, 
+            string sourceFileName, 
+            PlayMode playMode, 
+            int playModeValue, 
+            int relativeBrightness, 
+            int currentBrightness)
+            : base(name, mediaType, sourceFileName, relativeBrightness, currentBrightness)
         {
             ParentFolder = parentFolder;
             PlayMode = playMode;

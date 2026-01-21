@@ -26,11 +26,11 @@ namespace WearWare.Services.StreamConverter
         }
 
         // Example method: convert a file to a stream format
-        public async Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<ReConvertTaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
             if (mediaType == null){
-                return new TaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
+                return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
             }
             var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
             var inputPath = Path.Combine(sourcePath, odldFileName);
@@ -41,6 +41,7 @@ namespace WearWare.Services.StreamConverter
             var tmpStreamPath = Path.Combine(destPath, tmpStreamFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
             var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
+            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{tmpStreamPath}\"";
             _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
             var psi = new ProcessStartInfo
@@ -55,7 +56,7 @@ namespace WearWare.Services.StreamConverter
 
             using var process = Process.Start(psi);
             if (process == null)
-                return new TaskResult { ExitCode = -1, Error = "Failed to start led-image-viewer.", Message = "Failed to start led-image-viewer." };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start led-image-viewer.", Message = "Failed to start led-image-viewer.", ActualBrightness = actualBrightness };
 
             string output = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
@@ -77,15 +78,15 @@ namespace WearWare.Services.StreamConverter
                 }
                 catch (Exception ex)
                 {
-                    return new TaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "Stream conversion succeeded but failed to move temp file into place." };
+                    return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "Stream conversion succeeded but failed to move temp file into place.", ActualBrightness = actualBrightness };
                 }
-                return new TaskResult { ExitCode = exitCode, Error = error, Message = "Stream conversion successful." };
+                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "Stream conversion successful.", ActualBrightness = actualBrightness };
             }
             else
             {
                 // Clean up temp file on failure
                 try { if (File.Exists(tmpStreamPath)) File.Delete(tmpStreamPath); } catch {}
-                return new TaskResult { ExitCode = exitCode, Error = error, Message = $"Stream conversion failed (exit code {exitCode})" };
+                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = $"Stream conversion failed (exit code {exitCode})", ActualBrightness = actualBrightness };
             }
         }
     }

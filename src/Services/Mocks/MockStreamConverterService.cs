@@ -17,11 +17,11 @@ namespace WearWare.Services.Mocks
             _logger = logger;
         }
 
-        public async Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<ReConvertTaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
             if (mediaType == null){
-                return new TaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
+                return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
             }
             var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
             var inputPath = Path.Combine(sourcePath, odldFileName);
@@ -29,12 +29,13 @@ namespace WearWare.Services.Mocks
             var streamPath = Path.Combine(destPath, streamFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
             var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
+            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{streamPath}\"";
             _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
 
             File.Create(Path.Combine(destPath, $"{newFileNameNoExt}.stream")).Dispose();
             await Task.Delay(1000); // Simulate some work
-            return new TaskResult { ExitCode = 0, Error = "", Message = "Mock conversion successful." };
+            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Mock conversion successful.", ActualBrightness = actualBrightness };
         }
     }
 }

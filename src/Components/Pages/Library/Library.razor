@@ -92,9 +92,9 @@ else
         return Task.CompletedTask;
     }
 
-    private async Task<WearWare.Common.TaskResult> OnLibraryReconvertAsync(LedMatrixOptionsConfig options)
+    private async Task<ReConvertTaskResult> OnLibraryReconvertAsync(LedMatrixOptionsConfig options)
     {
-        if (editingItem is null) return new TaskResult { ExitCode = -1, Error = "Invalid", Message = "No item selected" };
+        if (editingItem is null) return new ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No item selected", ActualBrightness = 0 };
         try
         {
             var folder = PathConfig.LibraryPath;
@@ -102,7 +102,7 @@ else
         }
         catch (Exception ex)
         {
-            return new TaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed" };
+            return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed", ActualBrightness = 0 };
         }
     }
 }

@@ -53,11 +53,11 @@
         PlaylistService.StateChanged -= OnStateChanged;
     }
 
-    private async Task<WearWare.Common.TaskResult> ReprocessPlaylistItemAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts, int relativeBrightness)
+    private async Task<WearWare.Common.ReConvertTaskResult> ReprocessPlaylistItemAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts, int relativeBrightness)
     {
         if (_playlist is null || editingIndex < 0)
         {
-            return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected" };
+            return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected", ActualBrightness = 0 };
         }
         return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, relativeBrightness, opts);
     }
@@ -123,10 +123,10 @@
     /// Adds the selected LibraryItem to the playlist at the specified index
     /// </summary>
     /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue, relativeBrightness)
-    async void OnAddPlayableItem((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness) args)
+    async void OnAddPlayableItem((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
         if (_playlist is null) return;
-        PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness);
+        PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
         _items = _playlist?.GetPlaylistItems();
         showAddDialog = false;
         StateHasChanged();
@@ -170,7 +170,7 @@
         if (_playlist is null) return;
         // Update the item in the playlist
         _items![args.editingIndex] = args.updatedItem;
-        PlaylistService.PlaylistItemUpdated(_playlist, args.editingIndex);
+        PlaylistService.EditPlaylistItem(_playlist, args.editingIndex);
         showEditDialog = false;
         editingItem = null;
         StateHasChanged();
@@ -235,7 +235,7 @@
         if (_playlist is null)
             return;
         item.Enabled = newState;
-        PlaylistService.PlaylistItemUpdated(_playlist, itemIndex);
+        PlaylistService.EditPlaylistItem(_playlist, itemIndex);
         StateHasChanged();
     }
 

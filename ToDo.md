@@ -11,16 +11,8 @@
   - A bunch of stuff in here should be moved to PlaylistItems
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
-- No Matrix options on Add playlist item
-- Relative Brightness
-  When you reconvert, will apply this as a divisor to selected brightness  
-  Will require adding field to PlayableItem  
-  May require library items to have JSON file
-  - ToDo
-    - If user clicks cancel after changing relative brightness and reconverting, the incorrect value will be stored  
-      Disable cancel?
-    - Add Current Brightness to playlist item readout  
-      Matrix Options could have been changed since last convert, so relative brightness does not give actual value
+- No reprocess is done on Add of Playlist or QuickMedia items  
+  Therefore, setting Relative Brightness here does nothing
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
 - UI pages not responsive immediately after loading  
   Need some way to disable the page until it has fully loaded  

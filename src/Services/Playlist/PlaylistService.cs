@@ -190,7 +190,13 @@ namespace WearWare.Services.Playlist
         /// <param name="libraryItem"></param> The library item to add
         /// <param name="playMode"></param> The play mode for the item
         /// <param name="playModeValue"></param> The play mode value for the item
-        public void AddPlaylistItem(PlaylistItems playlist, int insertIndex, LibraryItem libraryItem, PlayMode playMode, int playModeValue, int relativeBrightness)
+        public void AddPlaylistItem(PlaylistItems playlist,
+            int insertIndex,
+            LibraryItem libraryItem,
+            PlayMode playMode,
+            int playModeValue,
+            int relativeBrightness,
+            int currentBrightness)
         {
             var restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
@@ -207,7 +213,9 @@ namespace WearWare.Services.Playlist
                 sourceFileName: libraryItem.SourceFileName,
                 playMode: playMode,
                 playModeValue: playModeValue,
-                relativeBrightness: relativeBrightness);
+                relativeBrightness: relativeBrightness,
+                currentBrightness: currentBrightness
+                );
             
             // Copy file from library to playlist folder
             var destPath = item.GetSourceFilePath();
@@ -225,6 +233,49 @@ namespace WearWare.Services.Playlist
             {
                 _mediaController.Start();
             }
+        }
+
+        /// <summary>
+        /// Updates a playlist item that has been edited
+        /// </summary>
+        /// <param name="playlist"></param> The playlist containing the item that was edited
+        /// <param name="itemIndex"></param> The index of the item that was edited
+        /// <returns>True if the item was updated, false otherwise</returns>
+        // ToDo: Do we need to notify MediaControllerService of the update?
+        // ToDo: If item enabled state changed, we may need to start/stop MediaControllerService
+        public bool EditPlaylistItem(PlaylistItems playlist, int itemIndex)
+        {
+            bool restartMediaController = false;
+            if (PlaylistIsPlaying(playlist))
+            {
+                // Currently editing playlist and media controller is running, need to restart after removing item
+                _mediaController.Stop();
+                restartMediaController = true;
+            }
+            var item = playlist.GetPlaylistItems()[itemIndex];
+            if (item == null)
+            {
+                // ToDo: log error
+                return false;
+            }
+            if (!item.Enabled)
+            {
+                // If item is now disabled, and it is the current item, we need to move to the next item
+                if (playlist.GetCurrentItem() == item)
+                {
+                    if (playlist.MoveNext() == null)
+                    {
+                        restartMediaController = false; // No more items to play
+                    }
+                }
+            }
+            playlist.Serialize();
+            // Restart media controller if there are still items to play
+            if (restartMediaController && playlist.GetCurrentItem() != null)
+            {
+                _mediaController.Start();
+            }
+            return true;
         }
 
         // ToDo: Should the bulk of this not be in PlaylistItems?
@@ -286,7 +337,7 @@ namespace WearWare.Services.Playlist
         /// Re-processes the specified playlist item using the provided matrix options.
         /// Overwrites the existing .stream in the playlist folder.
         /// </summary>
-        public async Task<TaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<ReConvertTaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var item = playlist.GetPlaylistItems()[itemIndex];
             var folder = playlist.GetPlaylistPath();
@@ -312,49 +363,6 @@ namespace WearWare.Services.Playlist
                 //     _mediaController.Start();
                 // }
             }
-        }
-
-        /// <summary>
-        /// Updates a playlist item that has been edited
-        /// </summary>
-        /// <param name="playlist"></param> The playlist containing the item that was edited
-        /// <param name="itemIndex"></param> The index of the item that was edited
-        /// <returns>True if the item was updated, false otherwise</returns>
-        // ToDo: Do we need to notify MediaControllerService of the update?
-        // ToDo: If item enabled state changed, we may need to start/stop MediaControllerService
-        public bool PlaylistItemUpdated(PlaylistItems playlist, int itemIndex)
-        {
-            bool restartMediaController = false;
-            if (PlaylistIsPlaying(playlist))
-            {
-                // Currently editing playlist and media controller is running, need to restart after removing item
-                _mediaController.Stop();
-                restartMediaController = true;
-            }
-            var item = playlist.GetPlaylistItems()[itemIndex];
-            if (item == null)
-            {
-                // ToDo: log error
-                return false;
-            }
-            if (!item.Enabled)
-            {
-                // If item is now disabled, and it is the current item, we need to move to the next item
-                if (playlist.GetCurrentItem() == item)
-                {
-                    if (playlist.MoveNext() == null)
-                    {
-                        restartMediaController = false; // No more items to play
-                    }
-                }
-            }
-            playlist.Serialize();
-            // Restart media controller if there are still items to play
-            if (restartMediaController && playlist.GetCurrentItem() != null)
-            {
-                _mediaController.Start();
-            }
-            return true;
         }
 
         /// <summary>

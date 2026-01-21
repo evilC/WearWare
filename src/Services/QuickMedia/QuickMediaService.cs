@@ -1,6 +1,8 @@
+using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.Library;
+using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.QuickMedia;
 using WearWare.Utils;
@@ -18,7 +20,9 @@ public class QuickMediaService
     private readonly string _logTag = "[QUICKMEDIA]";
     private static readonly string _configFileName = "quickmedia.json";
 
-    public QuickMediaService(ILogger<QuickMediaService> logger, MediaControllerService mediaController, IQuickMediaButtonFactory buttonFactory)
+    public QuickMediaService(ILogger<QuickMediaService> logger,
+        MediaControllerService mediaController, 
+        IQuickMediaButtonFactory buttonFactory)
     {
         _logger = logger;
         _buttons = new IQuickMediaButton[_maxButtons];
@@ -71,7 +75,7 @@ public class QuickMediaService
         return _buttons;
     }
 
-    public bool AddQuickMediaButton(int buttonNumber, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness)
+    public bool AddQuickMediaButton(int buttonNumber, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
     {
         if (buttonNumber < 0 || buttonNumber >= _maxButtons) return false;
         if (_buttons[buttonNumber] != null) return false;
@@ -83,7 +87,8 @@ public class QuickMediaService
             libItem.SourceFileName,
             playMode,
             playModeValue,
-            relativeBrightness);
+            relativeBrightness,
+            currentBrightness);
             try
         {
             if (!Directory.Exists(GetQuickMediaPath(buttonNumber)))
@@ -109,7 +114,7 @@ public class QuickMediaService
         }
     }
 
-    public bool EditQuickMediaButton(IQuickMediaButton button, PlayMode playMode, int playModeValue)
+    public bool EditQuickMediaButton(IQuickMediaButton button, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
     {
         if (button == null) return false;
         var restartMediaController = false;
@@ -120,6 +125,8 @@ public class QuickMediaService
         }
         button.Item.PlayMode = playMode;
         button.Item.PlayModeValue = playModeValue;
+        button.Item.RelativeBrightness = relativeBrightness;
+        button.Item.CurrentBrightness = currentBrightness;
         SerializeQuickMediaButton(button);
         if (restartMediaController)
         {
