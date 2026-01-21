@@ -113,8 +113,6 @@ namespace WearWare.Services.MatrixConfig
         public string ToArgsString(int relativeBrightness)
         {
             var args = new List<string>();
-            // Add args in alphabetical order by property name
-            //if (Brightness.HasValue) args.Add($"--led-brightness={Brightness}");
             if (Brightness.HasValue || relativeBrightness != 100)
                 args.Add($"--led-brightness={BrightnessCalculator.CalculateAbsoluteBrightness(Brightness ?? 100, relativeBrightness)}");
             if (ChainLength.HasValue) args.Add($"--led-chain={ChainLength}");

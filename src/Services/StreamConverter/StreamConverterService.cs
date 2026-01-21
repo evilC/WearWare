@@ -41,7 +41,6 @@ namespace WearWare.Services.StreamConverter
             var tmpStreamPath = Path.Combine(destPath, tmpStreamFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
             var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
-            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{tmpStreamPath}\"";
             _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
             var psi = new ProcessStartInfo
@@ -54,6 +53,7 @@ namespace WearWare.Services.StreamConverter
                 CreateNoWindow = true
             };
 
+            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             using var process = Process.Start(psi);
             if (process == null)
                 return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start led-image-viewer.", Message = "Failed to start led-image-viewer.", ActualBrightness = actualBrightness };
