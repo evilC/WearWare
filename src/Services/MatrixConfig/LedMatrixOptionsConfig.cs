@@ -2,6 +2,7 @@ using System.Collections.Generic;
 // validation removed per user request
 using System.ComponentModel.DataAnnotations;
 using RPiRgbLEDMatrix;
+using WearWare.Common;
 
 namespace WearWare.Services.MatrixConfig
 {
@@ -109,12 +110,13 @@ namespace WearWare.Services.MatrixConfig
         /// Converts the current options to a command-line argument string for led-image-viewer.
         /// </summary>
         /// <returns>Command-line argument string.</returns>
-        public string ToArgsString()
+        public string ToArgsString(int relativeBrightness)
         {
             var args = new List<string>();
             // Add args in alphabetical order by property name
-            if (Brightness.HasValue) args.Add($"--led-brightness={Brightness}");
-            //args.Add($"--led-brightness={BrightnessCalculator.CalculateAbsoluteBrightness(Brightness ?? 100, relativeBrightness)}");
+            //if (Brightness.HasValue) args.Add($"--led-brightness={Brightness}");
+            if (Brightness.HasValue || relativeBrightness != 100)
+                args.Add($"--led-brightness={BrightnessCalculator.CalculateAbsoluteBrightness(Brightness ?? 100, relativeBrightness)}");
             if (ChainLength.HasValue) args.Add($"--led-chain={ChainLength}");
             if (Cols.HasValue) args.Add($"--led-cols={Cols}");
             if (DisableHardwarePulsing == true) args.Add("--led-no-hardware-pulse");

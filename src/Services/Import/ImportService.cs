@@ -79,7 +79,7 @@ namespace WearWare.Services.Import
             if (mediaType == null){
                 return new TaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Import failed - unknown media type." };
             }
-            var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, oldFileName, PathConfig.LibraryPath, newFileNameNoExt, options);
+            var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, oldFileName, PathConfig.LibraryPath, newFileNameNoExt, relativeBrightness, options);
             if (result.ExitCode != 0)
             {
                 return result;

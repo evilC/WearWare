@@ -8,10 +8,13 @@ namespace WearWare.Services.StreamConverter
 {
     public class StreamConverterService : IStreamConverterService
     {
-        private string _matrixOptions = "";
+        // private string _matrixOptions = "";
         private readonly MatrixConfigService _matrixConfigService;
-        public StreamConverterService(MatrixConfigService matrixConfigService)
+        private readonly ILogger<StreamConverterService> _logger;
+        private readonly string _logTag = "[STREAMCONVERTER]";
+        public StreamConverterService(MatrixConfigService matrixConfigService, ILogger<StreamConverterService> logger)
         {
+            _logger = logger;
             _matrixConfigService = matrixConfigService;
             matrixConfigService.OptionsChanged += OnMatrixOptionsChanged;
             OnMatrixOptionsChanged();
@@ -19,11 +22,11 @@ namespace WearWare.Services.StreamConverter
 
         private void OnMatrixOptionsChanged()
         {
-            _matrixOptions = _matrixConfigService.GetArgsString();
+            // _matrixOptions = _matrixConfigService.GetArgsString();
         }
 
         // Example method: convert a file to a stream format
-        public async Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, LedMatrixOptionsConfig? options = null)
+        public async Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
             if (mediaType == null){
@@ -36,8 +39,10 @@ namespace WearWare.Services.StreamConverter
             // Write to a temporary file first, then atomically move into place to avoid read/write races
             var tmpStreamFile = $"{newFileNameNoExt}.stream.tmp";
             var tmpStreamPath = Path.Combine(destPath, tmpStreamFile);
-            var matrixArgs = options != null ? options.ToArgsString() : _matrixOptions;
+            var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
+            var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
             var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{tmpStreamPath}\"";
+            _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
             var psi = new ProcessStartInfo
             {
                 FileName = "bash",

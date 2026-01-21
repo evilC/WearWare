@@ -98,7 +98,7 @@ else
         try
         {
             var folder = PathConfig.LibraryPath;
-            return await StreamConverterService.ConvertToStream(folder, editingItem.SourceFileName, folder, editingItem.Name, options);
+            return await StreamConverterService.ConvertToStream(folder, editingItem.SourceFileName, folder, editingItem.Name, editingItem.RelativeBrightness, options);
         }
         catch (Exception ex)
         {

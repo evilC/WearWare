@@ -443,7 +443,7 @@
 
     private void UpdateArgsPreview()
     {
-        ArgsPreview = Options?.ToArgsString() ?? string.Empty;
+        ArgsPreview = Options?.ToArgsString(RelativeBrightness) ?? string.Empty;
         InvokeAsync(StateHasChanged);
     }
 

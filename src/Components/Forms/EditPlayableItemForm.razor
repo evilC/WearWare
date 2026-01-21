@@ -117,7 +117,8 @@
             lastReprocessResult = res;
             if (res.ExitCode == 0)
             {
-                // Reconvert succeeded: consider modified brightness accepted
+                // ToDo: If user clicks Cancel at this point, the brightness change will be lost. Need to handle that case.
+                // Disable cancel?
                 originalRelativeBrightness = selectedRelativeBrightness;
                 brightnessModified = false;
             }

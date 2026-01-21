@@ -1,4 +1,3 @@
-using Iot.Device.ExplorerHat;
 using RPiRgbLEDMatrix;
 using WearWare.Config;
 using WearWare.Utils;
@@ -35,11 +34,6 @@ namespace WearWare.Services.MatrixConfig
         public LedMatrixOptionsConfig CloneOptions()
         {
             return _options.Clone();
-        }
-
-        internal string GetArgsString()
-        {
-            return _options.ToArgsString();
         }
 
         internal RGBLedMatrixOptions GetRGBLedMatrixOptions()

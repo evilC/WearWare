@@ -128,7 +128,7 @@
         try
         {
             var folder = System.IO.Path.Combine(WearWare.Config.PathConfig.QuickMediaPath, editingIndex.ToString());
-            return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, options);
+            return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, btn.Item.RelativeBrightness, options);
         }
         catch (Exception ex)
         {

@@ -286,7 +286,7 @@ namespace WearWare.Services.Playlist
         /// Re-processes the specified playlist item using the provided matrix options.
         /// Overwrites the existing .stream in the playlist folder.
         /// </summary>
-        public async Task<TaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, LedMatrixOptionsConfig? options = null)
+        public async Task<TaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var item = playlist.GetPlaylistItems()[itemIndex];
             var folder = playlist.GetPlaylistPath();
@@ -298,7 +298,7 @@ namespace WearWare.Services.Playlist
             // }
             try
             {
-                var result = await _streamConverterService.ConvertToStream(folder, item.SourceFileName, folder, item.Name, options);
+                var result = await _streamConverterService.ConvertToStream(folder, item.SourceFileName, folder, item.Name, relativeBrightness, options);
                 if (result.ExitCode == 0)
                 {
                     StateChanged?.Invoke();

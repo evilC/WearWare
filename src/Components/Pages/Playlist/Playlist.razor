@@ -59,7 +59,7 @@
         {
             return new WearWare.Common.TaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected" };
         }
-        return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, opts);
+        return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, _playlist.GetPlaylistItems()[editingIndex].RelativeBrightness, opts);
     }
 
     private void OnActivePlaylistChanged(ChangeEventArgs e)

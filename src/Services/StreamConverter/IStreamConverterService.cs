@@ -6,6 +6,6 @@ namespace WearWare.Services.StreamConverter
 {
     public interface IStreamConverterService
     {
-        Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, LedMatrixOptionsConfig? options = null);
+        Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null);
     }
 }
