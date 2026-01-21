@@ -9,6 +9,9 @@
 - Allow configuration of ButtonPins via GUI
 - PlaylistService
   - A bunch of stuff in here should be moved to PlaylistItems
+- Convert inconsistency
+  - QuickMedia and Library forms call ConvertToStream, but for Playlist, it's in the Service  
+    Should probably always be in the Service?
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
 - No reprocess is done on Add of Playlist or QuickMedia items  
