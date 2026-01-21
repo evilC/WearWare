@@ -6,15 +6,15 @@
     Restart and it is OK  
     This is because some Matrix options (eg RowAddressType) cannot be changed  
     PR `matrix-reset-01` submitted to rectify this
-  - If cannot play items in playlist (Wrong matrix config), it goes forever in a loop and chugs whole system  
-    This is because GetNext() in streamplayer returns false if it is an invalid stream.  
-    It cannot detect the difference between end of stream and invalid stream  
-    PR `c#-content-streamer-iscompatible` submitted to rectify this
 - Allow configuration of ButtonPins via GUI
 - PlaylistService
   - A bunch of stuff in here should be moved to PlaylistItems
-- Disaster recovery
-  - Some way to restore last known good?
+- ReConvert all functionality
+  - Library, Playlists, QuickMedia
+- Relative Brightness
+  When you reconvert, will apply this as a divisor to selected brightness  
+  Will require adding field to PlayableItem  
+  May require library items to have JSON file
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
 - Mock Import (Just copy, don't convert)
 - UI pages not responsive immediately after loading  
@@ -41,7 +41,7 @@
   - Things that need to speak to MediaController:
     - Options page
       - Stop all playback, update options, then resume playback
-    - QuickMediaServic
+    - QuickMediaService
       - Stop playback of button if Button is deleted while being playing
       - Stop playback of button if edited while playing, then restart
     - PlaylistService
