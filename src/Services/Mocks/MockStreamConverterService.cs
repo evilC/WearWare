@@ -29,12 +29,12 @@ namespace WearWare.Services.Mocks
             var streamPath = Path.Combine(destPath, streamFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
             var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
-            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{streamPath}\"";
             _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
 
             File.Create(Path.Combine(destPath, $"{newFileNameNoExt}.stream")).Dispose();
             await Task.Delay(1000); // Simulate some work
+            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Mock conversion successful.", ActualBrightness = actualBrightness };
         }
     }
