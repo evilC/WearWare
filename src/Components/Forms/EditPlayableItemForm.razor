@@ -22,8 +22,11 @@
     private int selectedPlayMode;
     private int selectedPlayModeValue;
     private int selectedRelativeBrightness;
+    private int originalRelativeBrightness;
+    private bool brightnessModified = false;
     private bool showOptionsForm = false;
     private LedMatrixOptionsConfig? modalOptions;
+    private WearWare.Common.TaskResult? lastReprocessResult;
 
     protected override void OnInitialized()
     {
@@ -32,6 +35,8 @@
             selectedPlayMode = (int)EditingItem.PlayMode;
             selectedPlayModeValue = EditingItem.PlayModeValue;
             selectedRelativeBrightness = EditingItem.RelativeBrightness;
+            originalRelativeBrightness = selectedRelativeBrightness;
+            brightnessModified = false;
         }
     }
 
@@ -69,6 +74,19 @@
             selectedPlayModeValue = v;
     }
 
+    public int SelectedRelativeBrightness
+    {
+        get => selectedRelativeBrightness;
+        set
+        {
+            if (selectedRelativeBrightness != value)
+            {
+                selectedRelativeBrightness = value;
+                brightnessModified = (selectedRelativeBrightness != originalRelativeBrightness);
+            }
+        }
+    }
+
     private void SaveEdit()
     {
         if (EditingItem != null)
@@ -76,6 +94,9 @@
             EditingItem.PlayMode = (PlayMode)selectedPlayMode;
             EditingItem.PlayModeValue = selectedPlayModeValue;
             EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
+            // update original and clear modified flag after save
+            originalRelativeBrightness = EditingItem.RelativeBrightness;
+            brightnessModified = false;
             OnSave.InvokeAsync((EditingIndex, EditingItem));
         }
     }
@@ -83,13 +104,36 @@
     private void ShowReprocess()
     {
         modalOptions = MatrixConfigService.CloneOptions();
+        // clear any previous result and show the options form
+        lastReprocessResult = null;
         showOptionsForm = true;
+    }
+
+    private async Task<WearWare.Common.TaskResult> HandleReprocessAsync(LedMatrixOptionsConfig opts)
+    {
+        if (OnReprocessAsync != null)
+        {
+            var res = await OnReprocessAsync(opts);
+            lastReprocessResult = res;
+            if (res.ExitCode == 0)
+            {
+                // Reconvert succeeded: consider modified brightness accepted
+                originalRelativeBrightness = selectedRelativeBrightness;
+                brightnessModified = false;
+            }
+            return res;
+        }
+        var noop = new WearWare.Common.TaskResult { ExitCode = 0, Error = "", Message = "No reprocess handler provided." };
+        lastReprocessResult = noop;
+        return noop;
     }
 
     private Task OnOptionsOk()
     {
+        // Close the options modal. The result (if any) is stored in `lastReprocessResult`.
         showOptionsForm = false;
         modalOptions = null;
+        InvokeAsync(StateHasChanged);
         return Task.CompletedTask;
     }
 }
@@ -118,7 +162,7 @@
             </div>
             <div class="add-dialog-row" style="margin-top:1rem;">
                 <label class="add-dialog-label">Relative Brightness (%)
-                    <input type="number" class="add-dialog-number" @bind="selectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
+                    <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
                 </label>
             </div>
             <div class="add-dialog__list">
@@ -130,10 +174,12 @@
                     </div>
                 </div>
             </div>
-            <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%;">
-                <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
-                <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit">Save</button>
-                <button type="button" class="add-dialog__cancel-button" @onclick="ShowReprocess">ReConvert</button>
+            <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
+                <div style="display:flex; gap:0.5rem;">
+                    <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
+                    <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit" disabled="@brightnessModified">Save</button>
+                    <button type="button" class="add-dialog__cancel-button" @onclick="ShowReprocess">ReConvert</button>
+                </div>
             </div>
         </div>
     </div>
@@ -143,7 +189,7 @@
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
             <div style="width:80%;">
-            <WearWare.Components.Forms.MatrixOptionsForm Options="modalOptions" OnValidSubmitAsync="OnReprocessAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+            <WearWare.Components.Forms.MatrixOptionsForm Options="modalOptions" RelativeBrightness="selectedRelativeBrightness" OnValidSubmitAsync="HandleReprocessAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
         </div>
     </div>
 }

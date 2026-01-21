@@ -28,7 +28,7 @@ else
     <ul class="library-list" style="list-style:none; padding:0; margin:0;">
         @foreach (var item in items)
         {
-            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.75em; cursor:pointer;" @onclick="() => LibraryService.PlayPreviewItem(item)">
+            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.5rem; cursor:pointer;" @onclick="() => LibraryService.PlayPreviewItem(item)">
                 <div style="display:flex; flex-direction:column; gap:0.25em;">
                     <button type="button" class="btn btn-sm btn-outline-primary" @onclick:stopPropagation @onclick="() => ShowReconvert(item)">ReConvert</button>
                     <button type="button" class="btn btn-sm btn-outline-danger" @onclick:stopPropagation @onclick="() => ConfirmDelete(item)">Delete</button>
@@ -107,11 +107,11 @@ else
     }
 }
 
-@if (showOptionsForm && modalOptions is not null)
+@if (showOptionsForm && modalOptions is not null && editingItem is not null)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
-            <MatrixOptionsForm Options="modalOptions" OnValidSubmitAsync="OnLibraryReconvertAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+            <MatrixOptionsForm Options="modalOptions" RelativeBrightness="editingItem.RelativeBrightness" OnValidSubmitAsync="OnLibraryReconvertAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
         </div>
     </div>
 }

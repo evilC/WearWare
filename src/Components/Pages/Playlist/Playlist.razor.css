@@ -30,7 +30,7 @@
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
 }
 .playlist-item-controls {
     display: flex;

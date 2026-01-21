@@ -114,6 +114,7 @@ namespace WearWare.Services.MatrixConfig
             var args = new List<string>();
             // Add args in alphabetical order by property name
             if (Brightness.HasValue) args.Add($"--led-brightness={Brightness}");
+            //args.Add($"--led-brightness={BrightnessCalculator.CalculateAbsoluteBrightness(Brightness ?? 100, relativeBrightness)}");
             if (ChainLength.HasValue) args.Add($"--led-chain={ChainLength}");
             if (Cols.HasValue) args.Add($"--led-cols={Cols}");
             if (DisableHardwarePulsing == true) args.Add("--led-no-hardware-pulse");

@@ -30,10 +30,16 @@
             {
                 <InputCheckbox class="me-2" @bind-Value="BrightnessEnabledChecked" />
             }
-            <label class="mw-matrix-label">Brightness</label>
+            <label class="mw-matrix-label">Brightness %</label>
             <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Brightness" placeholder="@($"(Default: {_defaults.Brightness})")" />
         </div>
     }
+
+        <div class="mw-matrix-form-row">
+            <label class="mw-matrix-label">Actual Brightness %</label>
+            <input type="number" class="form-control mw-matrix-input" value="@ActualBrightness" disabled />
+        </div>
+
 
     @if (ShowChainLength || ShowFieldSelectors)
     {
@@ -381,6 +387,9 @@
     [Parameter]
     public LedMatrixOptionsConfig Options { get; set; } = new LedMatrixOptionsConfig();
 
+    [Parameter]
+    public int RelativeBrightness { get; set; }
+
     // Controls whether all fields are shown and checkboxes are rendered (for options page)
     [Parameter]
     public bool ShowFieldSelectors { get; set; } = false;
@@ -462,6 +471,8 @@
     }
 
     // Helper properties for rendering
+    private int ActualBrightness => BrightnessCalculator.CalculateAbsoluteBrightness(Options?.Brightness ?? _defaults.Brightness, RelativeBrightness);
+
     private bool ShowBrightness => Options.BrightnessEnabled ?? false;
     private bool ShowRows => Options.RowsEnabled ?? false;
     private bool ShowCols => Options.ColsEnabled ?? false;

@@ -1,6 +1,6 @@
 .playlist-item-image-and-info {
 	display: flex;
-	gap: 1rem;
+	/* gap: 1rem; */
 	align-items: center;
 }
 

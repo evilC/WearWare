@@ -6,7 +6,7 @@
     margin-bottom: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     height: 70px; /* Make assigned and unassigned buttons have consistent height */
 }
 
