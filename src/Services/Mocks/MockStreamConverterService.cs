@@ -12,6 +12,7 @@ namespace WearWare.Services.Mocks
 
         public async Task<TaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, LedMatrixOptionsConfig? options = null)
         {
+            File.Create(Path.Combine(destPath, $"{newFileNameNoExt}.stream")).Dispose();
             await Task.Delay(1000); // Simulate some work
             return new TaskResult { ExitCode = 0, Error = "", Message = "Mock conversion successful." };
         }

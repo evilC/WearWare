@@ -16,7 +16,6 @@
   Will require adding field to PlayableItem  
   May require library items to have JSON file
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
-- Mock Import (Just copy, don't convert)
 - UI pages not responsive immediately after loading  
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
