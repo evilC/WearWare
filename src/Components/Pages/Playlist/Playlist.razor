@@ -122,11 +122,11 @@
     /// <summary>
     /// Adds the selected LibraryItem to the playlist at the specified index
     /// </summary>
-    /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue)
-    async void OnAddPlayableItem((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue) args)
+    /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue, relativeBrightness)
+    async void OnAddPlayableItem((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness) args)
     {
         if (_playlist is null) return;
-        PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue);
+        PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness);
         _items = _playlist?.GetPlaylistItems();
         showAddDialog = false;
         StateHasChanged();

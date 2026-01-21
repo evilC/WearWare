@@ -71,7 +71,7 @@ public class QuickMediaService
         return _buttons;
     }
 
-    public bool AddQuickMediaButton(int buttonNumber, LibraryItem libItem, PlayMode playMode, int playModeValue)
+    public bool AddQuickMediaButton(int buttonNumber, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness)
     {
         if (buttonNumber < 0 || buttonNumber >= _maxButtons) return false;
         if (_buttons[buttonNumber] != null) return false;
@@ -82,7 +82,8 @@ public class QuickMediaService
             libItem.MediaType,
             libItem.SourceFileName,
             playMode,
-            playModeValue);
+            playModeValue,
+            relativeBrightness);
             try
         {
             if (!Directory.Exists(GetQuickMediaPath(buttonNumber)))

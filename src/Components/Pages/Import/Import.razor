@@ -60,6 +60,7 @@ else
     private bool showOptionsForm = false;
     private WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? modalOptions;
     private string? pendingNewFileName;
+    private int pendingRelativeBrightness;
     private string inputId = "fileInput_" + System.Guid.NewGuid().ToString("N");
 
     protected override void OnInitialized()
@@ -94,14 +95,16 @@ else
         }
     }
 
-    private Task OnFilenameConfirmed(string? newFileName)
+    private Task OnFilenameConfirmed((string? newFileName, int relativeBrightness) arg)
     {
         showForm = false;
-        if (newFileName != null && selectedFileName != null)
+        if (arg.newFileName != null && selectedFileName != null)
         {
             // Prepare a clone of current matrix options for the import form to edit
             modalOptions = MatrixConfigService.CloneOptions();
-            pendingNewFileName = newFileName;
+            // Store the relative brightness chosen in the import form for the import call
+            pendingRelativeBrightness = arg.relativeBrightness;
+            pendingNewFileName = arg.newFileName;
             showOptionsForm = true;
             return Task.CompletedTask;
         }
@@ -115,7 +118,7 @@ else
         TaskResult result = new TaskResult { ExitCode = -1, Error = "", Message = "Unknown" };
         if (pendingNewFileName != null && selectedFileName != null)
         {
-            result = await ImportService.ImportLibraryItem(selectedFileName, pendingNewFileName, editedOptions);
+            result = await ImportService.ImportLibraryItem(selectedFileName, pendingNewFileName, pendingRelativeBrightness, editedOptions);
         }
         // clear state
         pendingNewFileName = null;

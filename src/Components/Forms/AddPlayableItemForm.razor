@@ -18,7 +18,7 @@
     }
     [Parameter] public IReadOnlyList<LibraryItem>? LibraryItems { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public EventCallback<(int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue)> OnAdd { get; set; }
+    [Parameter] public EventCallback<(int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness)> OnAdd { get; set; }
     [Parameter] public int InsertIndex { get; set; }
     [Parameter] public string PageTitle { get; set; } = "Playlist";
 
@@ -31,6 +31,8 @@
 
     private int selectedPlayMode = (int)PlayMode.LOOP;
     private int selectedPlayModeValue = 1;
+    private int selectedRelativeBrightness = 100;
+    private LibraryItem? selectedLibraryItem;
 
     private void OnSelectPlayMode(int value)
     {
@@ -47,9 +49,18 @@
             selectedPlayModeValue = v;
     }
 
-    private void AddItem(LibraryItem libItem)
+    private void SelectItem(LibraryItem libItem)
     {
-        OnAdd.InvokeAsync((InsertIndex, libItem, (PlayMode)selectedPlayMode, selectedPlayModeValue));
+        selectedLibraryItem = libItem;
+        selectedRelativeBrightness = libItem.RelativeBrightness;
+    }
+
+    private void AddOk()
+    {
+        if (selectedLibraryItem != null)
+        {
+            OnAdd.InvokeAsync((InsertIndex, selectedLibraryItem, (PlayMode)selectedPlayMode, selectedPlayModeValue, selectedRelativeBrightness));
+        }
     }
 
     public async Task UnlockScrollAsync()
@@ -78,6 +89,11 @@
                 <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.FOREVER)" @onchange="OnSelectPlayModeValue" />
             </div>
         </div>
+        <div class="add-dialog-row" style="margin-top:1rem;">
+            <label class="add-dialog-label">Relative Brightness (%)
+                <input type="number" class="add-dialog-number" @bind="selectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
+            </label>
+        </div>
         @if (LibraryItems is null || !LibraryItems.Any())
         {
             <div>No items found.</div>
@@ -88,7 +104,8 @@
                 <ul>
                     @foreach (var libItem in LibraryItems)
                     {
-                        <li class="add-dialog__item" @onclick="() => AddItem(libItem)">
+                        var itemClass = selectedLibraryItem == libItem ? "add-dialog__item add-dialog__item--selected" : "add-dialog__item";
+                        <li class="@itemClass" @onclick="() => SelectItem(libItem)">
                             <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
                             <div>
                                 <strong>@libItem.Name</strong><br />
@@ -98,7 +115,10 @@
                     }
                 </ul>
             </div>
-            <button type="button" @onclick="() => OnCancel.InvokeAsync(null)" class="add-dialog__cancel-button">Cancel</button>
+            <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
+                <button type="button" class="add-dialog__cancel-button" @onclick="AddOk" disabled="@(selectedLibraryItem == null)">OK</button>
+                <button type="button" @onclick="() => OnCancel.InvokeAsync(null)" class="add-dialog__cancel-button">Cancel</button>
+            </div>
         }
     </div>
 </div>

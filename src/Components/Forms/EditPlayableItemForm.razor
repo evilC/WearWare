@@ -21,6 +21,7 @@
 
     private int selectedPlayMode;
     private int selectedPlayModeValue;
+    private int selectedRelativeBrightness;
     private bool showOptionsForm = false;
     private LedMatrixOptionsConfig? modalOptions;
 
@@ -30,6 +31,7 @@
         {
             selectedPlayMode = (int)EditingItem.PlayMode;
             selectedPlayModeValue = EditingItem.PlayModeValue;
+            selectedRelativeBrightness = EditingItem.RelativeBrightness;
         }
     }
 
@@ -73,6 +75,7 @@
         {
             EditingItem.PlayMode = (PlayMode)selectedPlayMode;
             EditingItem.PlayModeValue = selectedPlayModeValue;
+            EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
             OnSave.InvokeAsync((EditingIndex, EditingItem));
         }
     }
@@ -112,6 +115,11 @@
                     <label class="add-dialog-label">Value</label>
                     <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.FOREVER)" @onchange="OnSelectPlayModeValue" />
                 </div>
+            </div>
+            <div class="add-dialog-row" style="margin-top:1rem;">
+                <label class="add-dialog-label">Relative Brightness (%)
+                    <input type="number" class="add-dialog-number" @bind="selectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
+                </label>
             </div>
             <div class="add-dialog__list">
                 <div style="display:flex; align-items:center; gap:1rem;">

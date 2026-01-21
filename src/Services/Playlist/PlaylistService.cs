@@ -190,7 +190,7 @@ namespace WearWare.Services.Playlist
         /// <param name="libraryItem"></param> The library item to add
         /// <param name="playMode"></param> The play mode for the item
         /// <param name="playModeValue"></param> The play mode value for the item
-        public void AddPlaylistItem(PlaylistItems playlist, int insertIndex, LibraryItem libraryItem, PlayMode playMode, int playModeValue)
+        public void AddPlaylistItem(PlaylistItems playlist, int insertIndex, LibraryItem libraryItem, PlayMode playMode, int playModeValue, int relativeBrightness)
         {
             var restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
@@ -206,7 +206,8 @@ namespace WearWare.Services.Playlist
                 mediaType: libraryItem.MediaType,
                 sourceFileName: libraryItem.SourceFileName,
                 playMode: playMode,
-                playModeValue: playModeValue);
+                playModeValue: playModeValue,
+                relativeBrightness: relativeBrightness);
             
             // Copy file from library to playlist folder
             var destPath = item.GetSourceFilePath();

@@ -73,7 +73,7 @@ namespace WearWare.Services.Import
             StateChanged?.Invoke();
         }
 
-        public async Task<TaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, LedMatrixOptionsConfig? options = null)
+        public async Task<TaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
@@ -99,7 +99,7 @@ namespace WearWare.Services.Import
             {
                 return new TaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to copy original file." };
             }
-            var item = new LibraryItem(newFileNameNoExt, mediaType.Value, Path.GetFileName(destPath));
+            var item = new LibraryItem(newFileNameNoExt, mediaType.Value, Path.GetFileName(destPath), relativeBrightness);
             // Serialize item to JSON and write to libraryPath as name.json
             try
             {

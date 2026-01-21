@@ -67,9 +67,9 @@
         StateHasChanged();
     }
 
-    async void OnAddDialogAdd((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue) args)
+    async void OnAddDialogAdd((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness) args)
     {
-        QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue);
+        QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness);
         showAddDialog = false;
         StateHasChanged();
         await Task.Yield();
