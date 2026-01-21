@@ -11,6 +11,7 @@
   - A bunch of stuff in here should be moved to PlaylistItems
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
+- No Matrix options on Add playlist item
 - Relative Brightness
   When you reconvert, will apply this as a divisor to selected brightness  
   Will require adding field to PlayableItem  
