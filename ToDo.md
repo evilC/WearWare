@@ -68,3 +68,6 @@
       - Change of playlist
       - Delete playlist
     - Shutdown servive - stop all
+- Crash hardening.  
+  - Various places where null-forgiving operators are used
+  

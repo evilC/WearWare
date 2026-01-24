@@ -1,10 +1,12 @@
 @inject IJSRuntime JS
 @inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
+@inject ILogger<EditPlayableItemForm> _logger
 @using WearWare.Common
 @using WearWare.Common.Media
 @using WearWare.Services.MatrixConfig
 
 @code {
+    private readonly string _logTag = "EditPlayableItemForm";
     [Parameter] public PlayableItem? EditingItem { get; set; }
     [Parameter] public int EditingIndex { get; set; }
     [Parameter] public string? ImageUrl { get; set; }
@@ -130,13 +132,28 @@
 
     private void SetSaveCancelButtonStates()
     {
+        if (EditingItem == null)
+        {
+            cancelDisabled = false; // allow cancel to close the form
+            saveDisabled = true;    // nothing to save
+            return;
+        }
+
         // Cancel is disabled if stream brightness has been modified since load/save...
-        cancelDisabled = streamCurrentBrightness != EditingItem!.CurrentBrightness;
+        cancelDisabled = streamCurrentBrightness != EditingItem.CurrentBrightness;
         // Save is disabled if relative brightness has been modified since load/save, and we have not reprocessed yet...
         // ... ie streamCurrentBrightness is not equal to adjustedBrightness...
         // ... AND streamCurrentBrightness is not equal to actualBrightness (ie this is detecting if we have reprocessed yet)
-        saveDisabled = ((selectedRelativeBrightness != EditingItem!.CurrentBrightness)
+        saveDisabled = ((selectedRelativeBrightness != EditingItem.CurrentBrightness)
             && (streamCurrentBrightness != adjustedBrightness));
+
+        if (saveDisabled && cancelDisabled)
+        {
+            _logger.LogWarning($"{_logTag}: Both Save and Cancel buttons are disabled in Edit Playable Item form; this should not happen.");
+            cancelDisabled = false; // allow cancel to close the form
+        }
+            
+
     }
 
     private void SaveEdit()
