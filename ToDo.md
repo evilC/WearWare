@@ -6,7 +6,8 @@
   - ~~Remove LibraryItem~~  
     Do we now still need to pass all the parameters that were present in PlayableItem but not LibraryItem to eg `OnAddPlayableItem`  
     (When adding item to Playlist / QuickMedia). Can we not just pass a PlayableItem?  
-  - Store copy of used MatrixOptions in PlayableItem
+  - ~~Store copy of used MatrixOptions in PlayableItem~~
+  - Edit of PlayableItem should used stored MatrixOptions, not one from the service
   - Stream conversion should always be handled by the service  
     QuickMedia and Library do this in the form, Playlist does it in the service
   - Remove button to explicitly reconvert  
@@ -25,6 +26,8 @@
   - A bunch of stuff in here should be moved to PlaylistItems
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
+  - Reconvert with embedded options
+  - Reconvert with default options
 - No reprocess is done on Add of Playlist or QuickMedia items  
   Therefore, setting Relative Brightness here does nothing  
   Should be solved with Harmonization task
