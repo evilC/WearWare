@@ -14,6 +14,9 @@
     Should probably always be in the Service?
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
+- Combine playlist options and matrix options onto one page  
+- Combine Add and Edit forms into one form
+  - Add has step to pick playable item, then goes on to form which is same as Edit
 - No reprocess is done on Add of Playlist or QuickMedia items  
   Therefore, setting Relative Brightness here does nothing
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
