@@ -1,6 +1,21 @@
 # ToDo list
 
-- Put something on the Home page
+- Harmonization of Import / Add / Edit, and reconvert refactor  
+  Same form used for all  
+  Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
+  - Remove LibraryItem - always use PlayableItem  
+    It's kind of redundant anyway - on the Library page, we create a dummy PlayableItem for each LibraryItem anyway...  
+    ... so that we can preview it. So why do we even need LibraryItem in the first place?  
+    This would probably simplify the harmonization
+  - Store copy of used MatrixOptions in PlayableItem
+  - Stream conversion should always be handled by the service  
+    QuickMedia and Library do this in the form, Playlist does it in the service
+  - Remove button to explicitly reconvert  
+    Whether or not we reconvert should be decided by the service on save of the edit form
+    - Import: always converts (Obviously, because it's not converted yet)
+    - Playlist / QuickMedia:
+    - Add / Edit automatically reconvert if matrix options or brightness changed  
+      Add will need to copy from library before reconvert
 - Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
     Restart and it is OK  
@@ -9,16 +24,11 @@
 - Allow configuration of ButtonPins via GUI
 - PlaylistService
   - A bunch of stuff in here should be moved to PlaylistItems
-- Convert inconsistency
-  - QuickMedia and Library forms call ConvertToStream, but for Playlist, it's in the Service  
-    Should probably always be in the Service?
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
-- Combine playlist options and matrix options onto one page  
-- Combine Add and Edit forms into one form
-  - Add has step to pick playable item, then goes on to form which is same as Edit
 - No reprocess is done on Add of Playlist or QuickMedia items  
-  Therefore, setting Relative Brightness here does nothing
+  Therefore, setting Relative Brightness here does nothing  
+  Should be solved with Harmonization task
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
 - UI pages not responsive immediately after loading  
   Need some way to disable the page until it has fully loaded  
