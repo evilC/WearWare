@@ -1,11 +1,5 @@
 # ToDo list
 
-- MatrixOptions changes
-  - XxxEnabled fields need to be split off into other class.  
-  These are only used for the UI, and there should only ever be one copy.  
-  They should not be cloned
-  - Some of the enabled fields are being rendered to JSON when false (eg `ColsEnabled`).  
-  Suspect they should never be false anyway, only ever true or null?
 - Harmonization of Import / Add / Edit, and reconvert refactor  
   Same form used for all  
   Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
