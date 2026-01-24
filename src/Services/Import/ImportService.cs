@@ -113,7 +113,7 @@ namespace WearWare.Services.Import
             // Serialize item to JSON and write to libraryPath as name.json
             try
             {
-                var json = JsonSerializer.Serialize(item, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonUtils.ToJson(item);
                 var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{newFileNameNoExt}.json");
                 await File.WriteAllTextAsync(jsonPath, json, Encoding.UTF8);
                 // Notify library service that new items are available
