@@ -2,6 +2,7 @@ using System.Text.Json;
 using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.MediaController;
+using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Services.Library
 {
@@ -20,12 +21,14 @@ namespace WearWare.Services.Library
 
         private readonly ILogger<LibraryService> _logger;
         private readonly MediaControllerService _mediaControllerService;
+        private readonly MatrixConfigService _matrixConfigService;
 
-        public LibraryService(ILogger<LibraryService> logger, MediaControllerService mediaControllerService)
+        public LibraryService(ILogger<LibraryService> logger, MediaControllerService mediaControllerService, MatrixConfigService matrixConfigService)
         {
             _logger = logger;
             _mediaControllerService = mediaControllerService;
             LoadLibraryItems();
+            _matrixConfigService = matrixConfigService;
             _logger.LogInformation("LibraryService initialized.");
         }
 
@@ -49,8 +52,13 @@ namespace WearWare.Services.Library
                     // Optionally log or handle errors
                     continue;
                 }
-                // Add dummy PlayableItem for previewing
-                if (libraryItem != null){
+                
+                if (libraryItem != null)
+                {
+                    // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
+                    // if (libraryItem.MatrixOptions == null)
+                    //     libraryItem.MatrixOptions = _matrixConfigService.CloneOptions();
+
                     _items.Add(libraryItem.Name, libraryItem);
                 }
             }

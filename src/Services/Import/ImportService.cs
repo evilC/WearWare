@@ -102,14 +102,16 @@ namespace WearWare.Services.Import
                 return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to copy original file.", ActualBrightness = actual };
             }
             var item = new PlayableItem(
-                newFileNameNoExt,           // Name
-                PathConfig.LibraryFolder,   // ParentFolder
-                mediaType.Value,            // MediaType
-                Path.GetFileName(destPath), // SourceFileName   
-                PlayMode.FOREVER,           // PlayMode
-                0,                          // PlayModeValue
-                relativeBrightness,          // RelativeBrightness
-                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness));
+                newFileNameNoExt,
+                PathConfig.LibraryFolder,
+                mediaType.Value,
+                Path.GetFileName(destPath),  
+                PlayMode.FOREVER,
+                0,
+                relativeBrightness,
+                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness),
+                _matrixConfigService.CloneOptions() // ToDo: Use the options that the form returned
+            );
             // Serialize item to JSON and write to libraryPath as name.json
             try
             {

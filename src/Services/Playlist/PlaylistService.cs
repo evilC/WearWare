@@ -17,11 +17,13 @@ namespace WearWare.Services.Playlist
         private readonly PlaylistsConfig _config;
         // Logger factory for injecting loggers for PlaylistItems
         private readonly ILoggerFactory _loggerFactory;
+        private readonly MatrixConfigService _matrixConfigService;
 
         public PlaylistService(
             ILogger<PlaylistService> logger,
             MediaControllerService mediaController,
             StreamConverter.IStreamConverterService streamConverterService,
+            MatrixConfigService matrixConfigService,
             ILoggerFactory loggerFactory
             )
         {
@@ -38,6 +40,7 @@ namespace WearWare.Services.Playlist
             _mediaController = mediaController;
             _mediaController.StateChanged += OnMediaControllerStateChanged;
             _streamConverterService = streamConverterService;
+            _matrixConfigService = matrixConfigService;
         }
 
         /// <summary>
@@ -213,7 +216,8 @@ namespace WearWare.Services.Playlist
                 playMode: playMode,
                 playModeValue: playModeValue,
                 relativeBrightness: relativeBrightness,
-                currentBrightness: currentBrightness
+                currentBrightness: currentBrightness,
+                _matrixConfigService.CloneOptions()
                 );
             
             // Copy file from library to playlist folder

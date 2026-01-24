@@ -1,5 +1,6 @@
 using WearWare.Common.Media;
 using WearWare.Config;
+using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.QuickMedia;
 using WearWare.Utils;
@@ -16,15 +17,18 @@ public class QuickMediaService
     private readonly ILogger<QuickMediaService> _logger;
     private readonly string _logTag = "[QUICKMEDIA]";
     private static readonly string _configFileName = "quickmedia.json";
+    private readonly MatrixConfigService _matrixConfigService;
 
     public QuickMediaService(ILogger<QuickMediaService> logger,
         MediaControllerService mediaController, 
-        IQuickMediaButtonFactory buttonFactory)
+        IQuickMediaButtonFactory buttonFactory,
+        MatrixConfigService matrixConfigService)
     {
         _logger = logger;
         _buttons = new IQuickMediaButton[_maxButtons];
         _mediaController = mediaController;
         _buttonFactory = buttonFactory;
+        _matrixConfigService = matrixConfigService;
         _mediaController.StateChanged += OnMediaControllerStateChanged;
         // Instantiate buttons
         // Note that there seems to be an issue with GPIO pins floating after first boot
@@ -85,7 +89,9 @@ public class QuickMediaService
             playMode,
             playModeValue,
             relativeBrightness,
-            currentBrightness);
+            currentBrightness,
+            _matrixConfigService.CloneOptions() // ToDo: Use the options that the form returned
+        );
             try
         {
             if (!Directory.Exists(GetQuickMediaPath(buttonNumber)))

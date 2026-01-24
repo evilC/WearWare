@@ -1,4 +1,5 @@
 using WearWare.Config;
+using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Common.Media
 {
@@ -13,6 +14,7 @@ namespace WearWare.Common.Media
         public int PlayModeValue { get; set; } = 1;
         public string ParentFolder { get; init; }
         public bool Enabled { get; set; } = true;
+        public LedMatrixOptionsConfig MatrixOptions { get; set; }
 
         public PlayableItem(string name, 
             string parentFolder, 
@@ -21,7 +23,8 @@ namespace WearWare.Common.Media
             PlayMode playMode, 
             int playModeValue, 
             int relativeBrightness, 
-            int currentBrightness)
+            int currentBrightness,
+            LedMatrixOptionsConfig matrixOptions)
         {
             Name = name;
             MediaType = mediaType;
@@ -31,6 +34,7 @@ namespace WearWare.Common.Media
             PlayModeValue = playModeValue;
             RelativeBrightness = relativeBrightness;
             CurrentBrightness = currentBrightness;
+            MatrixOptions = matrixOptions;
         }
 
         public string GetStreamFilePath()
