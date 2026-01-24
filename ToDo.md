@@ -3,6 +3,9 @@
 - Harmonization of Import / Add / Edit, and reconvert refactor  
   Same form used for all  
   Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
+  - ~~Remove LibraryItem~~  
+    Do we now still need to pass all the parameters that were present in PlayableItem but not LibraryItem to eg `OnAddPlayableItem`  
+    (When adding item to Playlist / QuickMedia). Can we not just pass a PlayableItem?  
   - Store copy of used MatrixOptions in PlayableItem
   - Stream conversion should always be handled by the service  
     QuickMedia and Library do this in the form, Playlist does it in the service
