@@ -16,6 +16,12 @@
     - Playlist / QuickMedia:
     - Add / Edit automatically reconvert if matrix options or brightness changed  
       Add will need to copy from library before reconvert
+  - Rework stream conversion success / fail handling + reporting?  
+    TaskResult seems clunky. 
+    Int error results yucky  
+    Return enum?  
+    Custom exceptions?  
+    Either way, need to be able to tell if original file got overwritten or not
 - Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
     Restart and it is OK  
@@ -70,4 +76,3 @@
     - Shutdown servive - stop all
 - Crash hardening.  
   - Various places where null-forgiving operators are used
-  
