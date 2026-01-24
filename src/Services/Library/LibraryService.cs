@@ -56,8 +56,8 @@ namespace WearWare.Services.Library
                 if (libraryItem != null)
                 {
                     // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
-                    // if (libraryItem.MatrixOptions == null)
-                    //     libraryItem.MatrixOptions = _matrixConfigService.CloneOptions();
+                    if (libraryItem.MatrixOptions == null)
+                        libraryItem.MatrixOptions = _matrixConfigService.CloneOptions();
 
                     _items.Add(libraryItem.Name, libraryItem);
                 }

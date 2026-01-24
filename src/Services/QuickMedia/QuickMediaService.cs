@@ -191,7 +191,11 @@ public class QuickMediaService
             var json = File.ReadAllText(path);  
             var dto = JsonUtils.FromJson<QuickMediaDto>(json);
             if (dto == null) return null;
-            return _buttonFactory.Create(_mediaController, dto.ButtonNumber, dto.Item);
+            var button = _buttonFactory.Create(_mediaController, dto.ButtonNumber, dto.Item);
+            // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
+            if (button.Item.MatrixOptions == null)
+                button.Item.MatrixOptions = _matrixConfigService.CloneOptions();
+            return button;
         }
         catch (Exception ex)
         {

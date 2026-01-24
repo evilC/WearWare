@@ -1,5 +1,6 @@
 using WearWare.Common.Media;
 using WearWare.Config;
+using WearWare.Services.MatrixConfig;
 using WearWare.Utils;
 
 namespace WearWare.Services.Playlist
@@ -185,7 +186,7 @@ namespace WearWare.Services.Playlist
             return true;
         }
 
-        public static PlaylistItems? Deserialize(ILogger<PlaylistItems> logger, string playlistName)
+        public static PlaylistItems? Deserialize(ILogger<PlaylistItems> logger, string playlistName, MatrixConfigService matrixConfigService)
         {
             var path = Path.Combine(PathConfig.PlaylistPath, playlistName, _configFileName);
             if (!File.Exists(path))
@@ -204,6 +205,10 @@ namespace WearWare.Services.Playlist
                     items.Remove(item);
                     logger.LogWarning("{tag} Media file for item {item} does not exist in playlist {playlist}, removing item from playlist.", _logTag, item.Name, playlistName);
                 }
+                // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
+                if (item.MatrixOptions == null)
+                    item.MatrixOptions = matrixConfigService.CloneOptions();
+
             }
             return new PlaylistItems(logger, playlistName, config, items);
         }

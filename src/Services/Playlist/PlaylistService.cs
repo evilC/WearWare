@@ -100,7 +100,7 @@ namespace WearWare.Services.Playlist
         {
             try
             {
-                var deserializedPlaylist = PlaylistItems.Deserialize(_loggerFactory.CreateLogger<PlaylistItems>(), playlistName);
+                var deserializedPlaylist = PlaylistItems.Deserialize(_loggerFactory.CreateLogger<PlaylistItems>(), playlistName, _matrixConfigService);
                 if (deserializedPlaylist == null)
                 {
                     _logger.LogError("{LogTag} Failed to load playlist: {PlaylistName}", _logTag, playlistName);
