@@ -111,7 +111,7 @@ else
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
-            <MatrixOptionsForm Options="modalOptions" RelativeBrightness="editingItem.RelativeBrightness" OnValidSubmitAsync="OnLibraryReconvertAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+            <MatrixOptionsForm Options="modalOptions" Visibility="MatrixConfigService.Visibility" RelativeBrightness="editingItem.RelativeBrightness" OnValidSubmitAsync="OnLibraryReconvertAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
         </div>
     </div>
 }

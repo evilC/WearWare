@@ -393,6 +393,9 @@
     public LedMatrixOptionsConfig Options { get; set; } = new LedMatrixOptionsConfig();
 
     [Parameter]
+    public LedMatrixOptionsVisibility Visibility { get; set; } = new LedMatrixOptionsVisibility();
+
+    [Parameter]
     public int RelativeBrightness { get; set; }
 
     // True if we are on the Global version of the Matrix Options form
@@ -480,67 +483,66 @@
     // Helper properties for rendering
     private int ActualBrightness => BrightnessCalculator.CalculateAbsoluteBrightness(Options?.Brightness ?? _defaults.Brightness, RelativeBrightness);
 
-    private bool ShowBrightness => Options.BrightnessEnabled ?? false;
-    private bool ShowRows => Options.RowsEnabled ?? false;
-    private bool ShowCols => Options.ColsEnabled ?? false;
-    private bool ShowChainLength => Options.ChainLengthEnabled ?? false;
-    private bool ShowParallel => Options.ParallelEnabled ?? false;
-    private bool ShowPwmBits => Options.PwmBitsEnabled ?? false;
-    private bool ShowPwmLsbNanoseconds => Options.PwmLsbNanosecondsEnabled ?? false;
-    private bool ShowPwmDitherBits => Options.PwmDitherBitsEnabled ?? false;
-    private bool ShowHardwareMapping => Options.HardwareMappingEnabled ?? false;
-    private bool ShowDisableHardwarePulsing => Options.DisableHardwarePulsingEnabled ?? false;
-    
-    private bool ShowInverseColors => Options.InverseColorsEnabled ?? false;
-    private bool ShowLedRgbSequence => Options.LedRgbSequenceEnabled ?? false;
-    private bool ShowPixelMapperConfig => Options.PixelMapperConfigEnabled ?? false;
-    private bool ShowPanelType => Options.PanelTypeEnabled ?? false;
-    private bool ShowLimitRefreshRateHz => Options.LimitRefreshRateHzEnabled ?? false;
-    private bool ShowGpioSlowdown => Options.GpioSlowdownEnabled ?? false;
-    private bool ShowRowAddressType => Options.RowAddressTypeEnabled ?? false;
-    private bool ShowScanMode => Options.ScanModeEnabled ?? false;
-    private bool ShowMultiplexing => Options.MultiplexingEnabled ?? false;
+    private bool ShowBrightness => Visibility.BrightnessEnabled ?? false;
+    private bool ShowRows => Visibility.RowsEnabled ?? false;
+    private bool ShowCols => Visibility.ColsEnabled ?? false;
+    private bool ShowChainLength => Visibility.ChainLengthEnabled ?? false;
+    private bool ShowParallel => Visibility.ParallelEnabled ?? false;
+    private bool ShowPwmBits => Visibility.PwmBitsEnabled ?? false;
+    private bool ShowPwmLsbNanoseconds => Visibility.PwmLsbNanosecondsEnabled ?? false;
+    private bool ShowPwmDitherBits => Visibility.PwmDitherBitsEnabled ?? false;
+    private bool ShowHardwareMapping => Visibility.HardwareMappingEnabled ?? false;
+    private bool ShowDisableHardwarePulsing => Visibility.DisableHardwarePulsingEnabled ?? false;
+    private bool ShowInverseColors => Visibility.InverseColorsEnabled ?? false;
+    private bool ShowLedRgbSequence => Visibility.LedRgbSequenceEnabled ?? false;
+    private bool ShowPixelMapperConfig => Visibility.PixelMapperConfigEnabled ?? false;
+    private bool ShowPanelType => Visibility.PanelTypeEnabled ?? false;
+    private bool ShowLimitRefreshRateHz => Visibility.LimitRefreshRateHzEnabled ?? false;
+    private bool ShowGpioSlowdown => Visibility.GpioSlowdownEnabled ?? false;
+    private bool ShowRowAddressType => Visibility.RowAddressTypeEnabled ?? false;
+    private bool ShowScanMode => Visibility.ScanModeEnabled ?? false;
+    private bool ShowMultiplexing => Visibility.MultiplexingEnabled ?? false;
 
     // Checkbox helpers for full options page
     private bool BrightnessEnabledChecked
     {
-        get => Options.BrightnessEnabled ?? false;
-        set => Options.BrightnessEnabled = value ? true : null;
+        get => Visibility.BrightnessEnabled ?? false;
+        set => Visibility.BrightnessEnabled = value ? true : null;
     }
     private bool RowsEnabledChecked
     {
-        get => Options.RowsEnabled ?? false;
-        set => Options.RowsEnabled = value ? true : null;
+        get => Visibility.RowsEnabled ?? false;
+        set => Visibility.RowsEnabled = value ? true : null;
     }
     private bool ColsEnabledChecked
     {
-        get => Options.ColsEnabled ?? false;
-        set => Options.ColsEnabled = value ? true : null;
+        get => Visibility.ColsEnabled ?? false;
+        set => Visibility.ColsEnabled = value ? true : null;
     }
     private bool ChainLengthEnabledChecked
     {
-        get => Options.ChainLengthEnabled ?? false;
-        set => Options.ChainLengthEnabled = value ? true : null;
+        get => Visibility.ChainLengthEnabled ?? false;
+        set => Visibility.ChainLengthEnabled = value ? true : null;
     }
     private bool ParallelEnabledChecked
     {
-        get => Options.ParallelEnabled ?? false;
-        set => Options.ParallelEnabled = value ? true : null;
+        get => Visibility.ParallelEnabled ?? false;
+        set => Visibility.ParallelEnabled = value ? true : null;
     }
     private bool PwmBitsEnabledChecked
     {
-        get => Options.PwmBitsEnabled ?? false;
-        set => Options.PwmBitsEnabled = value ? true : null;
+        get => Visibility.PwmBitsEnabled ?? false;
+        set => Visibility.PwmBitsEnabled = value ? true : null;
     }
     private bool PwmLsbNanosecondsEnabledChecked
     {
-        get => Options.PwmLsbNanosecondsEnabled ?? false;
-        set => Options.PwmLsbNanosecondsEnabled = value ? true : null;
+        get => Visibility.PwmLsbNanosecondsEnabled ?? false;
+        set => Visibility.PwmLsbNanosecondsEnabled = value ? true : null;
     }
     private bool PwmDitherBitsEnabledChecked
     {
-        get => Options.PwmDitherBitsEnabled ?? false;
-        set => Options.PwmDitherBitsEnabled = value ? true : null;
+        get => Visibility.PwmDitherBitsEnabled ?? false;
+        set => Visibility.PwmDitherBitsEnabled = value ? true : null;
     }
     // Wrapper for PwmDitherBits select: 0 => null (use default)
     private int PwmDitherBitsSelectValue
@@ -550,8 +552,8 @@
     }
     private bool HardwareMappingEnabledChecked
     {
-        get => Options.HardwareMappingEnabled ?? false;
-        set => Options.HardwareMappingEnabled = value ? true : null;
+        get => Visibility.HardwareMappingEnabled ?? false;
+        set => Visibility.HardwareMappingEnabled = value ? true : null;
     }
     // Wrapper for HardwareMapping select: empty => null (use default)
     private string HardwareMappingSelectValue
@@ -567,29 +569,29 @@
     }
     private bool DisableHardwarePulsingEnabledChecked
     {
-        get => Options.DisableHardwarePulsingEnabled ?? false;
-        set => Options.DisableHardwarePulsingEnabled = value ? true : null;
+        get => Visibility.DisableHardwarePulsingEnabled ?? false;
+        set => Visibility.DisableHardwarePulsingEnabled = value ? true : null;
     }
     
     private bool InverseColorsEnabledChecked
     {
-        get => Options.InverseColorsEnabled ?? false;
-        set => Options.InverseColorsEnabled = value ? true : null;
+        get => Visibility.InverseColorsEnabled ?? false;
+        set => Visibility.InverseColorsEnabled = value ? true : null;
     }
     private bool LedRgbSequenceEnabledChecked
     {
-        get => Options.LedRgbSequenceEnabled ?? false;
-        set => Options.LedRgbSequenceEnabled = value ? true : null;
+        get => Visibility.LedRgbSequenceEnabled ?? false;
+        set => Visibility.LedRgbSequenceEnabled = value ? true : null;
     }
     private bool PixelMapperConfigEnabledChecked
     {
-        get => Options.PixelMapperConfigEnabled ?? false;
-        set => Options.PixelMapperConfigEnabled = value ? true : null;
+        get => Visibility.PixelMapperConfigEnabled ?? false;
+        set => Visibility.PixelMapperConfigEnabled = value ? true : null;
     }
     private bool PanelTypeEnabledChecked
     {
-        get => Options.PanelTypeEnabled ?? false;
-        set => Options.PanelTypeEnabled = value ? true : null;
+        get => Visibility.PanelTypeEnabled ?? false;
+        set => Visibility.PanelTypeEnabled = value ? true : null;
     }
     // Wrapper for PanelType select: empty => null (use default)
     private string PanelTypeSelectValue
@@ -599,13 +601,13 @@
     }
     private bool LimitRefreshRateHzEnabledChecked
     {
-        get => Options.LimitRefreshRateHzEnabled ?? false;
-        set => Options.LimitRefreshRateHzEnabled = value ? true : null;
+        get => Visibility.LimitRefreshRateHzEnabled ?? false;
+        set => Visibility.LimitRefreshRateHzEnabled = value ? true : null;
     }
     private bool GpioSlowdownEnabledChecked
     {
-        get => Options.GpioSlowdownEnabled ?? false;
-        set => Options.GpioSlowdownEnabled = value ? true : null;
+        get => Visibility.GpioSlowdownEnabled ?? false;
+        set => Visibility.GpioSlowdownEnabled = value ? true : null;
     }
     // Wrapper for GpioSlowdown select: empty => null (use library default, typically 1)
     private string GpioSlowdownSelectValue
@@ -615,8 +617,8 @@
     }
     private bool RowAddressTypeEnabledChecked
     {
-        get => Options.RowAddressTypeEnabled ?? false;
-        set => Options.RowAddressTypeEnabled = value ? true : null;
+        get => Visibility.RowAddressTypeEnabled ?? false;
+        set => Visibility.RowAddressTypeEnabled = value ? true : null;
     }
     // Wrapper for select UI: 0 represents 'default' and stores null in Options.RowAddressType
     private int RowAddressTypeSelectValue
@@ -632,13 +634,13 @@
     }
     private bool ScanModeEnabledChecked
     {
-        get => Options.ScanModeEnabled ?? false;
-        set => Options.ScanModeEnabled = value ? true : null;
+        get => Visibility.ScanModeEnabled ?? false;
+        set => Visibility.ScanModeEnabled = value ? true : null;
     }
     private bool MultiplexingEnabledChecked
     {
-        get => Options.MultiplexingEnabled ?? false;
-        set => Options.MultiplexingEnabled = value ? true : null;
+        get => Visibility.MultiplexingEnabled ?? false;
+        set => Visibility.MultiplexingEnabled = value ? true : null;
     }
 
     // Wrapper for ScanMode select: 0 => default (null), otherwise store enum name

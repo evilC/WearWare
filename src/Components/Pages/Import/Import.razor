@@ -20,7 +20,7 @@
 }
 else if (showOptionsForm && modalOptions != null && selectedFileName != null)
 {
-    <MatrixOptionsForm Options="modalOptions" RelativeBrightness="pendingRelativeBrightness" OnValidSubmitAsync="OnOptionsConfirmedAsync" OnCancel="OnOptionsOk" Action="Import" Title="Matrix Options for Import" />
+    <MatrixOptionsForm Options="modalOptions" Visibility="MatrixConfigService.Visibility" RelativeBrightness="pendingRelativeBrightness" OnValidSubmitAsync="OnOptionsConfirmedAsync" OnCancel="OnOptionsOk" Action="Import" Title="Matrix Options for Import" />
 }
 else if (importFiles == null)
 {
