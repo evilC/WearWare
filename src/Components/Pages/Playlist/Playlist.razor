@@ -91,7 +91,7 @@
     private int addDialogInsertIndex = 0;
     
     /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
-    private IReadOnlyList<LibraryItem>? libraryItems;
+    private IReadOnlyList<PlayableItem>? libraryItems;
     /// <summary> Reference to the AddPlayableItemForm component </summary>
     private AddPlayableItemForm? addFormRef;
     // Handler for AddPlayableItemForm component's OnAdd event
@@ -123,7 +123,7 @@
     /// Adds the selected LibraryItem to the playlist at the specified index
     /// </summary>
     /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue, relativeBrightness)
-    async void OnAddPlayableItem((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
+    async void OnAddPlayableItem((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
         if (_playlist is null) return;
         PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);

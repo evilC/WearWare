@@ -1,7 +1,6 @@
 using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;
-using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 
@@ -192,7 +191,7 @@ namespace WearWare.Services.Playlist
         /// <param name="playModeValue"></param> The play mode value for the item
         public void AddPlaylistItem(PlaylistItems playlist,
             int insertIndex,
-            LibraryItem libraryItem,
+            PlayableItem libraryItem,
             PlayMode playMode,
             int playModeValue,
             int relativeBrightness,

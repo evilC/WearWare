@@ -8,10 +8,9 @@ namespace WearWare.Services.Library
     public class LibraryService
     {
         public event Action? ItemsChanged;
-        private readonly SortedList<string, LibraryItem> _items = [];
-        private readonly Dictionary<string, PlayableItem> _previewItems = [];
+        private readonly SortedList<string, PlayableItem> _items = [];
 
-        public IReadOnlyList<LibraryItem> Items
+        public IReadOnlyList<PlayableItem> Items
         {
             get
             {
@@ -33,18 +32,17 @@ namespace WearWare.Services.Library
         private void LoadLibraryItems()
         {
             _items.Clear();
-            _previewItems.Clear();
             if (!Directory.Exists(PathConfig.LibraryPath))
                 return;
 
             var jsonFiles = Directory.EnumerateFiles(PathConfig.LibraryPath, "*.json", SearchOption.TopDirectoryOnly);
             foreach (var file in jsonFiles)
             {
-                LibraryItem? libraryItem;
+                PlayableItem? libraryItem;
                 try
                 {
                     var json = File.ReadAllText(file);
-                    libraryItem = JsonSerializer.Deserialize<LibraryItem>(json);
+                    libraryItem = JsonSerializer.Deserialize<PlayableItem>(json);
                 }
                 catch
                 {
@@ -54,16 +52,6 @@ namespace WearWare.Services.Library
                 // Add dummy PlayableItem for previewing
                 if (libraryItem != null){
                     _items.Add(libraryItem.Name, libraryItem);
-                    _previewItems.Add(libraryItem.Name, new PlayableItem(
-                        name: libraryItem.Name,
-                        parentFolder: PathConfig.LibraryPath,
-                        mediaType: libraryItem.MediaType,
-                        sourceFileName: libraryItem.SourceFileName,
-                        playMode: PlayMode.FOREVER,
-                        playModeValue: 1,
-                        relativeBrightness: libraryItem.RelativeBrightness,
-                        currentBrightness: libraryItem.CurrentBrightness)
-                    );
                 }
             }
             ItemsChanged?.Invoke();
@@ -81,7 +69,7 @@ namespace WearWare.Services.Library
         /// Deletes the specified library item files and metadata, then reloads the library.
         /// </summary>
         /// <param name="item"></param>
-        public void DeleteLibraryItem(LibraryItem item)
+        public void DeleteLibraryItem(PlayableItem item)
         {
             try
             {
@@ -99,13 +87,9 @@ namespace WearWare.Services.Library
             Reload();
         }
 
-        public void PlayPreviewItem(LibraryItem libItem)
+        public void PlayPreviewItem(PlayableItem libItem)
         {
-            _previewItems.TryGetValue(libItem.Name, out var playableItem);
-            if (playableItem is not null)
-            {
-                _mediaControllerService.PlayQuickMedia(playableItem);
-            }
+            _mediaControllerService.PlayQuickMedia(libItem);
         }
     }
 }

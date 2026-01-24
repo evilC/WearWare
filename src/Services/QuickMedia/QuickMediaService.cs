@@ -1,8 +1,5 @@
-using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;
-using WearWare.Services.Library;
-using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.QuickMedia;
 using WearWare.Utils;
@@ -75,7 +72,7 @@ public class QuickMediaService
         return _buttons;
     }
 
-    public bool AddQuickMediaButton(int buttonNumber, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
+    public bool AddQuickMediaButton(int buttonNumber, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
     {
         if (buttonNumber < 0 || buttonNumber >= _maxButtons) return false;
         if (_buttons[buttonNumber] != null) return false;

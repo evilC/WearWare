@@ -44,7 +44,7 @@ else
 }
 
 @code {
-    private IReadOnlyList<LibraryItem>? items;
+    private IReadOnlyList<PlayableItem>? items;
 
     protected override void OnInitialized()
     {
@@ -63,7 +63,7 @@ else
         LibraryService.ItemsChanged -= OnItemsChanged;
     }
 
-    private async Task ConfirmDelete(LibraryItem item)
+    private async Task ConfirmDelete(PlayableItem item)
     {
         var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete library item '{item.Name}' and its files?");
         if (ok)
@@ -75,9 +75,9 @@ else
     // ReConvert flow
     private bool showOptionsForm = false;
     private LedMatrixOptionsConfig? modalOptions;
-    private LibraryItem? editingItem;
+    private PlayableItem? editingItem;
 
-    private void ShowReconvert(LibraryItem item)
+    private void ShowReconvert(PlayableItem item)
     {
         editingItem = item;
         modalOptions = MatrixConfigService.CloneOptions();

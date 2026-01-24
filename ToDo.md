@@ -3,10 +3,6 @@
 - Harmonization of Import / Add / Edit, and reconvert refactor  
   Same form used for all  
   Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
-  - Remove LibraryItem - always use PlayableItem  
-    It's kind of redundant anyway - on the Library page, we create a dummy PlayableItem for each LibraryItem anyway...  
-    ... so that we can preview it. So why do we even need LibraryItem in the first place?  
-    This would probably simplify the harmonization
   - Store copy of used MatrixOptions in PlayableItem
   - Stream conversion should always be handled by the service  
     QuickMedia and Library do this in the form, Playlist does it in the service

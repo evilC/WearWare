@@ -15,7 +15,7 @@
 @code {
     // ================================================== Common ==================================================
     private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
-    private IReadOnlyList<LibraryItem>? libraryItems;
+    private IReadOnlyList<PlayableItem>? libraryItems;
 
     protected override void OnInitialized()
     {
@@ -67,7 +67,7 @@
         StateHasChanged();
     }
 
-    async void OnAddDialogAdd((int insertIndex, LibraryItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
+    async void OnAddDialogAdd((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
         QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
         showAddDialog = false;
