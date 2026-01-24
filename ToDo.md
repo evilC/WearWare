@@ -1,5 +1,8 @@
 # ToDo list
 
+- MatrixOptions XxxEnabled fields need to be split off into other class.  
+  These are only used for the UI, and there should only ever be one copy.  
+  They should not be cloned
 - Harmonization of Import / Add / Edit, and reconvert refactor  
   Same form used for all  
   Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
