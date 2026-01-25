@@ -12,8 +12,10 @@
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem)> OnSave { get; set; }
+
+    // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
     [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
-    [Parameter] public string PageTitle { get; set; } = "Playlist";
+    [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
 
     private Dictionary<string, int> playModeOptions = new()
     {
@@ -22,29 +24,30 @@
         { "Forever", (int)PlayMode.FOREVER }
     };
 
+    // === Form edited values ===
+    // The currently selected play mode in the form
     private int selectedPlayMode;
+    // The currently selected play mode value in the form
     private int selectedPlayModeValue;
     // The currently selected relative brightness in the form
     private int selectedRelativeBrightness;
-    // True if relative brightness has been modified since load/save...
-    // ... and we have not reprocessed yet
-    private bool saveDisabled = false;
-    // Holds the adjusted brightness based on current matrix options and selected relative brightness
-    // Also, if we used ReConvert, this is updated to reflect the actual brightness used
-    private int adjustedBrightness;
+
+    private LedMatrixOptionsConfig? selectedMatrixOptions;
+
+    // === Form state control  ===
     // Holds the current brightness that the stream was last converted with
     // If the user has reconverted with different brightness, this will differ from EditingItem.CurrentBrightness
     // In which case, disable the Cancel button to prevent loss of current brightness change
     // ToDo: This will be removed when we move to doing convert on save of this form, instead of immediate convert on ReConvert
     private int streamCurrentBrightness;
-    // True if the stream's brightness has been changed since load/save
-    // Either changing relative brightness or reprocessing may change actual brightness
-    // If true, then Cancel is disabled to prevent loss of actual brightness change
-    private bool cancelDisabled = false;
 
-    private bool showOptionsForm = false;
-    private LedMatrixOptionsConfig? modalOptions;
-    private WearWare.Common.ReConvertTaskResult? lastReprocessResult;
+    // === Form readouts ===
+    // What the brightness WOULD BE if we reprocessed now with current matrix options and selected relative brightness
+    private int adjustedBrightness;
+
+    // === Misc ===
+    // True when the Matrix Options form is visible
+    private bool showMatrixOptionsForm = false;
 
     protected override void OnInitialized()
     {
@@ -53,9 +56,9 @@
             selectedPlayMode = (int)EditingItem.PlayMode;
             selectedPlayModeValue = EditingItem.PlayModeValue;
             selectedRelativeBrightness = EditingItem.RelativeBrightness;
+            selectedMatrixOptions = EditingItem.MatrixOptions.Clone();
             streamCurrentBrightness = EditingItem.CurrentBrightness;
-            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(MatrixConfigService.CloneOptions().Brightness ?? 100, selectedRelativeBrightness);
-            saveDisabled = false;
+            CalculateBrightness();
         }
     }
 
@@ -78,6 +81,7 @@
         await JS.InvokeVoidAsync("modalScrollLock.unlock");
     }
 
+    // Called when the user changes the Play Mode radio buttons
     private void OnSelectPlayMode(int value)
     {
         selectedPlayMode = value;
@@ -87,6 +91,7 @@
         }
     }
 
+    // Called when the user changes the Play Mode Value input
     private void OnSelectPlayModeValue(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var v))
@@ -102,61 +107,44 @@
             if (selectedRelativeBrightness != value)
             {
                 selectedRelativeBrightness = value;
-                // Recalculate actual brightness using current matrix options
-                var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
-                adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, selectedRelativeBrightness);
-                SetSaveCancelButtonStates();
+                CalculateBrightness();
                 InvokeAsync(StateHasChanged);
             }
         }
     }
 
-    // Called once ReProcess has completed
-    private async Task<WearWare.Common.ReConvertTaskResult> HandleReprocessAsync(LedMatrixOptionsConfig opts)
-    {
-        if (OnReprocessAsync != null)
-        {
-            var res = await OnReprocessAsync(opts, selectedRelativeBrightness);
-            lastReprocessResult = res;
-            if (res.ExitCode == 0)
-            {
-                streamCurrentBrightness = res.ActualBrightness;
-                adjustedBrightness = res.ActualBrightness;
-                SetSaveCancelButtonStates();
-            }
-            return res;
+    // Recalculates adjusted brightness based on current matrix options and selected relative brightness
+    private void CalculateBrightness(){
+        int baseBrightness;
+        if (selectedMatrixOptions == null){
+            _logger.LogWarning($"{_logTag}: selectedMatrixOptions is null in EditPlayableItemForm; using default brightness of 100");
+            baseBrightness = 100;
         }
-        var noop = new WearWare.Common.ReConvertTaskResult { ExitCode = 0, Error = "", Message = "No reprocess handler provided.", ActualBrightness = (EditingItem?.CurrentBrightness ?? 0) };
-        lastReprocessResult = noop;
-        return noop;
+        else
+        {
+            baseBrightness = selectedMatrixOptions.Brightness ?? 100;
+        }
+        adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, selectedRelativeBrightness);
     }
 
-    private void SetSaveCancelButtonStates()
+    // Called after the user clicks OK in the Matrix Options form
+    private async Task OnMatrixOptionsOk(LedMatrixOptionsConfig opts)
     {
-        if (EditingItem == null)
-        {
-            cancelDisabled = false; // allow cancel to close the form
-            saveDisabled = true;    // nothing to save
-            return;
-        }
-
-        // Cancel is disabled if stream brightness has been modified since load/save...
-        cancelDisabled = streamCurrentBrightness != EditingItem.CurrentBrightness;
-        // Save is disabled if relative brightness has been modified since load/save, and we have not reprocessed yet...
-        // ... ie streamCurrentBrightness is not equal to adjustedBrightness...
-        // ... AND streamCurrentBrightness is not equal to actualBrightness (ie this is detecting if we have reprocessed yet)
-        saveDisabled = ((selectedRelativeBrightness != EditingItem.CurrentBrightness)
-            && (streamCurrentBrightness != adjustedBrightness));
-
-        if (saveDisabled && cancelDisabled)
-        {
-            _logger.LogWarning($"{_logTag}: Both Save and Cancel buttons are disabled in Edit Playable Item form; this should not happen.");
-            cancelDisabled = false; // allow cancel to close the form
-        }
-            
-
+        selectedMatrixOptions = opts;
+        showMatrixOptionsForm = false;
+        CalculateBrightness();
+        await InvokeAsync(StateHasChanged);
     }
 
+    // Called when Cancel is clicked in Matrix Options form
+    private Task OnMatrixOptionsCancel()
+    {
+        showMatrixOptionsForm = false;
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+    // Called when user clicks Save button
     private void SaveEdit()
     {
         if (EditingItem != null)
@@ -169,21 +157,30 @@
         }
     }
 
-    private void ShowReprocess()
+    // Called when user clicks Matrix Options button
+    private void ShowMatrixOptions()
     {
-        modalOptions = MatrixConfigService.CloneOptions();
-        // clear any previous result and show the options form
-        lastReprocessResult = null;
-        showOptionsForm = true;
+        showMatrixOptionsForm = true;
     }
 
-    private Task OnOptionsOk()
-    {
-        // Close the options modal. The result (if any) is stored in `lastReprocessResult`.
-        showOptionsForm = false;
-        modalOptions = null;
-        InvokeAsync(StateHasChanged);
-        return Task.CompletedTask;
+    private string BuildPageTitle(){
+        return ItemType switch
+        {
+            PlayableItemType.LIBRARY => "Library Item",
+            PlayableItemType.PLAYLIST => "Playlist Item",
+            PlayableItemType.QUICKMEDIA => $"QuickMedia B{EditingIndex + 1}",
+            _ => "Playable Item"
+        };
+    }
+
+    private string BuildMatrixOptionsTitle(){
+        return ItemType switch
+        {
+            PlayableItemType.LIBRARY => "Library Item Matrix Options",
+            PlayableItemType.PLAYLIST => "Playlist Item Matrix Options",
+            PlayableItemType.QUICKMEDIA => $"Button {EditingIndex + 1} Matrix Options",
+            _ => "Matrix Options"
+        };
     }
 }
 
@@ -191,7 +188,7 @@
 {
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
-            <h2>Edit @PageTitle</h2>
+            <h2>Edit @BuildPageTitle()</h2>
             <div class="add-dialog-row">
                 <div class="add-dialog-section">
                     <div class="add-dialog-options">
@@ -218,37 +215,44 @@
                     </div>
                 </div>
             </div>
-            <div class="add-dialog-row" style="margin-top:1rem;">
+            <div class="add-dialog-row" style="margin-top: 1em;">
                 <label class="add-dialog-label">Stream Current Brightness (%)
                     <input type="number" disabled class="add-dialog-number" @bind="streamCurrentBrightness"/>
                 </label>
             </div>
-            <div class="add-dialog-row" style="margin-top:1rem;">
+            <div class="add-dialog-row">
                 <label class="add-dialog-label">Relative Brightness (%)
                     <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
                 </label>
             </div>
-            <div class="add-dialog-row" style="margin-top:1rem;">
+            <div class="add-dialog-row">
                 <label class="add-dialog-label">Adjusted Brightness (%)
                     <input type="number" disabled class="add-dialog-number" @bind="adjustedBrightness" @bind:event="oninput" min="1" max="100" />
                 </label>
             </div>
+            <button type="button" class="add-dialog__cancel-button" @onclick="ShowMatrixOptions">Item Matrix Options</button>
             <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
                 <div style="display:flex; gap:0.5rem;">
-                    <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)" disabled="@cancelDisabled">Cancel</button>
-                    <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit" disabled="@saveDisabled">Save</button>
-                    <button type="button" class="add-dialog__cancel-button" @onclick="ShowReprocess">ReConvert</button>
+                    <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
+                    <button type="button" class="add-dialog__cancel-button" @onclick="SaveEdit">Save</button>
                 </div>
             </div>
         </div>
     </div>
 }
 
-@if (showOptionsForm && modalOptions is not null)
+@* Matrix Options form *@
+@if (showMatrixOptionsForm && selectedMatrixOptions is not null)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
             <div style="width:80%;">
-            <WearWare.Components.Forms.MatrixOptionsFormOld Options="modalOptions" Visibility="MatrixConfigService.Visibility" RelativeBrightness="selectedRelativeBrightness" OnValidSubmitAsync="HandleReprocessAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+            <WearWare.Components.Forms.MatrixOptionsFormOld Options="selectedMatrixOptions.Clone()"
+                Visibility="MatrixConfigService.Visibility"
+                RelativeBrightness="selectedRelativeBrightness"
+                OnValidSubmit="OnMatrixOptionsOk"
+                OnCancel="OnMatrixOptionsCancel"
+                Action="OK"
+                Title="@BuildMatrixOptionsTitle()" />
         </div>
     </div>
 }

@@ -157,5 +157,31 @@ namespace WearWare.Services.MatrixConfig
             };
         }
 
+        public bool IsSame(LedMatrixOptionsConfig other)
+        {
+            if (other == null)
+                return false;
+
+            return
+                    Brightness == other.Brightness &&
+                    ChainLength == other.ChainLength &&
+                    Cols == other.Cols &&
+                    DisableHardwarePulsing == other.DisableHardwarePulsing &&
+                    GpioSlowdown == other.GpioSlowdown &&
+                    HardwareMapping == other.HardwareMapping &&
+                    InverseColors == other.InverseColors &&
+                    LedRgbSequence == other.LedRgbSequence &&
+                    LimitRefreshRateHz == other.LimitRefreshRateHz &&
+                    Multiplexing == other.Multiplexing &&
+                    PanelType == other.PanelType &&
+                    Parallel == other.Parallel &&
+                    PixelMapperConfig == other.PixelMapperConfig &&
+                    PwmBits == other.PwmBits &&
+                    PwmDitherBits == other.PwmDitherBits &&
+                    PwmLsbNanoseconds == other.PwmLsbNanoseconds &&
+                    RowAddressType == other.RowAddressType &&
+                    Rows == other.Rows &&
+                    ScanMode == other.ScanMode;
+        }   
     }
 }

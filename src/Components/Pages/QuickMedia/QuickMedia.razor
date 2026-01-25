@@ -210,8 +210,8 @@ else
         EditingItem="editingItem"
         EditingIndex="editingIndex"
         ImageUrl="@($"/quickmedia-images/{editingIndex}/{editingItem.SourceFileName}")"
-        PageTitle="@($"QuickMedia Button {editingIndex+1}")"
         OnCancel="HideEditDialog"
         OnSave="OnEditQuickMediaButton"
-        OnReprocessAsync="ReprocessQuickMediaButtonAsync" />
+        OnReprocessAsync="ReprocessQuickMediaButtonAsync"
+        ItemType="PlayableItemType.QUICKMEDIA"/>
 }
