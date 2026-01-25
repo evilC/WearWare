@@ -54,16 +54,6 @@
         PlaylistService.StateChanged -= OnStateChanged;
     }
 
-    // Reprocesses a playlist item
-    @* private async Task<WearWare.Common.ReConvertTaskResult> ReprocessPlaylistItemAsync(PlayableItem item, WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts, int relativeBrightness)
-    {
-        if (_playlist is null || editingIndex < 0)
-        {
-            return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected", ActualBrightness = 0 };
-        }
-        return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, relativeBrightness, opts);
-    } *@
-
     private void OnActivePlaylistChanged(ChangeEventArgs e)
     {
         var newValue = e.Value?.ToString();
@@ -91,7 +81,7 @@
 
     /// <summary> The index to insert the new item at when adding to the playlist </summary>
     private int addDialogInsertIndex = 0;
-    
+
     /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
     private IReadOnlyList<PlayableItem>? libraryItems;
     /// <summary> Reference to the AddPlayableItemForm component </summary>
@@ -125,17 +115,14 @@
     /// Called after we click "Add" and a playable item is picked from the list
     /// </summary>
     /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue, relativeBrightness)
-    async void OnAddDialogItemChosen((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
+    async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
         if (_playlist is null) return;
-        @* PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
-        _items = _playlist?.GetPlaylistItems();
-        showAddDialog = false;
-        StateHasChanged(); *@
         showAddDialog = false;
         await Task.Yield();
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
+        OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.ADD);
     }
 
     // ================================================== Edit Dialog  ==================================================
@@ -152,14 +139,21 @@
     private int editingIndex;
 
     /// <summary>
+    /// The mode of the EditPlayableItemForm
+    /// Not used by the form itself, but when it returns we can know if we were adding or editing
+    /// </summary>
+    private PlayableItemFormMode formMode;
+
+    /// <summary>
     /// Shows the Edit Item dialog for the specified item
     /// </summary>
     /// <param name="item"></param> The PlayableItem to edit
     /// <param name="itemIndex"></param> The index of the PlayableItem to edit
-    void OnEditPlaylistItem(PlayableItem item, int itemIndex)
+    void OnEditPlaylistItem(PlayableItem item, int itemIndex, PlayableItemFormMode mode)
     {
         editingItem = item;
         editingIndex = itemIndex;
+        formMode = mode;
         showEditDialog = true;
     }
 
@@ -459,7 +453,7 @@
             var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
             <div class="playlist-item">
                 <div class="playlist-item-controls">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index)">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index, PlayableItemFormMode.EDIT)">Edit</button>
                     <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeletePlaylistItem(index)">Delete</button>
                 </div>
                 <div class="playlist-item-enabled">
@@ -496,7 +490,7 @@
         OnCancel="HideEditDialog"
         OnSave="OnSavePlaylistItem"
         ItemType="PlayableItemType.PLAYLIST"
-        FormMode="PlayableItemFormMode.EDIT"
+        FormMode="formMode"
     />
 }
 
