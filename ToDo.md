@@ -1,5 +1,41 @@
 # ToDo list
-
+- Summary of variations in new form for Harmonization task
+  - Import
+    - Clicking image is "Importing" (ie Add)
+    - No PlayableItem exists - needs to be created
+    - Dialog needs to be shown before edit form to pick media from Incoming folder
+    - Filename field shows only on this page - needs to be validated, and could be changed
+    - "PlayMode" options (PlayMode / PlayModeValue / RelativeBrightness) form not embedded.  
+      Values always hard-coded to PlayMode=FOREVER, PlayModeValue=1, RelativeBrightness=100
+    - Matrix options form shown with default values from MatrixOptions service
+    - Always converts  
+      - Copy from incoming, then convert
+  - Library
+    - ReConvert button instead launches new Edit form
+    - Modifies existing PlayableItem
+      - PlayMode form not embedded, hard-coded values from Import kept
+      - Matrix options form embedded with values from PlayableItem
+    - On submit:
+      - Reconverts if RelativeBrightness or Matrix Options changed
+  - Playlist / QuickMedia
+    - Add
+      - Add button shows dialog to pick PlayableItem from the library instead of separate Add form
+        - Clone PlayableItem from item picked
+        - After that, shows harmonized Edit form
+          - PlayMode options form embedded with values from PlayableItem
+          - Matrix options form embedded with values from PlayableItem
+      - On submit:
+        - Copy files from library
+        - Reconvert the copy if RelativeBrightness or Matrix Options changed
+        - Save PlayableItem
+    - Edit
+      - Edit button launches new harmonized Edit form
+        - Modifies existing PlayableItem
+          - PlayMode options form embedded with values from PlayableItem
+          - Matrix options form embedded with values from PlayableItem
+        - On submit:
+          - Reconvert if RelativeBrightness or Matrix Options changed
+          - Save PlayableItem
 - Harmonization of Import / Add / Edit, and reconvert refactor  
   Same form used for all  
   Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
