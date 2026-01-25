@@ -331,7 +331,7 @@
         </div>
     }
 
-    
+    @* led-image-viewer args preview *@
     </div>
         </div>
 
@@ -347,6 +347,8 @@
 
     </EditForm>
 
+    @* Stream Conversion status *@
+    @* ToDo: This needs to move out of here and be shown / hidden by the StreamConverterService *@
     @if (importing || operationResult != null)
     {
         <div class="mw-matrix-overlay">
