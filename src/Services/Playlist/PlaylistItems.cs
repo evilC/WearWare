@@ -215,20 +215,27 @@ namespace WearWare.Services.Playlist
 
         public void Serialize()
         {
-            var outPath = Path.Combine(GetPlaylistPath(), _configFileName);
+            var outPath = Path.Combine(GetPlaylistAbsolutePath(), _configFileName);
             JsonUtils.ToJsonFile(outPath, _items);
         }
 
         /// <summary>
-        /// Gets the path to the playlist folder
+        /// Gets the absolute path to the playlist folder
         /// </summary>
         /// <param name="playlist"></param>
-        /// <returns></returns>
-        public string GetPlaylistPath()
+        /// <returns>The absolute path to the playlist folder (eg /root/WearWare/playlists/playlistName)</returns>
+        public string GetPlaylistAbsolutePath()
         {
             return Path.Combine(PathConfig.PlaylistPath, Name);
         }
 
-
+        /// <summary>
+        /// Gets the relative path to the playlist folder from the WearWare root
+        /// </summary>
+        /// <returns>The relative path to the playlist folder (eg playlists/playlistName)</returns
+        public string GetPlaylistRelativePath()
+        {
+            return Path.Combine(PathConfig.PlaylistFolder, Name);
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace WearWare.Common.Media
         public int CurrentBrightness { get; set; } = 100;
         public PlayMode PlayMode { get; set; } = PlayMode.LOOP;
         public int PlayModeValue { get; set; } = 1;
-        public string ParentFolder { get; init; }
+        public string ParentFolder { get; set; }
         public bool Enabled { get; set; } = true;
         public LedMatrixOptionsConfig MatrixOptions { get; set; }
 

@@ -18,6 +18,7 @@
     /// In ADD mode, this will be the index where the new item will be inserted.
     /// In EDIT mode, this will be the index of the item being edited.
     /// </summary>
+
     [Parameter] public int EditingIndex { get; set; }
 
     /// <summary>
@@ -65,15 +66,16 @@
 
     protected override void OnInitialized()
     {
-        if (EditingItem != null)
-        {
-            selectedPlayMode = (int)EditingItem.PlayMode;
-            selectedPlayModeValue = EditingItem.PlayModeValue;
-            selectedRelativeBrightness = EditingItem.RelativeBrightness;
-            selectedMatrixOptions = EditingItem.MatrixOptions.Clone();
-            streamCurrentBrightness = EditingItem.CurrentBrightness;
-            CalculateBrightness();
+        if (EditingItem == null){
+            _logger.LogError($"{_logTag}: EditingItem is null in EditPlayableItemForm");
+            return;
         }
+        selectedPlayMode = (int)EditingItem.PlayMode;
+        selectedPlayModeValue = EditingItem.PlayModeValue;
+        selectedRelativeBrightness = EditingItem.RelativeBrightness;
+        selectedMatrixOptions = EditingItem.MatrixOptions.Clone();
+        streamCurrentBrightness = EditingItem.CurrentBrightness;
+        CalculateBrightness();
     }
 
     /// <summary>

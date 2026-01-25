@@ -287,19 +287,18 @@ namespace WearWare.Services.Playlist
         /// <summary>
         /// Called when OK is clicked in the EditPlayableItemForm
         /// </summary>
-        public async Task OnPlaylistFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem updatedItem, PlayableItemFormMode formMode)
+        /// <param name="playlist"></param> The playlist being edited
+        /// <param name="itemIndex"></param> The index of the item being edited
+        /// This is not used any more, but keep for now.
+        /// The equivalent method in QuickMediaService still uses it.
+        /// <param name="originalItem"></param> The original item before editing
+        /// <param name="updatedItem"></param> The updated item from the form
+        /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
+        /// </summary>
+        public async Task OnPlaylistFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
         {
-            // ToDo: Handle formMode.
-            // For ADD mode:
-            // - We always need to do a convert
-            // - File will need to be copied from library to playlist folder
-
-            var item = playlist.GetPlaylistItems()[itemIndex];
-            if (item == null)
-            {
-                _logger.LogError("{LogTag} Failed to edit playlist item at index {ItemIndex} in playlist {PlaylistName}: item not found.", _logTag, itemIndex, playlist.Name);
-                return;
-            }
+            // ToDo: Try / catch needed in here
+    
             bool restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
             {
@@ -307,11 +306,17 @@ namespace WearWare.Services.Playlist
                 _mediaController.Stop();
                 restartMediaController = true;
             }
+            if (formMode == PlayableItemFormMode.ADD)
+            {
+                // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
+                updatedItem.ParentFolder = playlist.GetPlaylistRelativePath();
+            }
 
-            if (item.NeedsReConvert(updatedItem)){
+            if (originalItem.NeedsReConvert(updatedItem)){
                 // If the updated item needs re-conversion, do it now
-                var path = playlist.GetPlaylistPath();
-                var result = await _streamConverterService.ConvertToStream(path, updatedItem.SourceFileName, path, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                var copyFrom = originalItem.GetSourceFilePath();  // For ADD, this will be from library; for EDIT, from playlist folder
+                var copyTo = playlist.GetPlaylistAbsolutePath();  // For both ADD and EDIT, destination is playlist folder
+                var result = await _streamConverterService.ConvertToStream(copyFrom, updatedItem.SourceFileName, copyTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
                 if (result.ExitCode != 0)
                 {
                     // Re-convert failed - show an alert and do not save changes
@@ -320,18 +325,43 @@ namespace WearWare.Services.Playlist
                     return;
                 }
             }
-            item.UpdateFromClone(updatedItem);
-            if (!item.Enabled)
+            else if (formMode == PlayableItemFormMode.ADD)
             {
-                // If item is now disabled, and it is the current item, we need to move to the next item
-                if (playlist.GetCurrentItem() == item)
+                // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
+                var copyFrom = originalItem.GetStreamFilePath();  // From library folder
+                var copyTo = updatedItem.GetStreamFilePath();  // To playlist folder
+                File.Copy(copyFrom, copyTo, overwrite: true);
+            }
+            if (formMode == PlayableItemFormMode.ADD)
+            {
+                // Copy source file from library to playlist folder
+                var copyFrom = originalItem.GetSourceFilePath();
+                var copyTo = updatedItem.GetSourceFilePath();
+                if (!File.Exists(copyTo)){
+                    File.Copy(copyFrom, copyTo, overwrite: true);
+                }
+            }
+            if (formMode == PlayableItemFormMode.ADD)
+            {
+                // Add new item
+                playlist.AddItem(itemIndex, updatedItem);
+            }
+            else
+            {
+                originalItem.UpdateFromClone(updatedItem);
+                if (!originalItem.Enabled)
                 {
-                    if (playlist.MoveNext() == null)
+                    // If item is now disabled, and it is the current item, we need to move to the next item
+                    if (playlist.GetCurrentItem() == originalItem)
                     {
-                        restartMediaController = false; // No more items to play
+                        if (playlist.MoveNext() == null)
+                        {
+                            restartMediaController = false; // No more items to play
+                        }
                     }
                 }
             }
+
             playlist.Serialize();
             // Restart media controller if there are still items to play
             if (restartMediaController && playlist.GetCurrentItem() != null)
@@ -378,7 +408,7 @@ namespace WearWare.Services.Playlist
             }
             if (deleteFiles)
             {
-                var path = playlist.GetPlaylistPath();
+                var path = playlist.GetPlaylistAbsolutePath();
                 File.Delete(item.GetStreamFilePath());
                 File.Delete(item.GetSourceFilePath());
             }
