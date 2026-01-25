@@ -152,7 +152,14 @@
     /// <param name="itemIndex"></param> The index of the PlayableItem to edit
     async Task OnEditPlaylistItem(PlayableItem item, int itemIndex, PlayableItemFormMode mode)
     {
-        editingItem = item;
+        editingItem = item.Clone();
+        if (mode == PlayableItemFormMode.ADD)
+        {
+            // For ADD mode, we need to set PlayMode to LOOP and PlayModeValue to 1 by default...
+            // ... because the item being passed in is from the library and has FOREVER mode by default
+            editingItem.PlayMode = PlayMode.LOOP;
+            editingItem.PlayModeValue = 1;
+        }
         editingIndex = itemIndex;
         formMode = mode;
         showEditDialog = true;
@@ -490,7 +497,7 @@
 {
     <EditPlayableItemForm
         @ref="editFormRef"
-        EditingItem="editingItem.Clone()"
+        EditingItem="editingItem"
         EditingIndex="editingIndex"
         ImageUrl="@($"{BuildEditingImageURL()}")"
         OnCancel="HideEditDialog"
