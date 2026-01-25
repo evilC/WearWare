@@ -34,14 +34,10 @@
 
     private LedMatrixOptionsConfig? selectedMatrixOptions;
 
-    // === Form state control  ===
+    // === Form readouts ===
     // Holds the current brightness that the stream was last converted with
-    // If the user has reconverted with different brightness, this will differ from EditingItem.CurrentBrightness
-    // In which case, disable the Cancel button to prevent loss of current brightness change
-    // ToDo: This will be removed when we move to doing convert on save of this form, instead of immediate convert on ReConvert
     private int streamCurrentBrightness;
 
-    // === Form readouts ===
     // What the brightness WOULD BE if we reprocessed now with current matrix options and selected relative brightness
     private int adjustedBrightness;
 
@@ -147,14 +143,20 @@
     // Called when user clicks Save button
     private void SaveEdit()
     {
-        if (EditingItem != null)
-        {
-            EditingItem.PlayMode = (PlayMode)selectedPlayMode;
-            EditingItem.PlayModeValue = selectedPlayModeValue;
-            EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
-            EditingItem.CurrentBrightness = streamCurrentBrightness;
-            OnSave.InvokeAsync((EditingIndex, EditingItem));
+        if (EditingItem == null){
+            _logger.LogError($"{_logTag}: Cannot save PlayableItem; EditingItem is null");
+            return;
         }
+        if (selectedMatrixOptions == null){
+            _logger.LogError($"{_logTag}: Cannot save PlayableItem; selectedMatrixOptions is null");
+            return;
+        }
+        EditingItem.PlayMode = (PlayMode)selectedPlayMode;
+        EditingItem.PlayModeValue = selectedPlayModeValue;
+        EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
+        EditingItem.CurrentBrightness = adjustedBrightness;
+        EditingItem.MatrixOptions = selectedMatrixOptions;
+        OnSave.InvokeAsync((EditingIndex, EditingItem));
     }
 
     // Called when user clicks Matrix Options button

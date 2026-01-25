@@ -27,8 +27,8 @@ namespace WearWare.Services.Library
         {
             _logger = logger;
             _mediaControllerService = mediaControllerService;
-            LoadLibraryItems();
             _matrixConfigService = matrixConfigService;
+            LoadLibraryItems();
             _logger.LogInformation("LibraryService initialized.");
         }
 

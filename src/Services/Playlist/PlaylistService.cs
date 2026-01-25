@@ -238,6 +238,7 @@ namespace WearWare.Services.Playlist
             }
         }
 
+        /*
         /// <summary>
         /// Updates a playlist item that has been edited
         /// </summary>
@@ -246,6 +247,7 @@ namespace WearWare.Services.Playlist
         /// <returns>True if the item was updated, false otherwise</returns>
         // ToDo: Do we need to notify MediaControllerService of the update?
         // ToDo: If item enabled state changed, we may need to start/stop MediaControllerService
+        // ToDo: REMOVE - this is the old method
         public bool EditPlaylistItem(PlaylistItems playlist, int itemIndex)
         {
             bool restartMediaController = false;
@@ -279,6 +281,59 @@ namespace WearWare.Services.Playlist
                 _mediaController.Start();
             }
             return true;
+        }
+        */
+
+        /// <summary>
+        /// Called when OK is clicked in the EditPlayableItemForm
+        /// </summary>
+        public async Task OnPlaylistFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem updatedItem)
+        {
+            var item = playlist.GetPlaylistItems()[itemIndex];
+            if (item == null)
+            {
+                _logger.LogError("{LogTag} Failed to edit playlist item at index {ItemIndex} in playlist {PlaylistName}: item not found.", _logTag, itemIndex, playlist.Name);
+                return;
+            }
+            bool restartMediaController = false;
+            if (PlaylistIsPlaying(playlist))
+            {
+                // Currently editing playlist and media controller is running, need to restart after removing item
+                _mediaController.Stop();
+                restartMediaController = true;
+            }
+
+            if (item.NeedsReConvert(updatedItem)){
+                // If the updated item needs re-conversion, do it now
+                var path = playlist.GetPlaylistPath();
+                var result = await _streamConverterService.ConvertToStream(path, updatedItem.SourceFileName, path, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                if (result.ExitCode != 0)
+                {
+                    // Re-convert failed - show an alert and do not save changes
+                    //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
+                    // ToDo: Show error to user
+                    return;
+                }
+            }
+            item.UpdateFromClone(updatedItem);
+            if (!item.Enabled)
+            {
+                // If item is now disabled, and it is the current item, we need to move to the next item
+                if (playlist.GetCurrentItem() == item)
+                {
+                    if (playlist.MoveNext() == null)
+                    {
+                        restartMediaController = false; // No more items to play
+                    }
+                }
+            }
+            playlist.Serialize();
+            // Restart media controller if there are still items to play
+            if (restartMediaController && playlist.GetCurrentItem() != null)
+            {
+                _mediaController.Start();
+            }
+            // return true;
         }
 
         // ToDo: Should the bulk of this not be in PlaylistItems?
@@ -336,6 +391,7 @@ namespace WearWare.Services.Playlist
             return removed;
         }
 
+        /*
         /// <summary>
         /// Re-processes the specified playlist item using the provided matrix options.
         /// Overwrites the existing .stream in the playlist folder.
@@ -367,6 +423,7 @@ namespace WearWare.Services.Playlist
                 // }
             }
         }
+        */
 
         /// <summary>
         /// Called when the editing playlist is changed from the UI

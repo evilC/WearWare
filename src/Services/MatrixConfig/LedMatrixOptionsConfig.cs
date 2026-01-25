@@ -157,7 +157,7 @@ namespace WearWare.Services.MatrixConfig
             };
         }
 
-        public bool IsSame(LedMatrixOptionsConfig other)
+        public bool IsEqual(LedMatrixOptionsConfig other)
         {
             if (other == null)
                 return false;

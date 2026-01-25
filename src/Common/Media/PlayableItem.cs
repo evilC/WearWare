@@ -46,5 +46,46 @@ namespace WearWare.Common.Media
         {
             return Path.Combine(PathConfig.Root, ParentFolder, SourceFileName);
         }
+
+        public PlayableItem Clone()
+        {
+            return new PlayableItem(
+                Name,
+                ParentFolder,
+                MediaType,
+                SourceFileName,
+                PlayMode,
+                PlayModeValue,
+                RelativeBrightness,
+                CurrentBrightness,
+                MatrixOptions.Clone()
+            );
+        }
+
+        /// <summary>
+        /// Determines if we need to reconvert the item based on changes to relevant properties.
+        /// </summary>
+        /// <param name="other">The other PlayableItem to compare against.</param>
+        /// <returns>True if reconversion is needed; otherwise, false.</returns>
+        public bool NeedsReConvert(PlayableItem other)
+        {
+            if (other == null) return false;
+            return 
+                   RelativeBrightness != other.RelativeBrightness ||
+                   !MatrixOptions.IsEqual(other.MatrixOptions);
+        }
+
+        /// <summary>
+        /// Copies mutable properties from a cloned PlayableItem into this one.
+        /// </summary>
+        /// <param name="other"></param> A cloned PlayableItem to copy from.
+        public void UpdateFromClone(PlayableItem other)
+        {
+            PlayMode = other.PlayMode;
+            PlayModeValue = other.PlayModeValue;
+            RelativeBrightness = other.RelativeBrightness;
+            CurrentBrightness = other.CurrentBrightness;
+            MatrixOptions = other.MatrixOptions.Clone();
+        }
     }
 }

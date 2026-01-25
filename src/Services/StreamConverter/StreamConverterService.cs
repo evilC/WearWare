@@ -25,15 +25,26 @@ namespace WearWare.Services.StreamConverter
             // _matrixOptions = _matrixConfigService.GetArgsString();
         }
 
-        // Example method: convert a file to a stream format
-        public async Task<ReConvertTaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        /// <summary>
+        /// Converts the specified source media file to a .stream file using led-image-viewer with the specified options.
+        /// </summary>
+        /// <param name="sourcePath"></param>
+        /// <param name="oldFileName"></param>
+        /// <param name="destPath"></param>
+        /// <param name="newFileNameNoExt"></param>
+        /// <param name="relativeBrightness"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ReConvertTaskResult> ConvertToStream(string sourcePath, string oldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
                 return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
             }
             var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
-            var inputPath = Path.Combine(sourcePath, odldFileName);
+            var inputPath = Path.Combine(sourcePath, oldFileName);
             var streamFile = $"{newFileNameNoExt}.stream";
             var streamPath = Path.Combine(destPath, streamFile);
             // Write to a temporary file first, then atomically move into place to avoid read/write races

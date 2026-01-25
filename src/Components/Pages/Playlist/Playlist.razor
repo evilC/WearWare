@@ -53,14 +53,15 @@
         PlaylistService.StateChanged -= OnStateChanged;
     }
 
-    private async Task<WearWare.Common.ReConvertTaskResult> ReprocessPlaylistItemAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts, int relativeBrightness)
+    // Reprocesses a playlist item
+    @* private async Task<WearWare.Common.ReConvertTaskResult> ReprocessPlaylistItemAsync(PlayableItem item, WearWare.Services.MatrixConfig.LedMatrixOptionsConfig opts, int relativeBrightness)
     {
         if (_playlist is null || editingIndex < 0)
         {
             return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No playlist/item selected", ActualBrightness = 0 };
         }
         return await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, relativeBrightness, opts);
-    }
+    } *@
 
     private void OnActivePlaylistChanged(ChangeEventArgs e)
     {
@@ -153,24 +154,38 @@
     /// </summary>
     /// <param name="item"></param> The PlayableItem to edit
     /// <param name="itemIndex"></param> The index of the PlayableItem to edit
-    void EditPlaylistItem(PlayableItem item, int itemIndex)
+    void OnEditPlaylistItem(PlayableItem item, int itemIndex)
     {
         editingItem = item;
         editingIndex = itemIndex;
         showEditDialog = true;
-        // ToDo: Need to know which playlist is being edited so we can call save on the right playlist
     }
 
     /// <summary>
-    /// Saves the edited PlayableItem to the playlist
+    /// Called when Save is clicked in the EditPlayableItemForm
     /// </summary>
     /// <param name="args"></param> Tuple of (editingIndex, updatedItem)
-    async void OnEditPlayableItem((int editingIndex, PlayableItem updatedItem) args)
+    async void OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem) args)
     {
-        if (_playlist is null) return;
+        if (_playlist is null || editingItem is null || editingIndex < 0) return;
+        await PlaylistService.OnPlaylistFormSubmit(_playlist, args.editingIndex, args.updatedItem);
+
+        /*
+        if (editingItem.NeedsReConvert(args.updatedItem)){
+            // If the updated item needs re-conversion, do it now
+            var result = await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, relativeBrightness, opts);
+            if (result.ExitCode != 0)
+            {
+                // Re-convert failed - show an alert and do not save changes
+                await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
+                return;
+            }
+        }
         // Update the item in the playlist
-        _items![args.editingIndex] = args.updatedItem;
+        _items![args.editingIndex].UpdateFromClone(args.updatedItem);   // Use UpdateFromClone rather than assignment to preserve references
+        
         PlaylistService.EditPlaylistItem(_playlist, args.editingIndex);
+        */
         showEditDialog = false;
         editingItem = null;
         StateHasChanged();
@@ -230,12 +245,13 @@
     /// <param name="item"></param> The PlayableItem being toggled
     /// <param name="itemIndex"></param> The index of the PlayableItem being toggled
     /// <param name="newState"></param> The new enabled state
-    void ItemEnableToggled(PlayableItem item, int itemIndex, bool newState)
+    async void ItemEnableToggled(PlayableItem item, int itemIndex, bool newState)
     {
         if (_playlist is null)
             return;
         item.Enabled = newState;
-        PlaylistService.EditPlaylistItem(_playlist, itemIndex);
+        @* PlaylistService.EditPlaylistItem(_playlist, itemIndex); *@
+        await PlaylistService.OnPlaylistFormSubmit(_playlist, itemIndex, item);
         StateHasChanged();
     }
 
@@ -441,7 +457,7 @@
             var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
             <div class="playlist-item">
                 <div class="playlist-item-controls">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => EditPlaylistItem(item, index)">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index)">Edit</button>
                     <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeletePlaylistItem(index)">Delete</button>
                 </div>
                 <div class="playlist-item-enabled">
@@ -472,12 +488,11 @@
 {
     <EditPlayableItemForm
         @ref="editFormRef"
-        EditingItem="editingItem"
+        EditingItem="editingItem.Clone()"
         EditingIndex="editingIndex"
         ImageUrl="@($"/playlist-images/{_playlist?.Name}/{editingItem.SourceFileName}")"
         OnCancel="HideEditDialog"
-        OnSave="OnEditPlayableItem"
-        OnReprocessAsync="ReprocessPlaylistItemAsync"
+        OnSave="OnSavePlaylistItem"
         ItemType="PlayableItemType.PLAYLIST"/>
 }
 

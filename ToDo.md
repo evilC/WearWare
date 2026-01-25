@@ -36,6 +36,11 @@
         - On submit:
           - Reconvert if RelativeBrightness or Matrix Options changed
           - Save PlayableItem
+- Progress system
+  Overlay to show progress (eg on ReConvert)  
+  - Old unused overlay still left in `MatrixOptionsForm.razor` (`div class="mw-matrix-overlay"`)
+  - Locked out scrollbars in underlying page - see `modalScrollLock` in `EditPlayableItemForm.razor`
+  - AI recommended in chat `Nested Razor forms validation scenario`: `Service / pub-sub — OperationProgressService`
 - Harmonization of Import / Add / Edit, and reconvert refactor  
   Same form used for all  
   Add (for both Playlist and QuickMedia) will need extra step to pick media to add first
