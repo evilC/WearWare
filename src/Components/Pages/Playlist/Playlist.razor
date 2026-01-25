@@ -1,4 +1,5 @@
 @page "/playlist"
+@using Microsoft.AspNetCore.Mvc.ModelBinding.Binders
 @using WearWare.Services.Playlist
 @using WearWare.Components.Pages.Shared.PlaylistItem
 @using WearWare.Common.Media
@@ -121,16 +122,17 @@
     }
 
     /// <summary>
-    /// Adds the selected LibraryItem to the playlist at the specified index
+    /// Called after we click "Add" and a playable item is picked from the list
     /// </summary>
     /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue, relativeBrightness)
-    async void OnAddPlayableItem((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
+    async void OnPlayableItemPickedForAdd((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
         if (_playlist is null) return;
-        PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
+        @* PlaylistService.AddPlaylistItem(_playlist, args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
         _items = _playlist?.GetPlaylistItems();
         showAddDialog = false;
-        StateHasChanged();
+        StateHasChanged(); *@
+        showAddDialog = false;
         await Task.Yield();
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
@@ -449,8 +451,8 @@
 @* Normal Playlist View: *@
 @if (_playlist is not null && _items is not null)
 {
-    <button class="playlist-add-button" @onclick="() => ShowAddDialog(0)">Add new item at start</button>
     <div class="playlist-list">
+        <button class="playlist-add-button" @onclick="() => ShowAddDialog(0)">Add new item at start</button>
         @for (int i = 0; i < _items.Count; i++)
         {
             var item = _items[i];
@@ -477,7 +479,7 @@
     <AddPlayableItemForm @ref="addFormRef"
         LibraryItems="libraryItems"
         OnCancel="HideAddDialog"
-        OnAdd="OnAddPlayableItem"
+        OnAdd="OnPlayableItemPickedForAdd"
         InsertIndex="addDialogInsertIndex"
         PageTitle="Playlist item" />
 }
@@ -493,7 +495,9 @@
         ImageUrl="@($"/playlist-images/{_playlist?.Name}/{editingItem.SourceFileName}")"
         OnCancel="HideEditDialog"
         OnSave="OnSavePlaylistItem"
-        ItemType="PlayableItemType.PLAYLIST"/>
+        ItemType="PlayableItemType.PLAYLIST"
+        FormMode="PlayableItemFormMode.EDIT"
+    />
 }
 
 

@@ -16,6 +16,7 @@
     // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
     [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
     [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
+    [Parameter] public PlayableItemFormMode FormMode { get; set; } = PlayableItemFormMode.EDIT;
 
     private Dictionary<string, int> playModeOptions = new()
     {

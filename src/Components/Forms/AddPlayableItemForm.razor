@@ -20,14 +20,8 @@
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<(int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)> OnAdd { get; set; }
     [Parameter] public int InsertIndex { get; set; }
+    // ToDo: Remove
     [Parameter] public string PageTitle { get; set; } = "Playlist";
-
-    private Dictionary<string, int> playModeOptions = new()
-    {
-        { "Loop", (int)PlayMode.LOOP },
-        { "Duration", (int)PlayMode.DURATION },
-        { "Forever", (int)PlayMode.FOREVER }
-    };
 
     private int selectedPlayMode = (int)PlayMode.LOOP;
     private int selectedPlayModeValue = 1;
@@ -35,26 +29,9 @@
     private int currentBrightness = 100;
     private PlayableItem? selectedLibraryItem;
 
-    private void OnSelectPlayMode(int value)
-    {
-        selectedPlayMode = value;
-        if (selectedPlayMode == (int)PlayMode.FOREVER)
-        {
-            selectedPlayModeValue = 1;
-        }
-    }
-
-    private void OnSelectPlayModeValue(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out var v))
-            selectedPlayModeValue = v;
-    }
-
     private void SelectItem(PlayableItem libItem)
     {
         selectedLibraryItem = libItem;
-        selectedRelativeBrightness = libItem.RelativeBrightness;
-        currentBrightness = libItem.CurrentBrightness;
     }
 
     private void AddOk()
@@ -73,24 +50,7 @@
 
 <div class="add-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
     <div class="add-dialog__content" @onclick:stopPropagation>
-        <h2>Add @PageTitle</h2>
-        <div class="add-dialog-row">
-            <div class="add-dialog-section">
-                <div class="add-dialog-options">
-                    @foreach (var mode in playModeOptions)
-                    {
-                        <label class="add-dialog-radio-label">
-                            <span class="add-dialog-mode-text">@mode.Key</span>
-                            <input type="radio" name="playMode" value="@mode.Value" @onchange="() => OnSelectPlayMode(mode.Value)" checked="@(selectedPlayMode == mode.Value)" class="add-dialog-radio" />
-                        </label>
-                    }
-                </div>
-            </div>
-            <div class="add-dialog-section">
-                <label class="add-dialog-label">Value</label>
-                <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.FOREVER)" @onchange="OnSelectPlayModeValue" />
-            </div>
-        </div>
+        <h2>Choose an item</h2>
         @if (LibraryItems is null || !LibraryItems.Any())
         {
             <div>No items found.</div>
@@ -101,21 +61,15 @@
                 <ul>
                     @foreach (var libItem in LibraryItems)
                     {
-                        var itemClass = selectedLibraryItem == libItem ? "add-dialog__item add-dialog__item--selected" : "add-dialog__item";
-                        <li class="@itemClass" @onclick="() => SelectItem(libItem)">
+                        <li class="add-dialog__item" @onclick="() => SelectItem(libItem)">
                             <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
                             <div>
                                 <strong>@libItem.Name</strong><br />
-                                <span class="add-dialog__item-type">@libItem.MediaType</span>
+                                <span class="add-dialog__item-type">Brightness: @libItem.CurrentBrightness %</span>
                             </div>
                         </li>
                     }
                 </ul>
-            </div>
-            <div class="add-dialog-row" style="margin-top:1rem;">
-                <label class="add-dialog-label">Relative Brightness (%)
-                    <input type="number" class="add-dialog-number" @bind="selectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
-                </label>
             </div>
             <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
                 <button type="button" class="add-dialog__cancel-button" @onclick="AddOk" disabled="@(selectedLibraryItem == null)">OK</button>
