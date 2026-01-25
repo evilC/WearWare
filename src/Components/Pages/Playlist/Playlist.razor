@@ -101,12 +101,10 @@
     /// <summary>
     /// Called when Cancel is clicked in the AddPlayableItemForm
     /// </summary>
-    async void OnAddDialogCancel()
+    async Task OnAddDialogCancel()
     {
         showAddDialog = false;
-        StateHasChanged();
-        // Wait for the UI to update and the dialog to be removed
-        await Task.Yield();
+        await InvokeAsync(StateHasChanged);
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
     }
@@ -119,10 +117,10 @@
     {
         if (_playlist is null) return;
         showAddDialog = false;
-        await Task.Yield();
+        await InvokeAsync(StateHasChanged);
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
-        OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.ADD);
+        await OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.ADD);
     }
 
     // ================================================== Edit Dialog  ==================================================
@@ -149,12 +147,13 @@
     /// </summary>
     /// <param name="item"></param> The PlayableItem to edit
     /// <param name="itemIndex"></param> The index of the PlayableItem to edit
-    void OnEditPlaylistItem(PlayableItem item, int itemIndex, PlayableItemFormMode mode)
+    async Task OnEditPlaylistItem(PlayableItem item, int itemIndex, PlayableItemFormMode mode)
     {
         editingItem = item;
         editingIndex = itemIndex;
         formMode = mode;
         showEditDialog = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     /// <summary>
@@ -166,22 +165,6 @@
         if (_playlist is null || editingItem is null || editingIndex < 0) return;
         await PlaylistService.OnPlaylistFormSubmit(_playlist, args.editingIndex, args.updatedItem);
 
-        /*
-        if (editingItem.NeedsReConvert(args.updatedItem)){
-            // If the updated item needs re-conversion, do it now
-            var result = await PlaylistService.ReprocessPlaylistItem(_playlist, editingIndex, relativeBrightness, opts);
-            if (result.ExitCode != 0)
-            {
-                // Re-convert failed - show an alert and do not save changes
-                await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
-                return;
-            }
-        }
-        // Update the item in the playlist
-        _items![args.editingIndex].UpdateFromClone(args.updatedItem);   // Use UpdateFromClone rather than assignment to preserve references
-        
-        PlaylistService.EditPlaylistItem(_playlist, args.editingIndex);
-        */
         showEditDialog = false;
         editingItem = null;
         StateHasChanged();
