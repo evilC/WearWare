@@ -67,9 +67,13 @@
         StateHasChanged();
     }
 
-    async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
+    /// <summary>
+    /// Called after we click "Add" and a playable item is picked from the list
+    /// </summary>
+    /// <param name="args"></param> Tuple of (insertIndex, libItem)
+    async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem) args)
     {
-        QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
+        @* QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem); *@
         showAddDialog = false;
         await InvokeAsync(StateHasChanged);
         if (addFormRef is not null)
@@ -115,6 +119,7 @@
         @* editingButton = button; *@
         formMode = mode;
         showEditDialog = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     /// <summary>

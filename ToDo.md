@@ -63,11 +63,12 @@
     Return enum?  
     Custom exceptions?  
     Either way, need to be able to tell if original file got overwritten or not
-  - Remove playMode, playModeValue, relativeBrightness, currentBrightness from `AddPlayableItemForm` `EventCallback`
   - Can originalItem be stored in the `EditPlayableItemForm`?  
     That way, we do not need to implement storing it on each of the pages
-  - Remove `MatrixOptionsFormOld`
   - Replace icky Task.Yield
+  - Library ReConvert needs to have Relative Brightness.  
+    Use new Edit form?
+  - Import to new Edit form?
 
 - Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  

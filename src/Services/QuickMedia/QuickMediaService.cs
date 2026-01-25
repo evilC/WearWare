@@ -80,47 +80,6 @@ public class QuickMediaService
         return _buttons;
     }
 
-    public bool AddQuickMediaButton(int buttonNumber, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
-    {
-        if (buttonNumber < 0 || buttonNumber >= _maxButtons) return false;
-        if (_buttons[buttonNumber] != null) return false;
-
-        var qmItem = new PlayableItem(
-            libItem.Name,
-            GetQuickMediaPath(buttonNumber),
-            libItem.MediaType,
-            libItem.SourceFileName,
-            playMode,
-            playModeValue,
-            relativeBrightness,
-            currentBrightness,
-            _matrixConfigService.CloneOptions() // ToDo: Use the options that the form returned
-        );
-            try
-        {
-            if (!Directory.Exists(GetQuickMediaPath(buttonNumber)))
-            {
-                Directory.CreateDirectory(GetQuickMediaPath(buttonNumber));
-            }
-            if (!File.Exists(qmItem.GetSourceFilePath())){
-                File.Copy(libItem.GetSourceFilePath(), qmItem.GetSourceFilePath(), overwrite: true);
-            }
-            if (!File.Exists(qmItem.GetStreamFilePath())){
-                File.Copy(libItem.GetStreamFilePath(), qmItem.GetStreamFilePath(), overwrite: true);
-            }
-            var button = _buttonFactory.Create(_mediaController, buttonNumber, qmItem);
-            _buttons[buttonNumber] = button;
-            SerializeQuickMediaButton(button);
-            StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{tag} Error adding Quick Media button for file {filename}: {message}", _logTag, libItem.SourceFileName, ex.Message);
-            return false;
-        }
-    }
-
     /// <summary>
     /// Called when OK is clicked in the EditPlayableItemForm
     /// </summary>
@@ -133,8 +92,30 @@ public class QuickMediaService
     /// </summary>
     public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
     {
-            var button = _buttons[itemIndex];
-            if (button == null) return; // ToDo: Error handling
+            IQuickMediaButton button;
+            if (formMode == PlayableItemFormMode.EDIT)
+            {
+                var tmp = _buttons[itemIndex];
+                if (itemIndex < 0 || itemIndex >= _maxButtons || tmp == null) return; // ToDo: Error handling
+                button = tmp;
+            }
+            else
+            {
+                // Create new button
+                try
+                {
+                    if (!Directory.Exists(GetQuickMediaPath(itemIndex)))
+                    {
+                        Directory.CreateDirectory(GetQuickMediaPath(itemIndex));
+                    }
+                    button = _buttonFactory.Create(_mediaController, itemIndex, updatedItem);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "{tag} Error adding Quick Media button for file {filename}: {message}", _logTag, updatedItem.SourceFileName, ex.Message);
+                    return;
+                }
+            }
             bool restartMediaController = false;
             // if (PlaylistIsPlaying(playlist))
             // {
@@ -182,7 +163,6 @@ public class QuickMediaService
             if (formMode == PlayableItemFormMode.ADD)
             {
                 // Add new item
-                button = _buttonFactory.Create(_mediaController, itemIndex, updatedItem);
                 _buttons[itemIndex] = button;
             }
             else
