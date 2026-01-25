@@ -63,6 +63,8 @@
     Return enum?  
     Custom exceptions?  
     Either way, need to be able to tell if original file got overwritten or not
+  - Remove playMode, playModeValue, relativeBrightness, currentBrightness from `AddPlayableItemForm` `EventCallback`
+
 - Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
     Restart and it is OK  
