@@ -35,6 +35,7 @@
     // Holds the current brightness that the stream was last converted with
     // If the user has reconverted with different brightness, this will differ from EditingItem.CurrentBrightness
     // In which case, disable the Cancel button to prevent loss of current brightness change
+    // ToDo: This will be removed when we move to doing convert on save of this form, instead of immediate convert on ReConvert
     private int streamCurrentBrightness;
     // True if the stream's brightness has been changed since load/save
     // Either changing relative brightness or reprocessing may change actual brightness
