@@ -180,7 +180,7 @@
     /// Called when Save is clicked in the EditPlayableItemForm
     /// </summary>
     /// <param name="args"></param> Tuple of (editingIndex, updatedItem, formMode)
-    async void OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
+    async Task OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
         if (_playlist is null || editingItem is null || _originalItem is null || editingIndex < 0) return; // ToDo: Error handling
         await PlaylistService.OnEditFormSubmit(_playlist, args.editingIndex, _originalItem, args.updatedItem, args.formMode);
@@ -188,8 +188,7 @@
         showEditDialog = false;
         editingItem = null;
         _originalItem = null;
-        StateHasChanged();
-        await Task.Yield(); // ToDo: Can this be replaced with InvokeAsync(StateHasChanged) like other places?
+        await InvokeAsync(StateHasChanged);
         if (editFormRef is not null)
             await editFormRef.UnlockScrollAsync();
     }
@@ -197,14 +196,13 @@
     /// <summary>
     /// Hides the Edit Item dialog - called on Cancel
     /// </summary>
-    async void HideEditDialog()
+    async Task HideEditDialog()
     {
         showEditDialog = false;
         editingItem = null;
         _originalItem = null;
-        StateHasChanged();
         // Wait for the UI to update and the dialog to be removed
-        await Task.Yield(); // ToDo: Can this be replaced with InvokeAsync(StateHasChanged) like other places?
+        await InvokeAsync(StateHasChanged);
         if (editFormRef is not null)
             await editFormRef.UnlockScrollAsync();
     }

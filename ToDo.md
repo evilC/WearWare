@@ -15,7 +15,6 @@
     Either way, need to be able to tell if original file got overwritten or not
   - Can originalItem be stored in the `EditPlayableItemForm`?  
     That way, we do not need to implement storing it on each of the pages
-  - Replace icky Task.Yield
   - Library ReConvert needs to have Relative Brightness.  
     Use new Edit form?
   - Import to new Edit form?

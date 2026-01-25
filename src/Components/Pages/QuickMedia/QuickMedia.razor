@@ -134,8 +134,7 @@
         showEditDialog = false;
         editingItem = null;
         _originalItem = null;
-        StateHasChanged();
-        await Task.Yield();
+        await InvokeAsync(StateHasChanged);
         if (editFormRef is not null)
             await editFormRef.UnlockScrollAsync();
     }
@@ -148,8 +147,7 @@
         showEditDialog = false;
         editingItem = null;
         _originalItem = null;
-        StateHasChanged();
-        await Task.Yield();
+        await InvokeAsync(StateHasChanged);
         if (editFormRef is not null)
             await editFormRef.UnlockScrollAsync();
 
