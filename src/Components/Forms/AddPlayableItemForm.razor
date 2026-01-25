@@ -29,17 +29,11 @@
     private int currentBrightness = 100;
     private PlayableItem? selectedLibraryItem;
 
-    private void SelectItem(PlayableItem libItem)
+    // Called when an item is selected from the list
+    private void ItemSelected(PlayableItem libItem)
     {
         selectedLibraryItem = libItem;
-    }
-
-    private void AddOk()
-    {
-        if (selectedLibraryItem != null)
-        {
-            OnAdd.InvokeAsync((InsertIndex, selectedLibraryItem, (PlayMode)selectedPlayMode, selectedPlayModeValue, selectedRelativeBrightness, currentBrightness));
-        }
+        OnAdd.InvokeAsync((InsertIndex, libItem, (PlayMode)selectedPlayMode, selectedPlayModeValue, selectedRelativeBrightness, currentBrightness));
     }
 
     public async Task UnlockScrollAsync()
@@ -61,7 +55,7 @@
                 <ul>
                     @foreach (var libItem in LibraryItems)
                     {
-                        <li class="add-dialog__item" @onclick="() => SelectItem(libItem)">
+                        <li class="add-dialog__item" @onclick="() => ItemSelected(libItem)">
                             <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
                             <div>
                                 <strong>@libItem.Name</strong><br />
@@ -72,7 +66,6 @@
                 </ul>
             </div>
             <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
-                <button type="button" class="add-dialog__cancel-button" @onclick="AddOk" disabled="@(selectedLibraryItem == null)">OK</button>
                 <button type="button" @onclick="() => OnCancel.InvokeAsync(null)" class="add-dialog__cancel-button">Cancel</button>
             </div>
         }
