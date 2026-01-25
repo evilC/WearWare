@@ -1,24 +1,20 @@
 # ToDo list
+- Rework stream conversion success / fail handling + reporting?  
+  TaskResult seems clunky. 
+  Int error results yucky  
+  Return enum?  
+  Custom exceptions?  
+  Either way, need to be able to tell if original file got overwritten or not
+- Can originalItem be stored in the `EditPlayableItemForm`?  
+  That way, we do not need to implement storing it on each of the pages
+- Library ReConvert needs to have Relative Brightness.  
+  Use new Edit form?
+- Import to new Edit form?
 - Progress system
   Overlay to show progress (eg on ReConvert)  
   - Old unused overlay still left in `MatrixOptionsForm.razor` (`div class="mw-matrix-overlay"`)
   - Locked out scrollbars in underlying page - see `modalScrollLock` in `EditPlayableItemForm.razor`
   - AI recommended in chat `Nested Razor forms validation scenario`: `Service / pub-sub — OperationProgressService`
-- Harmonization of Import / Add / Edit, and reconvert refactor  
-  - Edit of PlayableItem should used stored MatrixOptions, not one from the service
-  - Stream conversion should always be handled by the service  
-  - Rework stream conversion success / fail handling + reporting?  
-    TaskResult seems clunky. 
-    Int error results yucky  
-    Return enum?  
-    Custom exceptions?  
-    Either way, need to be able to tell if original file got overwritten or not
-  - Can originalItem be stored in the `EditPlayableItemForm`?  
-    That way, we do not need to implement storing it on each of the pages
-  - Library ReConvert needs to have Relative Brightness.  
-    Use new Edit form?
-  - Import to new Edit form?
-
 - Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
     Restart and it is OK  
