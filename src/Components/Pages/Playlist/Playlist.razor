@@ -9,10 +9,12 @@
 @inject PlaylistService PlaylistService
 @inject LibraryService LibraryService
 @inject IJSRuntime JSRuntime
+@inject ILogger<Playlist> _logger
 
 @code {
 
     // ================================================== Common ==================================================
+    private readonly string _logTag = "Playlist.razor";
     /// <summary> The list of available playlist names </summary>
     private List<string>? availablePlaylists;
     /// <summary> The playlist being edited </summary>
@@ -370,6 +372,26 @@
             DeletePlaylist();
         }
     }
+
+    /// <summary>
+    /// Builds the image path for the editing item based on whether we are adding or editing
+    /// Images on the Edit form in ADD mode come from the library, in EDIT mode come from the folder of the playlist
+    /// </summary>
+    /// <returns>The path to the URL for the editing image</returns>
+    private string BuildEditingImageURL(){
+        if (editingItem is null){
+            _logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
+            return string.Empty;
+        }
+        if (formMode == PlayableItemFormMode.EDIT){
+            if (_playlist is null){
+                _logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
+                return string.Empty;
+            }
+            return $"/playlist-images/{_playlist.Name}/{editingItem.SourceFileName}";
+        }
+        return $"/library-image/{editingItem.SourceFileName}";        
+    }
 }
 
 <PageTitle>Playlist</PageTitle>
@@ -469,7 +491,7 @@
         @ref="editFormRef"
         EditingItem="editingItem.Clone()"
         EditingIndex="editingIndex"
-        ImageUrl="@($"/playlist-images/{_playlist?.Name}/{editingItem.SourceFileName}")"
+        ImageUrl="@($"{BuildEditingImageURL()}")"
         OnCancel="HideEditDialog"
         OnSave="OnSavePlaylistItem"
         ItemType="PlayableItemType.PLAYLIST"

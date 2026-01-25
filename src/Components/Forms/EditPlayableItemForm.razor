@@ -166,8 +166,13 @@
         showMatrixOptionsForm = true;
     }
 
+    /// <summary>
+    /// Builds the title for the form based on mode and item type
+    /// </summary>
+    /// <returns>The page title</returns>
     private string BuildPageTitle(){
-        return ItemType switch
+        var title = FormMode == PlayableItemFormMode.EDIT ? "Edit " : "Add ";
+        return title + ItemType switch
         {
             PlayableItemType.LIBRARY => "Library Item",
             PlayableItemType.PLAYLIST => "Playlist Item",
@@ -191,7 +196,7 @@
 {
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
-            <h2>Edit @BuildPageTitle()</h2>
+            <h2>@BuildPageTitle()</h2>
             <div class="add-dialog-row">
                 <div class="add-dialog-section">
                     <div class="add-dialog-options">
