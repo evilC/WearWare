@@ -84,22 +84,54 @@
     private Boolean showEditDialog = false;
     private int editingIndex = -1;
     private PlayableItem? editingItem = null;
+    private PlayableItem? _originalItem;
+    // ToDo: Can we not remove this?
     private IQuickMediaButton? editingButton = null;
     private EditPlayableItemForm? editFormRef;
-    void EditQuickMediaButton(IQuickMediaButton button, int index)
+
+    /// <summary>
+    /// The mode of the EditPlayableItemForm
+    /// Not used by the form itself, but when it returns we can know if we were adding or editing
+    /// </summary>
+    private PlayableItemFormMode formMode;
+
+    /// <summary>
+    /// Called when Edit is clicked on the QuickMedia page
+    /// </summary>
+    /// <param name="button"></param>
+    /// <param name="index"></param>
+    void OnEditQuickMediaItem(IQuickMediaButton button, int index, PlayableItemFormMode mode)
     {
         editingIndex = index;
-        editingItem = button.Item;
+        _originalItem = button.Item;
+        editingItem = button.Item.Clone();
+        if (mode == PlayableItemFormMode.ADD)
+        {
+            // In Add mode, the item being passed in is from the library, so we need to modify some properties.
+            // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
+            // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
+            // Set PlayMode to LOOP and PlayModeValue to 1 by default...
+            // ... because library items have FOREVER mode by default
+            editingItem.PlayMode = PlayMode.LOOP;
+            editingItem.PlayModeValue = 1;
+        }
         editingButton = button;
+        formMode = mode;
         showEditDialog = true;
     }
 
-    public async Task OnEditQuickMediaButton((int editingIndex, PlayableItem item, PlayableItemFormMode formMode) args)
+    /// <summary>
+    /// Called when Save is clicked in the EditPlayableItemForm
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    public async Task OnSaveQuickMediaItem((int editingIndex, PlayableItem item, PlayableItemFormMode formMode) args)
     {
         if (editingButton is null) return;
         QuickMediaService.EditQuickMediaButton(editingButton, args.item.PlayMode, args.item.PlayModeValue, args.item.RelativeBrightness, args.item.CurrentBrightness);
         showEditDialog = false;
         editingItem = null;
+        _originalItem = null;
         editingButton = null;
         StateHasChanged();
         await Task.Yield();
@@ -107,10 +139,15 @@
             await editFormRef.UnlockScrollAsync();
     }
 
+    /// <summary>
+    /// Hides the Edit Item dialog - called on Cancel
+    /// </summary>
     async Task HideEditDialog()
     {
         showEditDialog = false;
         editingItem = null;
+        _originalItem = null;
+        editingButton = null;
         StateHasChanged();
         await Task.Yield();
         if (editFormRef is not null)
@@ -190,7 +227,7 @@ else
 					}
 					else
 					{
-						<button class="btn btn-sm btn-outline-primary" @onclick="() => EditQuickMediaButton(btn, index)">Edit</button>
+						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn, index, PlayableItemFormMode.EDIT)">Edit</button>
 					}
                     @if (btn?.Item is not null)
                     {
@@ -225,7 +262,7 @@ else
         EditingIndex="editingIndex"
         ImageUrl="@($"/quickmedia-images/{editingIndex}/{editingItem.SourceFileName}")"
         OnCancel="HideEditDialog"
-        OnSave="OnEditQuickMediaButton"
+        OnSave="OnSaveQuickMediaItem"
         OnReprocessAsync="ReprocessQuickMediaButtonAsync"
         ItemType="PlayableItemType.QUICKMEDIA"/>
 }
