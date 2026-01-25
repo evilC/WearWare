@@ -66,6 +66,7 @@
   - Remove playMode, playModeValue, relativeBrightness, currentBrightness from `AddPlayableItemForm` `EventCallback`
   - Can originalItem be stored in the `EditPlayableItemForm`?  
     That way, we do not need to implement storing it on each of the pages
+  - Remove `MatrixOptionsFormOld`
 
 - Changes needing PRs to go through  
   - Something odd going on with 1st start. Set MatrixOptions, load playlist, but screen is garbled  
