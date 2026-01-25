@@ -7,13 +7,30 @@
 
 @code {
     private readonly string _logTag = "EditPlayableItemForm";
+    /// <summary>
+    /// The PlayableItem being edited.
+    /// In ADD mode, this will be a Library item clone.
+    /// In EDIT mode, this will be the Playlist or QuickMedia item being edited.
+    /// </summary>
     [Parameter] public PlayableItem? EditingItem { get; set; }
+    /// <summary>
+    /// The index of the item being edited in the Playlist or QuickMedia list.
+    /// In ADD mode, this will be the index where the new item will be inserted.
+    /// In EDIT mode, this will be the index of the item being edited.
+    /// </summary>
     [Parameter] public int EditingIndex { get; set; }
+
+    /// <summary>
+    /// The URL of the image to display for the item being edited
+    /// In ADD mode, this will be the Library image URL.
+    /// In EDIT mode, this will be the Playlist or QuickMedia image URL depending on where the item is from.
+    /// </summary>
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
     [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem)> OnSave { get; set; }
 
     // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
+    // Needs to be left until QuickMedia page is updated to not use it
     [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
     [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
     [Parameter] public PlayableItemFormMode FormMode { get; set; } = PlayableItemFormMode.EDIT;
@@ -59,6 +76,11 @@
         }
     }
 
+    /// <summary>
+    /// Called after the component has been rendered.
+    /// Note: IDE says 0 references, but it is called by Blazor framework.
+    /// </summary>
+    /// <param name="firstRender">True if this is the first time the component is rendered</param>
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -68,6 +90,9 @@
         }
     }
 
+    /// <summary>
+    /// Unlocks scroll when the form is disposed 
+    /// </summary>
     public async Task UnlockScrollAsync()
     {
         await JS.InvokeVoidAsync("modalScrollLock.unlock");
@@ -78,7 +103,9 @@
         await JS.InvokeVoidAsync("modalScrollLock.unlock");
     }
 
-    // Called when the user changes the Play Mode radio buttons
+    /// <summary>
+    /// Called when the user changes the Play Mode radio buttons
+    /// </summary>
     private void OnSelectPlayMode(int value)
     {
         selectedPlayMode = value;
@@ -88,14 +115,18 @@
         }
     }
 
-    // Called when the user changes the Play Mode Value input
+    /// <summary>
+    /// Called when the user changes the Play Mode Value input
+    /// </summary>
     private void OnSelectPlayModeValue(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out var v))
             selectedPlayModeValue = v;
     }
 
-    // Setter is called when the Relative Brightness input is changed
+    /// <summary>
+    /// Setter is called when the Relative Brightness input is changed
+    /// </summary>
     public int SelectedRelativeBrightness
     {
         get => selectedRelativeBrightness;
@@ -124,7 +155,10 @@
         adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, selectedRelativeBrightness);
     }
 
-    // Called after the user clicks OK in the Matrix Options form
+    /// <summary>
+    /// Called after the user clicks OK in the Matrix Options form
+    /// </summary>
+    /// <param name="opts">The updated matrix options</param>
     private async Task OnMatrixOptionsOk(LedMatrixOptionsConfig opts)
     {
         selectedMatrixOptions = opts;
@@ -133,7 +167,9 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    // Called when Cancel is clicked in Matrix Options form
+    /// <summary>
+    /// Called after the user clicks Cancel in the Matrix Options form
+    /// </summary>
     private Task OnMatrixOptionsCancel()
     {
         showMatrixOptionsForm = false;
@@ -141,7 +177,9 @@
         return Task.CompletedTask;
     }
 
-    // Called when user clicks Save button
+    /// <summary>
+    /// Called when user clicks Save button
+    /// </summary>
     private void SaveEdit()
     {
         if (EditingItem == null){
@@ -160,7 +198,9 @@
         OnSave.InvokeAsync((EditingIndex, EditingItem));
     }
 
-    // Called when user clicks Matrix Options button
+    /// <summary>
+    /// Called when user clicks Matrix Options button
+    /// </summary>
     private void ShowMatrixOptions()
     {
         showMatrixOptionsForm = true;
@@ -181,6 +221,10 @@
         };
     }
 
+    /// <summary>
+    /// Builds the title for the Matrix Options form based on item type
+    /// </summary>
+    /// <returns>The title for the matrix options form</returns>
     private string BuildMatrixOptionsTitle(){
         return ItemType switch
         {
@@ -192,6 +236,7 @@
     }
 }
 
+@* Main Razor Markup: *@
 @if (EditingItem is not null)
 {
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">

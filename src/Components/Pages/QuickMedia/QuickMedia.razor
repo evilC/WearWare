@@ -48,7 +48,7 @@
             QuickMediaService.StateChanged -= OnStateChanged;
     }
 
-    
+
 
     // ================================================== Add Dialog  ==================================================
     private bool showAddDialog = false;
@@ -72,7 +72,10 @@
         QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem, args.playMode, args.playModeValue, args.relativeBrightness, args.currentBrightness);
         showAddDialog = false;
         StateHasChanged();
-        await Task.Yield();
+        await Task.Yield();     // See implementation in AddPlayableItemForm - we were able to not need Task.Yield by:
+        //                         - making methods return a Task instead of void
+        //                         - making the calling method async and awaiting the call
+        //                         - Replacing the Task.Yield with InvokeAsync(StateHasChanged)
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
     }
@@ -100,9 +103,9 @@
         editingButton = null;
         StateHasChanged();
         await Task.Yield();
-		if (editFormRef is not null)
-			await editFormRef.UnlockScrollAsync();
-	}
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
+    }
 
     async Task HideEditDialog()
     {
@@ -110,10 +113,21 @@
         editingItem = null;
         StateHasChanged();
         await Task.Yield();
-		if (editFormRef is not null)
-			await editFormRef.UnlockScrollAsync();
-		
-	}
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
+
+    }
+
+    /// <summary>
+    /// Called to reprocess (re-convert) the quickmedia button's item with new options
+    /// </summary>
+    /// <param name="options"></param>
+    /// <param name="relativeBrightness"></param>
+    /// <returns></returns>
+    /// ToDo: Needs to be removed - Reprocessing should be handled by the Service instead.
+    /// Once removed, also remove:
+    /// - OnReprocessAsync parameter from EditPlayableItemForm in this page.
+    /// - OnReprocessAsync parameter from EditPlayableItemForm.razor
     private async Task<WearWare.Common.ReConvertTaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options, int relativeBrightness)
     {
         if (editingIndex < 0)
