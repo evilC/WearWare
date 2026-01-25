@@ -18,6 +18,8 @@
     }
     [Parameter] public IReadOnlyList<PlayableItem>? LibraryItems { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    // ToDo: Modify to only pass (insertIndex, libItem) once PlaylistService.OnPlaylistFormSubmit is updated
+    // We will need to wait until QuickMedia page is also updated to not use it
     [Parameter] public EventCallback<(int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)> OnAdd { get; set; }
     [Parameter] public int InsertIndex { get; set; }
     // ToDo: Remove

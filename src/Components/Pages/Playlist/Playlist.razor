@@ -115,6 +115,7 @@
     /// Called after we click "Add" and a playable item is picked from the list
     /// </summary>
     /// <param name="args"></param> Tuple of (insertIndex, libItem, playMode, playModeValue, relativeBrightness)
+    /// ToDo: Modify to only pass (insertIndex, libItem) once PlaylistService.OnPlaylistFormSubmit is updated
     async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness) args)
     {
         if (_playlist is null) return;
