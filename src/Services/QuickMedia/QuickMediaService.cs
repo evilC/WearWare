@@ -124,7 +124,6 @@ public class QuickMediaService
     /// <summary>
     /// Called when OK is clicked in the EditPlayableItemForm
     /// </summary>
-    /// <param name="button"></param> The button being edited
     /// <param name="itemIndex"></param> The index of the item being edited
     /// This is not used any more, but keep for now.
     /// The equivalent method in QuickMediaService still uses it.
@@ -132,28 +131,10 @@ public class QuickMediaService
     /// <param name="updatedItem"></param> The updated item from the form
     /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
     /// </summary>
-    public async Task OnEditFormSubmit(IQuickMediaButton button, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
+    public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
     {
-        /*
-        if (button == null) return false;
-        var restartMediaController = false;
-        if (ButtonIsPlaying(button))
-        {
-            _mediaController.Stop();
-            restartMediaController = true;
-        }
-        button.Item.PlayMode = playMode;
-        button.Item.PlayModeValue = playModeValue;
-        button.Item.RelativeBrightness = relativeBrightness;
-        button.Item.CurrentBrightness = currentBrightness;
-        SerializeQuickMediaButton(button);
-        if (restartMediaController)
-        {
-            _mediaController.Start();
-        }
-        StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
-        return true;
-        */
+            var button = _buttons[itemIndex];
+            if (button == null) return; // ToDo: Error handling
             bool restartMediaController = false;
             // if (PlaylistIsPlaying(playlist))
             // {
@@ -201,22 +182,12 @@ public class QuickMediaService
             if (formMode == PlayableItemFormMode.ADD)
             {
                 // Add new item
-                //playlist.AddItem(itemIndex, updatedItem);
+                button = _buttonFactory.Create(_mediaController, itemIndex, updatedItem);
+                _buttons[itemIndex] = button;
             }
             else
             {
                 originalItem.UpdateFromClone(updatedItem);
-                // if (!originalItem.Enabled)
-                // {
-                //     // If item is now disabled, and it is the current item, we need to move to the next item
-                //     if (playlist.GetCurrentItem() == originalItem)
-                //     {
-                //         if (playlist.MoveNext() == null)
-                //         {
-                //             restartMediaController = false; // No more items to play
-                //         }
-                //     }
-                // }
             }
 
             // button.Serialize();
@@ -227,7 +198,7 @@ public class QuickMediaService
             {
                 _mediaController.Start();
             }
-
+            StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
     }
 
     public bool DeleteQuickMediaButton(int buttonNumber)
