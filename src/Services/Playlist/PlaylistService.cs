@@ -1,8 +1,8 @@
-using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
+using WearWare.Services.StreamConverter;
 
 namespace WearWare.Services.Playlist
 {
@@ -10,7 +10,7 @@ namespace WearWare.Services.Playlist
     {
         private Dictionary<string, PlaylistItems> _playlists = [];
         private readonly MediaControllerService _mediaController;
-        private readonly StreamConverter.IStreamConverterService _streamConverterService;
+        private readonly IStreamConverterService _streamConverterService;
         public event Action? StateChanged;
         private readonly ILogger<PlaylistService> _logger;
         private static readonly string _logTag = "[PLAYLISTSERV]";
@@ -22,7 +22,7 @@ namespace WearWare.Services.Playlist
         public PlaylistService(
             ILogger<PlaylistService> logger,
             MediaControllerService mediaController,
-            StreamConverter.IStreamConverterService streamConverterService,
+            IStreamConverterService streamConverterService,
             MatrixConfigService matrixConfigService,
             ILoggerFactory loggerFactory
             )
@@ -314,9 +314,11 @@ namespace WearWare.Services.Playlist
 
             if (originalItem.NeedsReConvert(updatedItem)){
                 // If the updated item needs re-conversion, do it now
-                var copyFrom = originalItem.GetSourceFilePath();  // For ADD, this will be from library; for EDIT, from playlist folder
-                var copyTo = playlist.GetPlaylistAbsolutePath();  // For both ADD and EDIT, destination is playlist folder
-                var result = await _streamConverterService.ConvertToStream(copyFrom, updatedItem.SourceFileName, copyTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                var readFrom = formMode == PlayableItemFormMode.ADD
+                        ? PathConfig.LibraryPath                    // For ADD, source is library folder
+                        : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
+                var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
+                var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
                 if (result.ExitCode != 0)
                 {
                     // Re-convert failed - show an alert and do not save changes
@@ -328,15 +330,15 @@ namespace WearWare.Services.Playlist
             else if (formMode == PlayableItemFormMode.ADD)
             {
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
-                var copyFrom = originalItem.GetStreamFilePath();  // From library folder
-                var copyTo = updatedItem.GetStreamFilePath();  // To playlist folder
+                var copyFrom = originalItem.GetStreamFilePath();    // From library folder
+                var copyTo = updatedItem.GetStreamFilePath();       // To playlist folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
             if (formMode == PlayableItemFormMode.ADD)
             {
                 // Copy source file from library to playlist folder
-                var copyFrom = originalItem.GetSourceFilePath();
-                var copyTo = updatedItem.GetSourceFilePath();
+                var copyFrom = originalItem.GetSourceFilePath();    // From library folder
+                var copyTo = updatedItem.GetSourceFilePath();       // To playlist folder
                 if (!File.Exists(copyTo)){
                     File.Copy(copyFrom, copyTo, overwrite: true);
                 }

@@ -3,6 +3,7 @@ using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.QuickMedia;
+using WearWare.Services.StreamConverter;
 using WearWare.Utils;
 
 record QuickMediaDto(int ButtonNumber, PlayableItem Item);
@@ -18,17 +19,20 @@ public class QuickMediaService
     private readonly string _logTag = "[QUICKMEDIA]";
     private static readonly string _configFileName = "quickmedia.json";
     private readonly MatrixConfigService _matrixConfigService;
+    private readonly IStreamConverterService _streamConverterService;
 
     public QuickMediaService(ILogger<QuickMediaService> logger,
         MediaControllerService mediaController, 
         IQuickMediaButtonFactory buttonFactory,
-        MatrixConfigService matrixConfigService)
+        MatrixConfigService matrixConfigService,
+        IStreamConverterService streamConverterService)
     {
         _logger = logger;
         _buttons = new IQuickMediaButton[_maxButtons];
         _mediaController = mediaController;
         _buttonFactory = buttonFactory;
         _matrixConfigService = matrixConfigService;
+        _streamConverterService = streamConverterService;
         _mediaController.StateChanged += OnMediaControllerStateChanged;
         // Instantiate buttons
         // Note that there seems to be an issue with GPIO pins floating after first boot
@@ -128,8 +132,9 @@ public class QuickMediaService
     /// <param name="updatedItem"></param> The updated item from the form
     /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
     /// </summary>
-    public bool OnEditFormSubmit(IQuickMediaButton button, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
+    public async Task OnEditFormSubmit(IQuickMediaButton button, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
     {
+        /*
         if (button == null) return false;
         var restartMediaController = false;
         if (ButtonIsPlaying(button))
@@ -148,6 +153,81 @@ public class QuickMediaService
         }
         StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
         return true;
+        */
+            bool restartMediaController = false;
+            // if (PlaylistIsPlaying(playlist))
+            // {
+                // Currently editing playlist and media controller is running, need to restart after removing item
+                _mediaController.Stop();
+                restartMediaController = true;
+            // }
+            if (formMode == PlayableItemFormMode.ADD)
+            {
+                // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
+                updatedItem.ParentFolder = button.GetRelativePath();
+            }
+
+            if (originalItem.NeedsReConvert(updatedItem)){
+                // If the updated item needs re-conversion, do it now
+                var readFrom = formMode == PlayableItemFormMode.ADD
+                        ? PathConfig.LibraryPath                // For ADD, source is library folder
+                        : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
+                var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
+                var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                if (result.ExitCode != 0)
+                {
+                    // Re-convert failed - show an alert and do not save changes
+                    //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
+                    // ToDo: Show error to user
+                    return;
+                }
+            }
+            else if (formMode == PlayableItemFormMode.ADD)
+            {
+                // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
+                var copyFrom = originalItem.GetStreamFilePath();    // From library folder
+                var copyTo = updatedItem.GetStreamFilePath();       // To quickmedia folder
+                File.Copy(copyFrom, copyTo, overwrite: true);
+            }
+            if (formMode == PlayableItemFormMode.ADD)
+            {
+                // Copy source file from library to quickmedia folder
+                var copyFrom = originalItem.GetSourceFilePath();    // From library folder
+                var copyTo = updatedItem.GetSourceFilePath();       // To quickmedia folder
+                if (!File.Exists(copyTo)){
+                    File.Copy(copyFrom, copyTo, overwrite: true);
+                }
+            }
+            if (formMode == PlayableItemFormMode.ADD)
+            {
+                // Add new item
+                //playlist.AddItem(itemIndex, updatedItem);
+            }
+            else
+            {
+                originalItem.UpdateFromClone(updatedItem);
+                // if (!originalItem.Enabled)
+                // {
+                //     // If item is now disabled, and it is the current item, we need to move to the next item
+                //     if (playlist.GetCurrentItem() == originalItem)
+                //     {
+                //         if (playlist.MoveNext() == null)
+                //         {
+                //             restartMediaController = false; // No more items to play
+                //         }
+                //     }
+                // }
+            }
+
+            // button.Serialize();
+            SerializeQuickMediaButton(button);
+            // Restart media controller if there are still items to play
+            // if (restartMediaController && playlist.GetCurrentItem() != null)
+            if (restartMediaController)
+            {
+                _mediaController.Start();
+            }
+
     }
 
     public bool DeleteQuickMediaButton(int buttonNumber)

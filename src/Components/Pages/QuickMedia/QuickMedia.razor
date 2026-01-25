@@ -127,8 +127,8 @@
     /// <returns></returns>
     public async Task OnSaveQuickMediaItem((int editingIndex, PlayableItem item, PlayableItemFormMode formMode) args)
     {
-        if (editingButton is null) return;
-        QuickMediaService.OnEditFormSubmit(editingButton, args.item.PlayMode, args.item.PlayModeValue, args.item.RelativeBrightness, args.item.CurrentBrightness);
+        if (editingButton is null || editingItem is null || _originalItem is null || editingIndex < 0) return; // ToDo: Error handling
+        await QuickMediaService.OnEditFormSubmit(editingButton, editingIndex, _originalItem, args.item, args.formMode);
         showEditDialog = false;
         editingItem = null;
         _originalItem = null;
