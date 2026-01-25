@@ -117,7 +117,18 @@ public class QuickMediaService
         }
     }
 
-    public bool EditQuickMediaButton(IQuickMediaButton button, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
+    /// <summary>
+    /// Called when OK is clicked in the EditPlayableItemForm
+    /// </summary>
+    /// <param name="button"></param> The button being edited
+    /// <param name="itemIndex"></param> The index of the item being edited
+    /// This is not used any more, but keep for now.
+    /// The equivalent method in QuickMediaService still uses it.
+    /// <param name="originalItem"></param> The original item before editing
+    /// <param name="updatedItem"></param> The updated item from the form
+    /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
+    /// </summary>
+    public bool OnEditFormSubmit(IQuickMediaButton button, PlayMode playMode, int playModeValue, int relativeBrightness, int currentBrightness)
     {
         if (button == null) return false;
         var restartMediaController = false;

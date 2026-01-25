@@ -184,7 +184,7 @@
     async void OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
         if (_playlist is null || editingItem is null || _originalItem is null || editingIndex < 0) return; // ToDo: Error handling
-        await PlaylistService.OnPlaylistFormSubmit(_playlist, args.editingIndex, _originalItem, args.updatedItem, args.formMode);
+        await PlaylistService.OnEditFormSubmit(_playlist, args.editingIndex, _originalItem, args.updatedItem, args.formMode);
 
         showEditDialog = false;
         editingItem = null;
@@ -254,7 +254,7 @@
         var originalItem = item.Clone();    // Take a clone so that we can pass the original state (Enabled in original state) to the service
         item.Enabled = newState;
         @* PlaylistService.EditPlaylistItem(_playlist, itemIndex); *@
-        await PlaylistService.OnPlaylistFormSubmit(_playlist, itemIndex, originalItem, item, PlayableItemFormMode.EDIT);
+        await PlaylistService.OnEditFormSubmit(_playlist, itemIndex, originalItem, item, PlayableItemFormMode.EDIT);
         StateHasChanged();
     }
 
