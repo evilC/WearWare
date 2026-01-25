@@ -94,7 +94,7 @@
         showEditDialog = true;
     }
 
-    public async Task OnEditQuickMediaButton((int editingIndex, PlayableItem item) args)
+    public async Task OnEditQuickMediaButton((int editingIndex, PlayableItem item, PlayableItemFormMode formMode) args)
     {
         if (editingButton is null) return;
         QuickMediaService.EditQuickMediaButton(editingButton, args.item.PlayMode, args.item.PlayModeValue, args.item.RelativeBrightness, args.item.CurrentBrightness);

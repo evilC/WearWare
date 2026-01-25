@@ -287,8 +287,13 @@ namespace WearWare.Services.Playlist
         /// <summary>
         /// Called when OK is clicked in the EditPlayableItemForm
         /// </summary>
-        public async Task OnPlaylistFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem updatedItem)
+        public async Task OnPlaylistFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem updatedItem, PlayableItemFormMode formMode)
         {
+            // ToDo: Handle formMode.
+            // For ADD mode:
+            // - We always need to do a convert
+            // - File will need to be copied from library to playlist folder
+
             var item = playlist.GetPlaylistItems()[itemIndex];
             if (item == null)
             {

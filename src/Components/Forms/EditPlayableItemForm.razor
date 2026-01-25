@@ -27,7 +27,7 @@
     /// </summary>
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
-    [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem)> OnSave { get; set; }
+    [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode)> OnSave { get; set; }
 
     // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
     // Needs to be left until QuickMedia page is updated to not use it
@@ -195,7 +195,7 @@
         EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
         EditingItem.CurrentBrightness = adjustedBrightness;
         EditingItem.MatrixOptions = selectedMatrixOptions;
-        OnSave.InvokeAsync((EditingIndex, EditingItem));
+        OnSave.InvokeAsync((EditingIndex, EditingItem, FormMode));
     }
 
     /// <summary>

@@ -169,16 +169,16 @@
     /// <summary>
     /// Called when Save is clicked in the EditPlayableItemForm
     /// </summary>
-    /// <param name="args"></param> Tuple of (editingIndex, updatedItem)
-    async void OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem) args)
+    /// <param name="args"></param> Tuple of (editingIndex, updatedItem, formMode)
+    async void OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
         if (_playlist is null || editingItem is null || editingIndex < 0) return;
-        await PlaylistService.OnPlaylistFormSubmit(_playlist, args.editingIndex, args.updatedItem);
+        await PlaylistService.OnPlaylistFormSubmit(_playlist, args.editingIndex, args.updatedItem, args.formMode);
 
         showEditDialog = false;
         editingItem = null;
         StateHasChanged();
-        await Task.Yield();
+        await Task.Yield(); // ToDo: Can this be replaced with InvokeAsync(StateHasChanged) like other places?
         if (editFormRef is not null)
             await editFormRef.UnlockScrollAsync();
     }
@@ -192,7 +192,7 @@
         editingItem = null;
         StateHasChanged();
         // Wait for the UI to update and the dialog to be removed
-        await Task.Yield();
+        await Task.Yield(); // ToDo: Can this be replaced with InvokeAsync(StateHasChanged) like other places?
         if (editFormRef is not null)
             await editFormRef.UnlockScrollAsync();
     }
@@ -240,7 +240,7 @@
             return;
         item.Enabled = newState;
         @* PlaylistService.EditPlaylistItem(_playlist, itemIndex); *@
-        await PlaylistService.OnPlaylistFormSubmit(_playlist, itemIndex, item);
+        await PlaylistService.OnPlaylistFormSubmit(_playlist, itemIndex, item, PlayableItemFormMode.EDIT);
         StateHasChanged();
     }
 
