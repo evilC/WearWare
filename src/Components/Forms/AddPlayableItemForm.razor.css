@@ -1,4 +1,3 @@
-/* Styles for AddPlayableItemForm dialog overlay and content */
 .add-dialog {
     position: fixed;
     inset: 0;
@@ -10,6 +9,7 @@
     pointer-events: auto;
     overflow: hidden;
 }
+
 .add-dialog__content {
     background: #fff;
     border-radius: 12px;
@@ -24,76 +24,54 @@
     flex-direction: column;
     align-items: center;
 }
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-input[type=number] {
-    appearance: textfield;
-}
-.add-dialog-row {
+
+.add-dialog__list {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    gap: 0.5em;
-    align-items: stretch;
-    margin-bottom: 1em;
-}
-.add-dialog-section {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    border: 1px solid #bbb;
-    border-radius: 8px;
-    padding: 0.2em 0.5em;
-    background: #fafafa;
-}
-.add-dialog-label {
-    font-weight: 500;
-    text-align: center;
-    width: 100%;
-    height: 2em;
-    line-height: 2em;
-}
-.add-dialog-label-spacer {
-    height: 2em;
-}
-.add-dialog-options {
-    display: flex;
-    gap: 1em;
-    align-items: center;
-    height: 100%;
-}
-.add-dialog-radio-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    height: auto;
-    white-space: normal;
-}
-.add-dialog-radio {
-    height: 1.6em;
-    width: 1.6em;
-    vertical-align: middle;
-}
-.add-dialog-mode-text { font-size: 1.05em; display: block; }
-.add-dialog-number {
+    overflow-y: auto;
+    border: 1px solid #eee;
     padding: 0.5em;
-    font-size: 1em;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    width: 4em;
-    height: 2em;
-    text-align: center;
-    align-self: center;
-    -webkit-appearance: none;
-    -moz-appearance: textfield;
-    appearance: textfield;
+    background: #fafafa;
+    border-radius: 8px;
 }
+
+.add-dialog__list ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.add-dialog__item {
+    margin-bottom: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+}
+
+.add-dialog__item-image {
+    max-width: 64px;
+    max-height: 64px;
+    border-radius: 6px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.125);
+    background: #eee;
+}
+
+.add-dialog__item-type {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.add-dialog__cancel-button {
+    margin-top: 0.5em;
+    padding: 0.7em 2em;
+    font-size: 1.1em;
+    border-radius: 6px;
+    background: #eee;
+    border: 1px solid #ccc;
+}
+
 @media (max-width: 640px) {
     .add-dialog__content {
         width: 100vw;
@@ -101,7 +79,7 @@ input[type=number] {
         max-width: none;
         max-height: none;
         border-radius: 0;
-        padding: 1rem 1rem 1.25rem 1rem;
+        padding: 1rem;
         padding-top: calc(env(safe-area-inset-top, 0.5rem) + 0.5rem);
     }
     @supports (height: 100dvh) {
@@ -117,45 +95,4 @@ input[type=number] {
         margin-top: 0;
         padding-top: 0.25rem;
     }
-}
-.add-dialog__list {
-    width: 100%;
-    overflow-y: auto;
-    border: 1px solid #eee;
-    padding: 0.5em;
-    background: #fafafa;
-    border-radius: 8px;
-}
-.add-dialog__list ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-.add-dialog__item {
-    margin-bottom: 1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 1em;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1em;
-}
-.add-dialog__item-image {
-    max-width: 64px;
-    max-height: 64px;
-    border-radius: 6px;
-    box-shadow: 0 1px 8px rgba(0,0,0,0.125);
-    background: #eee;
-}
-.add-dialog__item-type {
-    font-size: 0.9em;
-    color: #666;
-}
-.add-dialog__cancel-button {
-    margin-top: 0.5em;
-    padding: 0.7em 2em;
-    font-size: 1.1em;
-    border-radius: 6px;
-    background: #eee;
-    border: 1px solid #ccc;
 }
