@@ -1,7 +1,8 @@
 # ToDo list
 
 ## High Priority
-- Progress system
+- Error handling in Add / Edit (Copying files + converting stream)  
+- Progress / error reporting system
   Overlay to show progress (eg on ReConvert)  
   - Old unused overlay still left in `MatrixOptionsForm.razor` (`div class="mw-matrix-overlay"`)
   - Locked out scrollbars in underlying page - see `modalScrollLock` in `EditPlayableItemForm.razor`
