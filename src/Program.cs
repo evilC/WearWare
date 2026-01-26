@@ -16,6 +16,7 @@ using WearWare.Services.Logging;
 using WearWare.Services.ShutdownService;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
+using WearWare.Services.OperationProgress;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -82,6 +83,7 @@ else
 }
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<QuickMediaService>();
+builder.Services.AddSingleton<IOperationProgressService, OperationProgressService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

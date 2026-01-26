@@ -1,0 +1,34 @@
+@using WearWare.Services.OperationProgress
+@inject IOperationProgressService OperationProgressService
+
+<div class="mw-progress-overlay" hidden="@(!_visible)">
+    <div class="mw-progress-card">
+        <div class="mw-progress-title">@(_current?.Title ?? "Working...")</div>
+        <div class="mw-progress-bar">
+            <div class="mw-progress-fill" style="width:@((_current?.Percent ?? 0) + "%")"></div>
+        </div>
+        <div class="mw-progress-message">@(_current?.Message)</div>
+    </div>
+</div>
+
+@code {
+    private OperationProgressEvent _current = new OperationProgressEvent();
+    private bool _visible;
+
+    protected override void OnInitialized()
+    {
+        OperationProgressService.OnProgressChanged += HandleProgress;
+    }
+
+    private void HandleProgress(OperationProgressEvent ev)
+    {
+        _current = ev;
+        _visible = !ev.IsCompleted;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        OperationProgressService.OnProgressChanged -= HandleProgress;
+    }
+}
