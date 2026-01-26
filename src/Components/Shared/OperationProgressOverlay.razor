@@ -3,11 +3,8 @@
 
 <div class="mw-progress-overlay" hidden="@(!_visible)">
     <div class="mw-progress-card">
-        <div class="mw-progress-title">@(_current?.Title ?? "Working...")</div>
-        <div class="mw-progress-bar">
-            <div class="mw-progress-fill" style="width:@((_current?.Percent ?? 0) + "%")"></div>
-        </div>
-        <div class="mw-progress-message">@(_current?.Message)</div>
+        <div class="mw-progress-title">@(_current.Title)</div>
+        <div class="mw-progress-message">@(_current.Message)</div>
     </div>
 </div>
 

@@ -2,6 +2,7 @@ using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
+using WearWare.Services.OperationProgress;
 using WearWare.Services.StreamConverter;
 
 namespace WearWare.Services.Playlist
@@ -18,12 +19,14 @@ namespace WearWare.Services.Playlist
         // Logger factory for injecting loggers for PlaylistItems
         private readonly ILoggerFactory _loggerFactory;
         private readonly MatrixConfigService _matrixConfigService;
+        private readonly IOperationProgressService _operationProgress;
 
         public PlaylistService(
             ILogger<PlaylistService> logger,
             MediaControllerService mediaController,
             IStreamConverterService streamConverterService,
             MatrixConfigService matrixConfigService,
+            IOperationProgressService operationProgress,
             ILoggerFactory loggerFactory
             )
         {
@@ -41,6 +44,7 @@ namespace WearWare.Services.Playlist
             _mediaController.StateChanged += OnMediaControllerStateChanged;
             _streamConverterService = streamConverterService;
             _matrixConfigService = matrixConfigService;
+            _operationProgress = operationProgress;
         }
 
         /// <summary>
@@ -238,52 +242,6 @@ namespace WearWare.Services.Playlist
             }
         }
 
-        /*
-        /// <summary>
-        /// Updates a playlist item that has been edited
-        /// </summary>
-        /// <param name="playlist"></param> The playlist containing the item that was edited
-        /// <param name="itemIndex"></param> The index of the item that was edited
-        /// <returns>True if the item was updated, false otherwise</returns>
-        // ToDo: Do we need to notify MediaControllerService of the update?
-        // ToDo: If item enabled state changed, we may need to start/stop MediaControllerService
-        // ToDo: REMOVE - this is the old method
-        public bool EditPlaylistItem(PlaylistItems playlist, int itemIndex)
-        {
-            bool restartMediaController = false;
-            if (PlaylistIsPlaying(playlist))
-            {
-                // Currently editing playlist and media controller is running, need to restart after removing item
-                _mediaController.Stop();
-                restartMediaController = true;
-            }
-            var item = playlist.GetPlaylistItems()[itemIndex];
-            if (item == null)
-            {
-                // ToDo: log error
-                return false;
-            }
-            if (!item.Enabled)
-            {
-                // If item is now disabled, and it is the current item, we need to move to the next item
-                if (playlist.GetCurrentItem() == item)
-                {
-                    if (playlist.MoveNext() == null)
-                    {
-                        restartMediaController = false; // No more items to play
-                    }
-                }
-            }
-            playlist.Serialize();
-            // Restart media controller if there are still items to play
-            if (restartMediaController && playlist.GetCurrentItem() != null)
-            {
-                _mediaController.Start();
-            }
-            return true;
-        }
-        */
-
         /// <summary>
         /// Called when OK is clicked in the EditPlayableItemForm
         /// </summary>
@@ -298,7 +256,7 @@ namespace WearWare.Services.Playlist
         public async Task OnEditFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
         {
             // ToDo: Try / catch needed in here
-    
+            var opId = _operationProgress.StartOperation("Updating Playlist Item");
             bool restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
             {
@@ -313,6 +271,7 @@ namespace WearWare.Services.Playlist
             }
 
             if (originalItem.NeedsReConvert(updatedItem)){
+                _operationProgress.ReportProgress(opId, "Converting stream...");
                 // If the updated item needs re-conversion, do it now
                 var readFrom = formMode == PlayableItemFormMode.ADD
                         ? PathConfig.LibraryPath                    // For ADD, source is library folder
@@ -324,11 +283,13 @@ namespace WearWare.Services.Playlist
                     // Re-convert failed - show an alert and do not save changes
                     //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
                     // ToDo: Show error to user
+                    _operationProgress.CompleteOperation(opId, false, "Conversion failed");
                     return;
                 }
             }
             else if (formMode == PlayableItemFormMode.ADD)
             {
+                _operationProgress.ReportProgress(opId, "Copying stream file...");
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
                 var copyFrom = originalItem.GetStreamFilePath();    // From library folder
                 var copyTo = updatedItem.GetStreamFilePath();       // To playlist folder
@@ -336,6 +297,7 @@ namespace WearWare.Services.Playlist
             }
             if (formMode == PlayableItemFormMode.ADD)
             {
+                _operationProgress.ReportProgress(opId, "copying source file...");
                 // Copy source file from library to playlist folder
                 var copyFrom = originalItem.GetSourceFilePath();    // From library folder
                 var copyTo = updatedItem.GetSourceFilePath();       // To playlist folder
@@ -343,6 +305,7 @@ namespace WearWare.Services.Playlist
                     File.Copy(copyFrom, copyTo, overwrite: true);
                 }
             }
+            _operationProgress.ReportProgress(opId, "Updating playlist...");
             if (formMode == PlayableItemFormMode.ADD)
             {
                 // Add new item
@@ -370,6 +333,7 @@ namespace WearWare.Services.Playlist
             {
                 _mediaController.Start();
             }
+            _operationProgress.CompleteOperation(opId, true, "Done");
             // return true;
         }
 
@@ -427,40 +391,6 @@ namespace WearWare.Services.Playlist
             }
             return removed;
         }
-
-        /*
-        /// <summary>
-        /// Re-processes the specified playlist item using the provided matrix options.
-        /// Overwrites the existing .stream in the playlist folder.
-        /// </summary>
-        public async Task<ReConvertTaskResult> ReprocessPlaylistItem(PlaylistItems playlist, int itemIndex, int relativeBrightness, LedMatrixOptionsConfig? options = null)
-        {
-            var item = playlist.GetPlaylistItems()[itemIndex];
-            var folder = playlist.GetPlaylistPath();
-            // var restartMediaController = false;
-            // if (PlaylistIsPlaying(playlist))
-            // {
-            //     _mediaController.Stop();
-            //     restartMediaController = true;
-            // }
-            try
-            {
-                var result = await _streamConverterService.ConvertToStream(folder, item.SourceFileName, folder, item.Name, relativeBrightness, options);
-                if (result.ExitCode == 0)
-                {
-                    StateChanged?.Invoke();
-                }
-                return result;
-            }
-            finally
-            {
-                // if (restartMediaController && playlist.GetCurrentItem() != null)
-                // {
-                //     _mediaController.Start();
-                // }
-            }
-        }
-        */
 
         /// <summary>
         /// Called when the editing playlist is changed from the UI

@@ -15,7 +15,6 @@ namespace WearWare.Services.OperationProgress
             {
                 OperationId = id,
                 Title = string.IsNullOrEmpty(title) ? "Operation" : title,
-                Percent = 0,
                 Message = string.Empty,
                 IsCompleted = false,
                 Success = true
@@ -25,10 +24,9 @@ namespace WearWare.Services.OperationProgress
             return id;
         }
 
-        public void ReportProgress(Guid operationId, int percent, string message = "")
+        public void ReportProgress(Guid operationId, string message = "")
         {
             if (!_ops.TryGetValue(operationId, out var ev)) return;
-            ev.Percent = Math.Clamp(percent, 0, 100);
             ev.Message = message ?? string.Empty;
             OnProgressChanged?.Invoke(ev);
         }
@@ -39,7 +37,6 @@ namespace WearWare.Services.OperationProgress
             ev.IsCompleted = true;
             ev.Success = success;
             if (!string.IsNullOrEmpty(message)) ev.Message = message;
-            ev.Percent = 100;
             OnProgressChanged?.Invoke(ev);
             _ops.TryRemove(operationId, out _);
         }
