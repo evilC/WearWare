@@ -193,7 +193,7 @@ namespace WearWare.Services.Library
                     return;
                 }
                 // Update item's relative brightness and matrix options
-                item.CurrentBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, item.RelativeBrightness);
+                item.CurrentBrightness = result.ActualBrightness;
                 if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
                 {
                     item.MatrixOptions = options;
