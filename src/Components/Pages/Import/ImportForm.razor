@@ -17,10 +17,6 @@
         </label>
     </div>
     <div class="mw-matrix-form-row">
-        <label class="mw-matrix-label">Relative Brightness (%)
-            <InputNumber class="mw-matrix-input" TValue="int" type="number" @bind-Value="model.RelativeBrightness" min="1" max="100" />
-            <ValidationMessage For="@(() => model.RelativeBrightness)" />
-        </label>
     </div>
     <button type="submit">Continue</button>
     <button type="button" @onclick="OnCancelClicked">Cancel</button>
