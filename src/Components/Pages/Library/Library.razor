@@ -25,8 +25,8 @@ else if (!items.Any())
 }
 else
 {
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
     <ul class="library-list" style="list-style:none; padding:0; margin:0;">
         @foreach (var item in items)
         {
@@ -128,7 +128,7 @@ else
     /// </summary>
     private void ShowReConvertAllGlobal()
     {
-        _reconvertAllMode = PlayableItemFormMode.ReConvertAllGlobal;
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllMatrix;
         _showReConvertAllDialog = true;
     }
 
@@ -137,7 +137,7 @@ else
     /// </summary>
     private void ShowReConvertAllEmbedded()
     {
-        _reconvertAllMode = PlayableItemFormMode.ReConvertAllEmbedded;
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllBrightness;
         _showReConvertAllDialog = true;
     }
 
@@ -145,10 +145,10 @@ else
     /// Called when the Reconvert All form is submitted
     /// </summary>
     /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-    private async Task OnReconvertAll((PlayableItemFormMode formMode, LedMatrixOptionsConfig? options) args)
+    private async Task OnReconvertAll((PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
     {
         _showReConvertAllDialog = false;
-        await LibraryService.ReConvertAllItems(args.formMode, args.options);
+        await LibraryService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
         if (_editFormRef is not null)
             await _editFormRef.UnlockScrollAsync();
         await InvokeAsync(StateHasChanged);

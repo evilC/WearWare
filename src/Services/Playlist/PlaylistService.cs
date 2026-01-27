@@ -340,39 +340,49 @@ namespace WearWare.Services.Playlist
         /// <summary>
         /// Called when OK is clicked in the ReConvertAllPlayableItemsForm
         /// </summary>
-        public async Task ReConvertAllItems(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options)
+        public async Task ReConvertAllItems(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
         {
             var playlist = GetPlaylistBeingEdited();
             if (playlist == null)
                 return;
             var opId = await _operationProgress.StartOperation("Re-Converting all Playlist Items");
             int itemIndex = 0;
-            foreach (var item in playlist.GetPlaylistItems())
+            foreach (var originalItem in playlist.GetPlaylistItems())
             {
+                var item = originalItem.Clone();
+                if (formMode == PlayableItemFormMode.ReConvertAllBrightness)
+                {
+                    item.RelativeBrightness = relativeBrightness;
+                }
+                else if (formMode == PlayableItemFormMode.ReConvertAllMatrix && options != null)
+                {
+                    item.MatrixOptions = options;
+                }
+                if (!originalItem.NeedsReConvert(item))
+                {
+                    continue;
+                }
                 _operationProgress.ReportProgress(opId, $"Re-Converting item {itemIndex + 1} of {playlist.GetPlaylistItems().Count}: {item.Name}");
                 if (formMode == PlayableItemFormMode.Edit && options != null)
                 {
                     item.MatrixOptions = options;
                 }
                 var folder = playlist.GetPlaylistAbsolutePath();
-                // ToDo: Check if needs re-convert, but would need to preserve reference to original item (ie use updateFromClone)
                 var result = await _streamConverterService.ConvertToStream(
                     folder,
                     item.SourceFileName,
                     folder,
                     item.Name,
                     item.RelativeBrightness,
-                    formMode == PlayableItemFormMode.ReConvertAllGlobal ? options : item.MatrixOptions);
+                    item.MatrixOptions);
                 if (result.ExitCode != 0)
                 {
                     // Re-convert failed - show an alert and do not save changes
                     _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
                 }
                 item.CurrentBrightness = result.ActualBrightness;
-                if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
-                {
-                    item.MatrixOptions = options;
-                }
+                // Save updated metadata
+                originalItem.UpdateFromClone(item);
                 itemIndex++;
             }
             _operationProgress.CompleteOperation(opId, true, "Done");

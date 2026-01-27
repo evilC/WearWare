@@ -211,7 +211,7 @@
     /// </summary>
     private void ShowReConvertAllGlobal()
     {
-        _reconvertAllMode = PlayableItemFormMode.ReConvertAllGlobal;
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllMatrix;
         _showReConvertAllDialog = true;
     }
 
@@ -220,7 +220,7 @@
     /// </summary>
     private void ShowReConvertAllEmbedded()
     {
-        _reconvertAllMode = PlayableItemFormMode.ReConvertAllEmbedded;
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllBrightness;
         _showReConvertAllDialog = true;
     }
 
@@ -228,10 +228,10 @@
     /// Called when the Reconvert All form is submitted
     /// </summary>
     /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-    private async Task OnReconvertAll((PlayableItemFormMode formMode, LedMatrixOptionsConfig? options) args)
+    private async Task OnReconvertAll((PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
     {
         _showReConvertAllDialog = false;
-        await QuickMediaService.ReConvertAllItems(args.formMode, args.options);
+        await QuickMediaService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
         if (_editFormRef is not null)
             await _editFormRef.UnlockScrollAsync();
         await InvokeAsync(StateHasChanged);
@@ -246,8 +246,8 @@
 }
 else
 {
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
 	<div class="qm-button-list">
 		@for (int i = 0; i < quickButtons.Count; i++)
 		{

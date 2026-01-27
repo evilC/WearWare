@@ -215,16 +215,28 @@ public class QuickMediaService
     /// <param name="formMode"></param> The mode of the form (ReConvertAllGlobal or ReConvertAllEmbedded)
     /// <param name="options"></param> The new matrix options to use if ReConvertAllGlobal
     /// <returns></returns>
-    public async Task ReConvertAllItems(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options)
+    public async Task ReConvertAllItems(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
     {
         var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
         for (int i = 0; i < _maxButtons; i++)
         {
             var button = _buttons[i];
             if (button == null) continue;
-            var item = button.Item;
-            if (item == null) continue;
-            // ToDo: Check if needs re-convert, but would need to preserve reference to original item (ie use updateFromClone)
+            var originalItem = button.Item;
+            if (originalItem == null) continue;
+            var item = originalItem.Clone();
+            if (formMode == PlayableItemFormMode.ReConvertAllBrightness)
+            {
+                item.RelativeBrightness = relativeBrightness;
+            }
+            else if (formMode == PlayableItemFormMode.ReConvertAllMatrix && options != null)
+            {
+                item.MatrixOptions = options;
+            }
+            if (!originalItem.NeedsReConvert(item))
+            {
+                continue;
+            }
             _operationProgress.ReportProgress(opId, $"Re-converting Quick Media button {i+1}");
             var folder = button.GetAbsolutePath();
             var result = await _streamConverterService.ConvertToStream(
@@ -233,7 +245,8 @@ public class QuickMediaService
                 folder,
                 item.Name,
                 item.RelativeBrightness, 
-                formMode == PlayableItemFormMode.ReConvertAllGlobal ? options : item.MatrixOptions);
+                item.MatrixOptions
+            );
             if (result.ExitCode != 0)
             {
                 _logger.LogError("{tag} Re-conversion failed for Quick Media button {buttonNumber}, item {itemName}: {error} - {message}", 
@@ -243,10 +256,8 @@ public class QuickMediaService
             }
             // Update item's relative brightness and matrix options
             item.CurrentBrightness = result.ActualBrightness;
-            if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
-            {
-                item.MatrixOptions = options;
-            }
+            // Save updated metadata
+            button.Item.UpdateFromClone(item);
             // Serialize updated item
             SerializeQuickMediaButton(button);
         }

@@ -2,23 +2,23 @@
 
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
-- Can originalItem be stored in the `EditPlayableItemForm`?  
-  That way, we do not need to implement storing it on each of the pages
-- ReConvert all functionality
-  - Library, Playlist, QuickMedia
-  - Reconvert with embedded options
-    - Show no options
-    - Matrix options from item
-  - Reconvert with default options
-    - Only show Matrix Options
-    - Uses Global Matrix Options
-    - Do not show Relative / Actual brightness on Matrix Options form
-  - ReConvert embedded would never do anything?
+- Duplicate playlist
 
 ## Med Priority
+### Misc
+- Can originalItem be stored in the `EditPlayableItemForm`?  
+  That way, we do not need to implement storing it on each of the pages
+
+### CSS / Layout overhaul
+- Work out why I cannot style Blazor form elements (CSS classes not taking effect)
+- Validation not fully rolled out  
+  - EditPlayableItemForm not a razor form, except for Name  
+    Dodgy form inside of form
+- Probably lots of redundant CSS around
+- Lots of CSS could probably be centralized
 
 ### Crash hardening.  
- - Various places where null-forgiving operators are used
+- Various places where null-forgiving operators are used
 
 ### Rework stream conversion success / fail handling + reporting?  
 TaskResult seems clunky. 

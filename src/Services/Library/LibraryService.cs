@@ -166,7 +166,7 @@ namespace WearWare.Services.Library
         /// Called when OK is clicked in the ReConvert All dialog.
         /// </summary>
         /// <param name="relativeBrightness"></param> The relative brightness to set for all items
-        public async Task ReConvertAllItems(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options = null)
+        public async Task ReConvertAllItems(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
             int itemCount = 0;
@@ -175,18 +175,30 @@ namespace WearWare.Services.Library
                 itemCount++;
             }
             int currentItem = 0;
-            foreach (var item in _items.Values)
+            foreach (var originalItem in _items.Values)
             {
+                var item = originalItem.Clone();
+                if (formMode == PlayableItemFormMode.ReConvertAllBrightness)
+                {
+                    item.RelativeBrightness = relativeBrightness;
+                }
+                else if (formMode == PlayableItemFormMode.ReConvertAllMatrix && options != null)
+                {
+                    item.MatrixOptions = options;
+                }
                 currentItem++;
+                if (!originalItem.NeedsReConvert(item))
+                {
+                    continue;
+                }
                 _operationProgress.ReportProgress(opId, $"ReConverting {item.Name} ({currentItem} of {itemCount})");
-                // ToDo: Check if needs re-convert, but would need to preserve reference to original item (ie use updateFromClone)
                 var result = await _streamConverterService.ConvertToStream(
                     PathConfig.LibraryPath,
                     item.SourceFileName,
                     PathConfig.LibraryPath,
                     item.Name,
                     item.RelativeBrightness,
-                    formMode == PlayableItemFormMode.ReConvertAllGlobal ? options : item.MatrixOptions
+                    item.MatrixOptions
                 );
                 if (result.ExitCode != 0)
                 {
@@ -195,10 +207,6 @@ namespace WearWare.Services.Library
                 }
                 // Update item's relative brightness and matrix options
                 item.CurrentBrightness = result.ActualBrightness;
-                if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
-                {
-                    item.MatrixOptions = options;
-                }
                 // Save updated metadata
                 try
                 {
@@ -210,6 +218,8 @@ namespace WearWare.Services.Library
                     _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
                     return;
                 }
+                // Update the original item with data from the clone
+                originalItem.UpdateFromClone(item);
             }
             _operationProgress.CompleteOperation(opId, true, "Done");
         }
