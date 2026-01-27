@@ -25,6 +25,8 @@ else if (!items.Any())
 }
 else
 {
+    <button class="reconvert-all-button" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
+    <button class="reconvert-all-button" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
     <ul class="library-list" style="list-style:none; padding:0; margin:0;">
         @foreach (var item in items)
         {
@@ -73,52 +75,113 @@ else
     }
 
     // ReConvert flow (use EditPlayableItemForm; service will handle reconvert)
-    private bool showEditDialog = false;
+    private bool _showEditDialog = false;
     private PlayableItem? _originalItem;
     private PlayableItem? _editingClone;
-    private EditPlayableItemForm? editFormRef;
+    private EditPlayableItemForm? _editFormRef;
+    private bool _showReConvertAllDialog = false;
+    private PlayableItemFormMode _reconvertAllMode;
 
+    /// <summary>
+    /// Called when Reconvert is clicked for a library item.
+    /// </summary>
+    /// <param name="item"></param>
     private void ShowReconvert(PlayableItem item)
     {
         _originalItem = item;
         _editingClone = item.Clone();
-        showEditDialog = true;
+        _showEditDialog = true;
     }
 
-    private async Task OnOptionsOk()
+    /// <summary>
+    /// Called when the edit form is cancelled or closed.
+    /// </summary>
+    private async Task OnEditFormCancel()
     {
-        showEditDialog = false;
+        _showEditDialog = false;
         _editingClone = null;
         _originalItem = null;
-        if (editFormRef is not null)
-            await editFormRef.UnlockScrollAsync();
+        _showReConvertAllDialog = false;
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
     }
 
+    /// <summary>
+    /// Called when the edit form is submitted for a library item.
+    /// </summary>
+    /// <param name="args"></param> The arguments containing the updated item and form mode
+    /// <returns></returns>
     private async Task OnSaveLibraryItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
         if (_originalItem is null) return;
         await LibraryService.OnEditFormSubmit(_originalItem, args.updatedItem, args.formMode);
-        showEditDialog = false;
+        _showEditDialog = false;
         _editingClone = null;
         _originalItem = null;
-        if (editFormRef is not null)
-            await editFormRef.UnlockScrollAsync();
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All (Global) is clicked
+    /// </summary>
+    private async Task ShowReConvertAllGlobal()
+    {
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllGlobal;
+        _showReConvertAllDialog = true;
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All (Embedded) is clicked
+    /// </summary>
+    private async Task ShowReConvertAllEmbedded()
+    {
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllEmbedded;
+        _showReConvertAllDialog = true;
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All form is submitted
+    /// </summary>
+    /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
+    private async Task OnReconvertAll((PlayableItemFormMode formMode, LedMatrixOptionsConfig? options) args)
+    {
+        _showReConvertAllDialog = false;
+        await LibraryService.ReConvertAllItems(args.formMode, args.options);
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
         await InvokeAsync(StateHasChanged);
     }
 }
 
-@if (showEditDialog && _editingClone is not null && _originalItem is not null)
+@if (_showEditDialog && _editingClone is not null && _originalItem is not null)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
-            <EditPlayableItemForm @ref="editFormRef"
+            <EditPlayableItemForm @ref="_editFormRef"
                 EditingItem="_editingClone"
                 EditingIndex="0"
                 ItemType="PlayableItemType.Library"
                 FormMode="PlayableItemFormMode.Edit"
                 ImageUrl="@($"/library-image/{_originalItem.SourceFileName}")"
                 OnSave="OnSaveLibraryItem"
-                OnCancel="OnOptionsOk" />
+                OnCancel="OnEditFormCancel"
+            />
+        </div>
+    </div>
+}
+
+@if (_showReConvertAllDialog)
+{
+    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
+        <div style="width:80%;">
+            <EditPlayableItemForm @ref="_editFormRef"
+                ItemType="PlayableItemType.Library"
+                FormMode="@_reconvertAllMode"
+                OnReconvertAllOk="OnReconvertAll"
+                OnCancel="OnEditFormCancel"
+            />
         </div>
     </div>
 }

@@ -161,5 +161,56 @@ namespace WearWare.Services.Library
                 return;
             }
         }
+
+        /// <summary>
+        /// Called when OK is clicked in the ReConvert All dialog.
+        /// </summary>
+        /// <param name="relativeBrightness"></param> The relative brightness to set for all items
+        public async Task ReConvertAllItems(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options = null)
+        {
+            var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
+            int itemCount = 0;
+            foreach (var item in _items.Values)
+            {
+                itemCount++;
+            }
+            int currentItem = 0;
+            foreach (var item in _items.Values)
+            {
+                currentItem++;
+                _operationProgress.ReportProgress(opId, $"ReConverting {item.Name} ({currentItem} of {itemCount})");
+                var result = await _streamConverterService.ConvertToStream(
+                    PathConfig.LibraryPath,
+                    item.SourceFileName,
+                    PathConfig.LibraryPath,
+                    item.Name,
+                    item.RelativeBrightness,
+                    formMode == PlayableItemFormMode.ReConvertAllEmbedded ? item.MatrixOptions : options
+                );
+                if (result.ExitCode != 0)
+                {
+                    _operationProgress.CompleteOperation(opId, false, $"Failed to ReConvert item {item.Name}: " + result.Message + "\n" + result.Error);
+                    return;
+                }
+                // Update item's relative brightness and matrix options
+                item.CurrentBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, item.RelativeBrightness);
+                if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
+                {
+                    item.MatrixOptions = options;
+                }
+                // Save updated metadata
+                try
+                {
+                    var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
+                    JsonUtils.ToJsonFile(jsonPath, item);
+                }
+                catch (Exception ex)
+                {
+                    _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
+                    return;
+                }
+            }
+            _operationProgress.CompleteOperation(opId, true, "Done");
+        }
     }
 }

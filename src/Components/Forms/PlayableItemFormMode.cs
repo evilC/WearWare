@@ -1,5 +1,7 @@
 public enum PlayableItemFormMode
 {
     Add,
-    Edit
+    Edit,
+    ReConvertAllGlobal,
+    ReConvertAllEmbedded
 }

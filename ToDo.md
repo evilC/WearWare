@@ -7,10 +7,10 @@
 - ReConvert all functionality
   - Library, Playlist, QuickMedia
   - Reconvert with embedded options
-    - Only show relative brightness
+    - Show no options
     - Matrix options from item
   - Reconvert with default options
-    - Only show relative brightness and Matrix Options
+    - Only show Matrix Options
     - Uses Global Matrix Options
     - Do not show Relative / Actual brightness on Matrix Options form
 

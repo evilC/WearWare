@@ -30,7 +30,14 @@
     /// </summary>
     [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    /// <summary>
+    /// Callback for clicking OK in regular Add / Edit mode
+    /// </summary>
     [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode)> OnSave { get; set; }
+    /// <summary>
+    /// Callback for clicking OK in ReConvert All mode
+    /// </summary>
+    [Parameter] public EventCallback<(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options)> OnReconvertAllOk { get; set; }
 
     // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
     // Needs to be left until QuickMedia page is updated to not use it
@@ -77,7 +84,23 @@
 
     protected override void OnInitialized()
     {
-        if (EditingItem == null){
+        if (EditingItem == null)
+        {
+            // If we're being used for ReConvertAll flows, EditingItem may be null.
+            // Initialize reasonable defaults so the dialog can render and be used
+            // to select relative brightness and matrix options.
+            if (FormMode == PlayableItemFormMode.ReConvertAllGlobal || FormMode == PlayableItemFormMode.ReConvertAllEmbedded)
+            {
+                selectedPlayMode = (int)PlayMode.LOOP;
+                selectedPlayModeValue = 1;
+                selectedRelativeBrightness = 100;
+                selectedMatrixOptions = MatrixConfigService.CloneOptions();
+                nameInput = string.Empty;
+                importNameModel.Name = string.Empty;
+                streamCurrentBrightness = selectedMatrixOptions?.Brightness ?? 100;
+                CalculateBrightness();
+                return;
+            }
             _logger.LogError($"{_logTag}: EditingItem is null in EditPlayableItemForm");
             return;
         }
@@ -197,6 +220,13 @@
     /// </summary>
     private void SaveEdit()
     {
+        // If we're in a ReConvertAll mode, call the dedicated callback instead
+        if (FormMode == PlayableItemFormMode.ReConvertAllGlobal || FormMode == PlayableItemFormMode.ReConvertAllEmbedded)
+        {
+            OnReconvertAllOk.InvokeAsync((FormMode, selectedMatrixOptions));
+            return;
+        }
+
         if (EditingItem == null){
             _logger.LogError($"{_logTag}: Cannot save PlayableItem; EditingItem is null");
             return;
@@ -247,6 +277,14 @@
     /// </summary>
     /// <returns>The page title</returns>
     private string BuildPageTitle(){
+        if (FormMode == PlayableItemFormMode.ReConvertAllGlobal)
+        {
+            return $"ReConvert {ItemType} (Global)";
+        }
+        else if (FormMode == PlayableItemFormMode.ReConvertAllEmbedded)
+        {
+            return $"ReConvert {ItemType} (Embedded)";
+        }
         var title = ItemType == PlayableItemType.Import ? "" : $"{FormMode.ToString()} ";
         title += ItemType.ToString();
         if (ItemType == PlayableItemType.QuickMedia){
@@ -275,11 +313,19 @@
 }
 
 @* Main Razor Markup: *@
-@if (EditingItem is not null)
+@if (EditingItem is not null || FormMode == PlayableItemFormMode.ReConvertAllGlobal || FormMode == PlayableItemFormMode.ReConvertAllEmbedded)
 {
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
             <h2>@BuildPageTitle()</h2>
+            @if(FormMode == PlayableItemFormMode.ReConvertAllGlobal)
+            {
+                <span>ReConverts all @ItemType items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
+            }
+            else if(FormMode == PlayableItemFormMode.ReConvertAllEmbedded)
+            {
+                <span>ReConverts all @ItemType items with their Relative Brightness and their embedded Matrix Options</span>
+            }
             @if (ItemType == PlayableItemType.Import)
             {
                 <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
@@ -312,31 +358,38 @@
                     </div>
                 </div>
             }
-            <div class="add-dialog__list">
-                <div style="display:flex; align-items:center; gap:1rem;">
-                    <img class="add-dialog__item-image" src="@ImageUrl" alt="@EditingItem?.Name" />
-                    <div>
-                        <strong>@EditingItem?.Name</strong><br />
-                        <span class="add-dialog__item-type">@EditingItem?.MediaType</span>
+            @if (FormMode != PlayableItemFormMode.ReConvertAllGlobal && FormMode != PlayableItemFormMode.ReConvertAllEmbedded){
+                <div class="add-dialog__list">
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <img class="add-dialog__item-image" src="@ImageUrl" alt="@EditingItem?.Name" />
+                        <div>
+                            <strong>@EditingItem?.Name</strong><br />
+                            <span class="add-dialog__item-type">@EditingItem?.MediaType</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="add-dialog-row" style="margin-top: 1em;">
-                <label class="add-dialog-label">Stream Current Brightness (%)
-                    <input type="number" disabled class="add-dialog-number" @bind="streamCurrentBrightness"/>
-                </label>
-            </div>
-            <div class="add-dialog-row">
-                <label class="add-dialog-label">Relative Brightness (%)
-                    <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
-                </label>
-            </div>
-            <div class="add-dialog-row">
-                <label class="add-dialog-label">Adjusted Brightness (%)
-                    <input type="number" disabled class="add-dialog-number" @bind="adjustedBrightness" @bind:event="oninput" min="1" max="100" />
-                </label>
-            </div>
-            <button type="button" class="add-dialog__cancel-button" @onclick="ShowMatrixOptions">Item Matrix Options</button>
+                <div class="add-dialog-row" style="margin-top: 1em;">
+                    <label class="add-dialog-label">Stream Current Brightness (%)
+                        <input type="number" disabled class="add-dialog-number" @bind="streamCurrentBrightness"/>
+                    </label>
+                </div>
+                <div class="add-dialog-row">
+                    <label class="add-dialog-label">Relative Brightness (%)
+                        <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
+                    </label>
+                </div>
+            }
+            @if (FormMode != PlayableItemFormMode.ReConvertAllGlobal && FormMode != PlayableItemFormMode.ReConvertAllEmbedded){
+                <div class="add-dialog-row">
+                    <label class="add-dialog-label">Adjusted Brightness (%)
+                        <input type="number" disabled class="add-dialog-number" @bind="adjustedBrightness" @bind:event="oninput" min="1" max="100" />
+                    </label>
+                </div>
+            }
+            @if (FormMode != PlayableItemFormMode.ReConvertAllEmbedded)
+            {
+                <button type="button" class="add-dialog__cancel-button" @onclick="ShowMatrixOptions">Matrix Options</button>
+            }
             <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
                 <div style="display:flex; gap:0.5rem;">
                     <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
