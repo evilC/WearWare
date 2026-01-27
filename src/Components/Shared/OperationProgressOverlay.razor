@@ -33,7 +33,6 @@
 @code {
     private OperationProgressEvent _current = new OperationProgressEvent();
     private bool _visible;
-    private bool _acknowledged;
 
     protected override void OnInitialized()
     {
@@ -45,8 +44,7 @@
         _current = ev;
         if (!ev.IsCompleted)
         {
-            // New/ongoing operation: ensure visible and reset acknowledgement
-            _acknowledged = false;
+            // New/ongoing operation: ensure visible
             _visible = true;
         }
         else
@@ -72,7 +70,6 @@
             else
             {
                 _visible = true;
-                _acknowledged = false;
             }
         }
         InvokeAsync(StateHasChanged);
@@ -80,7 +77,6 @@
 
     private void Acknowledge()
     {
-        _acknowledged = true;
         _visible = false;
         _current = new OperationProgressEvent();
         InvokeAsync(StateHasChanged);
