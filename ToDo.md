@@ -5,9 +5,13 @@
 - Can originalItem be stored in the `EditPlayableItemForm`?  
   That way, we do not need to implement storing it on each of the pages
 - ReConvert all functionality
-  - Library, Playlists, QuickMedia
+  - Library, Playlist, QuickMedia
   - Reconvert with embedded options
+    - Only show relative brightness
+    - Matrix options from item
   - Reconvert with default options
+    - Only show relative brightness and Matrix Options
+    - Uses Global Matrix Options
 
 ## Med Priority
 
