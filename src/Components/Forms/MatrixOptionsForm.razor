@@ -347,42 +347,6 @@
 
     </EditForm>
 
-    @* Stream Conversion status *@
-    @* ToDo: This needs to move out of here and be shown / hidden by the StreamConverterService *@
-    @if (importing || operationResult != null)
-    {
-        <div class="mw-matrix-overlay">
-            <div class="card mw-overlay-card">
-                <div class="card-body">
-                    @if (importing)
-                    {
-                        <div class="d-flex align-items-center" style="gap:0.75rem;">
-                            <div class="spinner-border" role="status" aria-hidden="true"></div>
-                            <div>Processing...</div>
-                        </div>
-                    }
-                    else if (operationResult != null)
-                    {
-                        if (operationResult.ExitCode == 0)
-                        {
-                            <div class="alert alert-success mb-0">Stream converted successfully.</div>
-                            <div class="text-end mt-2">
-                                <button type="button" class="btn btn-primary" @onclick="HandleOk">OK</button>
-                            </div>
-                        }
-                        else
-                        {
-                            var cls = "alert-danger";
-                            <div class="alert @cls mb-0">@operationResult.Message@if(!string.IsNullOrEmpty(operationResult.Error)){<div><strong>Error:</strong> @operationResult.Error</div>}</div>
-                            <div class="text-end mt-2">
-                                <button type="button" class="btn btn-primary" @onclick="HandleOk">OK</button>
-                            </div>
-                        }
-                    }
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
 
@@ -419,8 +383,6 @@
     [Parameter]
     public Func<LedMatrixOptionsConfig, Task<ReConvertTaskResult>>? OnValidSubmitAsync { get; set; }
 
-    private bool importing = false;
-    private ReConvertTaskResult? operationResult;
 
     private EditContext? _editContext;
     private bool _hasValidationErrors = false;
@@ -664,14 +626,9 @@
 
     private async Task HandleValidSubmit()
     {
-        
         if (OnValidSubmitAsync != null)
         {
-            importing = true;
-            StateHasChanged();
-            operationResult = await OnValidSubmitAsync(Options);
-            importing = false;
-            await InvokeAsync(StateHasChanged);
+            await OnValidSubmitAsync(Options);
             return;
         }
 

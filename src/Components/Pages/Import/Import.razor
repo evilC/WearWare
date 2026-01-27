@@ -1,26 +1,27 @@
 @page "/import"
 @using System.Threading.Tasks
 @using WearWare.Config
+@using static WearWare.Common.Media.MediaTypeMappings
+@using static WearWare.Common.Media.MediaType
+@using WearWare.Common.Media
+@using WearWare.Common
+@using Microsoft.AspNetCore.Components.Forms
 @rendermode InteractiveServer
 @inject WearWare.Services.Import.ImportService ImportService
-@using WearWare.Common
 @inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
 @inject IJSRuntime JSRuntime
-@using Microsoft.AspNetCore.Components.Forms
 @inject HttpClient Http
 @inject NavigationManager Navigation
 
 <h3>Import</h3>
-@using static WearWare.Common.Media.MediaTypeMappings
-@using static WearWare.Common.Media.MediaType
 
 @if (showForm && selectedFileName != null)
 {
     <ImportForm FileName="@selectedFileName" OnFilenameConfirmed="OnFilenameConfirmed" />
 }
-else if (showOptionsForm && modalOptions != null && selectedFileName != null)
+else if (showEditDialog && _editingItem != null && selectedFileName != null)
 {
-    <MatrixOptionsForm Options="modalOptions" Visibility="MatrixConfigService.Visibility" RelativeBrightness="pendingRelativeBrightness" OnValidSubmitAsync="OnOptionsConfirmedAsync" OnCancel="OnOptionsOk" Action="Import" Title="Matrix Options for Import" />
+    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.LIBRARY" FormMode="PlayableItemFormMode.ADD" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnOptionsOk" />
 }
 else if (importFiles == null)
 {
@@ -57,10 +58,11 @@ else
     private List<string>? importFiles;
     private bool showForm = false;
     private string? selectedFileName;
-    private bool showOptionsForm = false;
-    private WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? modalOptions;
+    private bool showEditDialog = false;
     private string? pendingNewFileName;
     private int pendingRelativeBrightness;
+    private PlayableItem? _editingItem;
+    private EditPlayableItemForm? editFormRef;
     private string inputId = "fileInput_" + System.Guid.NewGuid().ToString("N");
 
     protected override void OnInitialized()
@@ -100,38 +102,54 @@ else
         showForm = false;
         if (arg.newFileName != null && selectedFileName != null)
         {
-            // Prepare a clone of current matrix options for the import form to edit
-            modalOptions = MatrixConfigService.CloneOptions();
-            // Store the relative brightness chosen in the import form for the import call
+            // Prepare an editing PlayableItem for the import flow
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(selectedFileName)) ?? MediaType.IMAGE;
+            var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
+            var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, arg.relativeBrightness);
+            _editingItem = new PlayableItem(
+                arg.newFileName,
+                PathConfig.LibraryFolder,
+                mediaType,
+                selectedFileName,
+                PlayMode.FOREVER,
+                1,
+                arg.relativeBrightness,
+                actual,
+                MatrixConfigService.CloneOptions()
+            );
             pendingRelativeBrightness = arg.relativeBrightness;
             pendingNewFileName = arg.newFileName;
-            showOptionsForm = true;
+            showEditDialog = true;
             return Task.CompletedTask;
         }
         selectedFileName = null;
         return Task.CompletedTask;
     }
 
-    private async Task<ReConvertTaskResult> OnOptionsConfirmedAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig editedOptions)
+    private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
-        showOptionsForm = false;
+        showEditDialog = false;
         ReConvertTaskResult result = new ReConvertTaskResult { ExitCode = -1, Error = "", Message = "Unknown", ActualBrightness = 0 };
         if (pendingNewFileName != null && selectedFileName != null)
         {
-            result = await ImportService.ImportLibraryItem(selectedFileName, pendingNewFileName, pendingRelativeBrightness, editedOptions);
+            result = await ImportService.ImportLibraryItem(selectedFileName, args.updatedItem.Name, args.updatedItem.RelativeBrightness, args.updatedItem.MatrixOptions);
         }
         // clear state
         pendingNewFileName = null;
         selectedFileName = null;
-        return result;
+        _editingItem = null;
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private Task OnOptionsOk()
     {
-        // Close the options form and return to the import list without importing
-        showOptionsForm = false;
+        // Close the edit form and return to the import list without importing
+        showEditDialog = false;
         pendingNewFileName = null;
         selectedFileName = null;
+        _editingItem = null;
         return Task.CompletedTask;
     }
 

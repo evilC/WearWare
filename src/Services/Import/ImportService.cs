@@ -7,6 +7,7 @@ using WearWare.Utils;
 using WearWare.Common;
 using WearWare.Services.StreamConverter;
 using WearWare.Services.MatrixConfig;
+using WearWare.Services.OperationProgress;
 
 namespace WearWare.Services.Import
 {
@@ -16,13 +17,19 @@ namespace WearWare.Services.Import
         private readonly MatrixConfigService _matrixConfigService;
         private readonly IStreamConverterService _streamConverterService;
         private readonly LibraryService _libraryService;
-        public ImportService(MatrixConfigService matrixConfigService, IStreamConverterService streamConverterService, LibraryService libraryService)
+        private readonly IOperationProgressService _operationProgress;
+        public ImportService(MatrixConfigService matrixConfigService, 
+            IStreamConverterService streamConverterService,
+            LibraryService libraryService,
+            IOperationProgressService operationProgress
+        )
         {
             _matrixConfigService = matrixConfigService;
             _matrixConfigService.OptionsChanged += OnMatrixOptionsChanged;
             OnMatrixOptionsChanged();
             _streamConverterService = streamConverterService;
             _libraryService = libraryService;
+            _operationProgress = operationProgress;
         }
 
         private void OnMatrixOptionsChanged()
@@ -75,16 +82,20 @@ namespace WearWare.Services.Import
 
         public async Task<ReConvertTaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
+            var opId = await _operationProgress.StartOperation("Importing Item");
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
                 int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
                 return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Import failed - unknown media type.", ActualBrightness = actual };
             }
+            _operationProgress.ReportProgress(opId, "Converting stream...");
             var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, oldFileName, PathConfig.LibraryPath, newFileNameNoExt, relativeBrightness, options);
             if (result.ExitCode != 0)
             {
+                _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
                 return result;
             }
+            _operationProgress.ReportProgress(opId, "Copying original file...");
             // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
             var ext = Path.GetExtension(oldFileName);
             var destPath = Path.Combine(PathConfig.LibraryPath, $"{newFileNameNoExt}{ext}");
@@ -98,6 +109,7 @@ namespace WearWare.Services.Import
             }
             catch (Exception ex)
             {
+                _operationProgress.CompleteOperation(opId, false, "Import succeeded, but failed to copy original file: " + ex.Message);
                 int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
                 return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to copy original file.", ActualBrightness = actual };
             }
@@ -115,25 +127,28 @@ namespace WearWare.Services.Import
             // Serialize item to JSON and write to libraryPath as name.json
             try
             {
+                _operationProgress.ReportProgress(opId, "Writing metadata...");
                 var json = JsonUtils.ToJson(item);
                 var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{newFileNameNoExt}.json");
                 await File.WriteAllTextAsync(jsonPath, json, Encoding.UTF8);
                 // Notify library service that new items are available
                 try
                 {
+                    _operationProgress.ReportProgress(opId, "Reloading library...");
                     _libraryService.Reload();
                 }
                 catch
                 {
-                    // Swallow any errors from reload; import itself succeeded.
+                    _operationProgress.ReportProgress(opId, "Warning: Failed to reload library after import.");
                 }
             }
             catch (Exception ex)
             {
+                _operationProgress.CompleteOperation(opId, false, "Import succeeded, but failed to write JSON metadata: " + ex.Message);
                 int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
                 return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to write JSON metadata.", ActualBrightness = actual };
             }
-
+            _operationProgress.CompleteOperation(opId, true, "Done");
             int finalActual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
             return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Import successful.", ActualBrightness = finalActual };
         }

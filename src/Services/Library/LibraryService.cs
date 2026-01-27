@@ -1,6 +1,8 @@
 using System.Text.Json;
 using WearWare.Common.Media;
 using WearWare.Config;
+using WearWare.Common;
+using WearWare.Utils;
 using WearWare.Services.MediaController;
 using WearWare.Services.MatrixConfig;
 
@@ -22,12 +24,20 @@ namespace WearWare.Services.Library
         private readonly ILogger<LibraryService> _logger;
         private readonly MediaControllerService _mediaControllerService;
         private readonly MatrixConfigService _matrixConfigService;
+        private readonly StreamConverter.IStreamConverterService _streamConverterService;
+        private readonly OperationProgress.IOperationProgressService _operationProgress;
 
-        public LibraryService(ILogger<LibraryService> logger, MediaControllerService mediaControllerService, MatrixConfigService matrixConfigService)
+        public LibraryService(ILogger<LibraryService> logger,
+            MediaControllerService mediaControllerService,
+            MatrixConfigService matrixConfigService,
+            StreamConverter.IStreamConverterService streamConverterService,
+            OperationProgress.IOperationProgressService operationProgress)
         {
             _logger = logger;
             _mediaControllerService = mediaControllerService;
             _matrixConfigService = matrixConfigService;
+            _streamConverterService = streamConverterService;
+            _operationProgress = operationProgress;
             LoadLibraryItems();
             _logger.LogInformation("LibraryService initialized.");
         }
@@ -98,6 +108,48 @@ namespace WearWare.Services.Library
         public void PlayPreviewItem(PlayableItem libItem)
         {
             _mediaControllerService.PlayQuickMedia(libItem);
+        }
+
+        public async Task<ReConvertTaskResult> OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
+        {
+            var opId = await _operationProgress.StartOperation("Updating Library Item");
+            try
+            {
+                _operationProgress.ReportProgress(opId, "Converting stream...");
+                var result = await _streamConverterService.ConvertToStream(PathConfig.LibraryPath, originalItem.SourceFileName, PathConfig.LibraryPath, originalItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                if (result.ExitCode != 0)
+                {
+                    _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
+                    return result;
+                }
+
+                // Update metadata and save
+                if (_items.ContainsKey(originalItem.Name))
+                {
+                    var item = _items[originalItem.Name];
+                    item.UpdateFromClone(updatedItem);
+                    try
+                    {
+                        _operationProgress.ReportProgress(opId, "Writing metadata...");
+                        var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
+                        JsonUtils.ToJsonFile(jsonPath, item);
+                        ItemsChanged?.Invoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
+                        return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "ReConvert succeeded, but failed to write JSON metadata.", ActualBrightness = 0 };
+                    }
+                }
+
+                _operationProgress.CompleteOperation(opId, true, "Done");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _operationProgress.CompleteOperation(opId, false, ex.Message);
+                return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed", ActualBrightness = 0 };
+            }
         }
     }
 }

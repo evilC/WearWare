@@ -30,7 +30,7 @@ else
         {
             <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.5rem; cursor:pointer;" @onclick="() => LibraryService.PlayPreviewItem(item)">
                 <div style="display:flex; flex-direction:column; gap:0.25em;">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick:stopPropagation @onclick="() => ShowReconvert(item)">ReConvert</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick:stopPropagation @onclick="() => ShowReconvert(item)">Edit</button>
                     <button type="button" class="btn btn-sm btn-outline-danger" @onclick:stopPropagation @onclick="() => ConfirmDelete(item)">Delete</button>
                 </div>
                 <img src="/library-image/@item.SourceFileName" alt="@item.Name" style="max-width:64px; max-height:64px; border-radius:8px; box-shadow:0 1px 8px #0002; background:#eee;" />
@@ -72,46 +72,53 @@ else
         }
     }
 
-    // ReConvert flow
-    private bool showOptionsForm = false;
-    private LedMatrixOptionsConfig? modalOptions;
-    private PlayableItem? editingItem;
+    // ReConvert flow (use EditPlayableItemForm; service will handle reconvert)
+    private bool showEditDialog = false;
+    private PlayableItem? _originalItem;
+    private PlayableItem? _editingClone;
+    private EditPlayableItemForm? editFormRef;
 
     private void ShowReconvert(PlayableItem item)
     {
-        editingItem = item;
-        modalOptions = MatrixConfigService.CloneOptions();
-        showOptionsForm = true;
+        _originalItem = item;
+        _editingClone = item.Clone();
+        showEditDialog = true;
     }
 
-    private Task OnOptionsOk()
+    private async Task OnOptionsOk()
     {
-        showOptionsForm = false;
-        modalOptions = null;
-        editingItem = null;
-        return Task.CompletedTask;
+        showEditDialog = false;
+        _editingClone = null;
+        _originalItem = null;
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
     }
 
-    private async Task<ReConvertTaskResult> OnLibraryReconvertAsync(LedMatrixOptionsConfig options)
+    private async Task OnSaveLibraryItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
-        if (editingItem is null) return new ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No item selected", ActualBrightness = 0 };
-        try
-        {
-            var folder = PathConfig.LibraryPath;
-            return await StreamConverterService.ConvertToStream(folder, editingItem.SourceFileName, folder, editingItem.Name, editingItem.RelativeBrightness, options);
-        }
-        catch (Exception ex)
-        {
-            return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed", ActualBrightness = 0 };
-        }
+        if (_originalItem is null) return;
+        await LibraryService.OnEditFormSubmit(_originalItem, args.updatedItem, args.formMode);
+        showEditDialog = false;
+        _editingClone = null;
+        _originalItem = null;
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
+        await InvokeAsync(StateHasChanged);
     }
 }
 
-@if (showOptionsForm && modalOptions is not null && editingItem is not null)
+@if (showEditDialog && _editingClone is not null && _originalItem is not null)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
-            <MatrixOptionsForm Options="modalOptions" Visibility="MatrixConfigService.Visibility" RelativeBrightness="editingItem.RelativeBrightness" OnValidSubmitAsync="OnLibraryReconvertAsync" OnCancel="OnOptionsOk" Action="ReConvert" Title="Matrix Options for ReConvert" />
+            <EditPlayableItemForm @ref="editFormRef"
+                EditingItem="_editingClone"
+                EditingIndex="0"
+                ItemType="PlayableItemType.LIBRARY"
+                FormMode="PlayableItemFormMode.EDIT"
+                ImageUrl="@($"/library-image/{_originalItem.SourceFileName}")"
+                OnSave="OnSaveLibraryItem"
+                OnCancel="OnOptionsOk" />
         </div>
     </div>
 }
