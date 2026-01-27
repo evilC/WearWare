@@ -25,8 +25,8 @@ else if (!items.Any())
 }
 else
 {
-    <button class="reconvert-all-button" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
-    <button class="reconvert-all-button" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
     <ul class="library-list" style="list-style:none; padding:0; margin:0;">
         @foreach (var item in items)
         {
@@ -126,7 +126,7 @@ else
     /// <summary>
     /// Called when the Reconvert All (Global) is clicked
     /// </summary>
-    private async Task ShowReConvertAllGlobal()
+    private void ShowReConvertAllGlobal()
     {
         _reconvertAllMode = PlayableItemFormMode.ReConvertAllGlobal;
         _showReConvertAllDialog = true;
@@ -135,7 +135,7 @@ else
     /// <summary>
     /// Called when the Reconvert All (Embedded) is clicked
     /// </summary>
-    private async Task ShowReConvertAllEmbedded()
+    private void ShowReConvertAllEmbedded()
     {
         _reconvertAllMode = PlayableItemFormMode.ReConvertAllEmbedded;
         _showReConvertAllDialog = true;
