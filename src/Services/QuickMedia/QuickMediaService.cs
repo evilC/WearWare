@@ -1,7 +1,9 @@
+using Iot.Device.ExplorerHat;
 using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
+using WearWare.Services.OperationProgress;
 using WearWare.Services.QuickMedia;
 using WearWare.Services.StreamConverter;
 using WearWare.Utils;
@@ -20,12 +22,15 @@ public class QuickMediaService
     private static readonly string _configFileName = "quickmedia.json";
     private readonly MatrixConfigService _matrixConfigService;
     private readonly IStreamConverterService _streamConverterService;
+    private readonly IOperationProgressService _operationProgress;
 
     public QuickMediaService(ILogger<QuickMediaService> logger,
         MediaControllerService mediaController, 
         IQuickMediaButtonFactory buttonFactory,
         MatrixConfigService matrixConfigService,
-        IStreamConverterService streamConverterService)
+        IStreamConverterService streamConverterService,
+        IOperationProgressService operationProgress
+    )
     {
         _logger = logger;
         _buttons = new IQuickMediaButton[_maxButtons];
@@ -34,6 +39,7 @@ public class QuickMediaService
         _matrixConfigService = matrixConfigService;
         _streamConverterService = streamConverterService;
         _mediaController.StateChanged += OnMediaControllerStateChanged;
+        _operationProgress = operationProgress;
         // Instantiate buttons
         // Note that there seems to be an issue with GPIO pins floating after first boot
         // So these buttons will default to uninitialized, and will be initialized later
@@ -92,67 +98,80 @@ public class QuickMediaService
     /// </summary>
     public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
     {
-            IQuickMediaButton button;
-            if (formMode == PlayableItemFormMode.Edit)
+        IQuickMediaButton button;
+        var opId = await _operationProgress.StartOperation($"{(formMode == PlayableItemFormMode.Add ? "Adding" : "Editing")} Quick Media Item");
+        if (formMode == PlayableItemFormMode.Edit)
+        {
+            var tmp = _buttons[itemIndex];
+            if (itemIndex < 0 || itemIndex >= _maxButtons || tmp == null)
             {
-                var tmp = _buttons[itemIndex];
-                if (itemIndex < 0 || itemIndex >= _maxButtons || tmp == null) return; // ToDo: Error handling
-                button = tmp;
-            }
-            else
+                _operationProgress.CompleteOperation(opId, false, "Error: Quick Media button not found for editing.");
+                return; // ToDo: Error handling
+            } 
+            button = tmp;
+        }
+        else
+        {
+            // Create new button
+            try
             {
-                // Create new button
-                try
+                _operationProgress.ReportProgress(opId, "Creating folder");
+                if (!Directory.Exists(GetQuickMediaPath(itemIndex)))
                 {
-                    if (!Directory.Exists(GetQuickMediaPath(itemIndex)))
-                    {
-                        Directory.CreateDirectory(GetQuickMediaPath(itemIndex));
-                    }
-                    button = _buttonFactory.Create(_mediaController, itemIndex, updatedItem);
+                    Directory.CreateDirectory(GetQuickMediaPath(itemIndex));
                 }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "{tag} Error adding Quick Media button for file {filename}: {message}", _logTag, updatedItem.SourceFileName, ex.Message);
-                    return;
-                }
+                _operationProgress.ReportProgress(opId, "Creating button");
+                button = _buttonFactory.Create(_mediaController, itemIndex, updatedItem);
             }
-            bool restartMediaController = false;
-            // if (PlaylistIsPlaying(playlist))
-            // {
-                // Currently editing playlist and media controller is running, need to restart after removing item
-                _mediaController.Stop();
-                restartMediaController = true;
-            // }
-            if (formMode == PlayableItemFormMode.Add)
+            catch (Exception ex)
             {
-                // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
-                updatedItem.ParentFolder = button.GetRelativePath();
+                _operationProgress.CompleteOperation(opId, false, "Error creating Quick Media button: " + ex.Message);
+                _logger.LogError(ex, "{tag} Error adding Quick Media button for file {filename}: {message}", _logTag, updatedItem.SourceFileName, ex.Message);
+                return;
             }
+        }
+        if (formMode == PlayableItemFormMode.Add)
+        {
+            // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
+            updatedItem.ParentFolder = button.GetRelativePath();
+        }
 
-            if (originalItem.NeedsReConvert(updatedItem)){
-                // If the updated item needs re-conversion, do it now
-                var readFrom = formMode == PlayableItemFormMode.Add
-                        ? PathConfig.LibraryPath                // For ADD, source is library folder
-                        : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
-                var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
-                var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
-                if (result.ExitCode != 0)
-                {
-                    // Re-convert failed - show an alert and do not save changes
-                    //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
-                    // ToDo: Show error to user
-                    return;
-                }
-            }
-            else if (formMode == PlayableItemFormMode.Add)
+        if (originalItem.NeedsReConvert(updatedItem)){
+            _operationProgress.ReportProgress(opId, "Converting stream");
+            // If the updated item needs re-conversion, do it now
+            var readFrom = formMode == PlayableItemFormMode.Add
+                    ? PathConfig.LibraryPath                // For ADD, source is library folder
+                    : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
+            var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
+            var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+            if (result.ExitCode != 0)
             {
+                // Re-convert failed - show an alert and do not save changes
+                _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
+                return;
+            }
+        }
+        else if (formMode == PlayableItemFormMode.Add)
+        {
+            try
+            {
+                _operationProgress.ReportProgress(opId, "Copying stream file");
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
                 var copyFrom = originalItem.GetStreamFilePath();    // From library folder
                 var copyTo = updatedItem.GetStreamFilePath();       // To quickmedia folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
-            if (formMode == PlayableItemFormMode.Add)
+            catch
             {
+                _operationProgress.CompleteOperation(opId, false, "Error copying stream file from library to Quick Media folder.");
+                return;
+            }
+        }
+        if (formMode == PlayableItemFormMode.Add)
+        {
+            try
+            {
+                _operationProgress.ReportProgress(opId, "Copying source file");
                 // Copy source file from library to quickmedia folder
                 var copyFrom = originalItem.GetSourceFilePath();    // From library folder
                 var copyTo = updatedItem.GetSourceFilePath();       // To quickmedia folder
@@ -160,25 +179,78 @@ public class QuickMediaService
                     File.Copy(copyFrom, copyTo, overwrite: true);
                 }
             }
-            if (formMode == PlayableItemFormMode.Add)
+            catch
             {
-                // Add new item
-                _buttons[itemIndex] = button;
+                _operationProgress.CompleteOperation(opId, false, "Error copying source file from library to Quick Media folder.");
+                return;
             }
-            else
-            {
-                originalItem.UpdateFromClone(updatedItem);
-            }
-
-            // button.Serialize();
+        }
+        if (formMode == PlayableItemFormMode.Add)
+        {
+            _operationProgress.ReportProgress(opId, "Adding button to collection");
+            _buttons[itemIndex] = button;
+        }
+        else
+        {
+            _operationProgress.ReportProgress(opId, "Updating item metadata");
+            originalItem.UpdateFromClone(updatedItem);
+        }
+        try
+        {
+            _operationProgress.ReportProgress(opId, "Saving configuration");
             SerializeQuickMediaButton(button);
-            // Restart media controller if there are still items to play
-            // if (restartMediaController && playlist.GetCurrentItem() != null)
-            if (restartMediaController)
+        }
+        catch
+        {
+            _operationProgress.CompleteOperation(opId, false, "Error writing Quick Media button configuration.");
+            return;
+        }
+        _operationProgress.CompleteOperation(opId, true, "Done");
+        StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
+    }
+
+    /// <summary>
+    /// Called when Re-Convert All is clicked in the QuickMedia page
+    /// </summary>
+    /// <param name="formMode"></param> The mode of the form (ReConvertAllGlobal or ReConvertAllEmbedded)
+    /// <param name="options"></param> The new matrix options to use if ReConvertAllGlobal
+    /// <returns></returns>
+    public async Task ReConvertAllItems(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options)
+    {
+        var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
+        for (int i = 0; i < _maxButtons; i++)
+        {
+            var button = _buttons[i];
+            if (button == null) continue;
+            var item = button.Item;
+            if (item == null) continue;
+            // ToDo: Check if needs re-convert, but would need to preserve reference to original item (ie use updateFromClone)
+            _operationProgress.ReportProgress(opId, $"Re-converting Quick Media button {i+1}");
+            var folder = button.GetAbsolutePath();
+            var result = await _streamConverterService.ConvertToStream(
+                folder,
+                item.SourceFileName,
+                folder,
+                item.Name,
+                item.RelativeBrightness, 
+                formMode == PlayableItemFormMode.ReConvertAllGlobal ? options : item.MatrixOptions);
+            if (result.ExitCode != 0)
             {
-                _mediaController.Start();
+                _logger.LogError("{tag} Re-conversion failed for Quick Media button {buttonNumber}, item {itemName}: {error} - {message}", 
+                    _logTag, i, item.Name, result.Error, result.Message);
+                _operationProgress.ReportProgress(opId, $"Re-conversion failed for Quick Media button {i+1}: {result.Error} - {result.Message}");
+                continue;
             }
-            StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
+            // Update item's relative brightness and matrix options
+            item.CurrentBrightness = result.ActualBrightness;
+            if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
+            {
+                item.MatrixOptions = options;
+            }
+            // Serialize updated item
+            SerializeQuickMediaButton(button);
+        }
+        _operationProgress.CompleteOperation(opId, true, "Done");
     }
 
     public bool DeleteQuickMediaButton(int buttonNumber)

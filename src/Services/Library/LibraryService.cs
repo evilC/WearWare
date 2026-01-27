@@ -179,13 +179,14 @@ namespace WearWare.Services.Library
             {
                 currentItem++;
                 _operationProgress.ReportProgress(opId, $"ReConverting {item.Name} ({currentItem} of {itemCount})");
+                // ToDo: Check if needs re-convert, but would need to preserve reference to original item (ie use updateFromClone)
                 var result = await _streamConverterService.ConvertToStream(
                     PathConfig.LibraryPath,
                     item.SourceFileName,
                     PathConfig.LibraryPath,
                     item.Name,
                     item.RelativeBrightness,
-                    formMode == PlayableItemFormMode.ReConvertAllEmbedded ? item.MatrixOptions : options
+                    formMode == PlayableItemFormMode.ReConvertAllGlobal ? options : item.MatrixOptions
                 );
                 if (result.ExitCode != 0)
                 {

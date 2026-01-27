@@ -2,6 +2,7 @@
 @using Iot.Device.GoPiGo3.Sensors
 @using System.Threading.Tasks
 @using WearWare.Services.Library
+@using WearWare.Services.MatrixConfig
 @using WearWare.Services.QuickMedia
 @using WearWare.Components.Pages.Shared.PlaylistItem
 @using WearWare.Common.Media
@@ -15,7 +16,7 @@
 @code {
     // ================================================== Common ==================================================
     private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
-    private IReadOnlyList<PlayableItem>? libraryItems;
+    private IReadOnlyList<PlayableItem>? _libraryItems;
 
     protected override void OnInitialized()
     {
@@ -27,7 +28,7 @@
         {
             quickButtons = Array.Empty<IQuickMediaButton?>();
         }
-        libraryItems = LibraryService.Items;
+        _libraryItems = LibraryService.Items;
         if (QuickMediaService != null)
             QuickMediaService.StateChanged += OnStateChanged;
     }
@@ -51,19 +52,21 @@
 
 
     // ================================================== Add Dialog  ==================================================
-    private bool showAddDialog = false;
-    private int addDialogInsertIndex = 0;
-    private AddPlayableItemForm? addFormRef;
+    private bool _showAddDialog = false;
+    private int _addDialogInsertIndex = 0;
+    private AddPlayableItemForm? _addFormRef;
+    private bool _showReConvertAllDialog = false;
+    private PlayableItemFormMode _reconvertAllMode;
 
     void OnAddDialogShow(int index)
     {
-        addDialogInsertIndex = index;
-        showAddDialog = true;
+        _addDialogInsertIndex = index;
+        _showAddDialog = true;
     }
 
     void OnAddDialogCancel()
     {
-        showAddDialog = false;
+        _showAddDialog = false;
         StateHasChanged();
     }
 
@@ -74,27 +77,27 @@
     async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem) args)
     {
         @* QuickMediaService.AddQuickMediaButton(args.insertIndex, args.libItem); *@
-        showAddDialog = false;
+        _showAddDialog = false;
         await InvokeAsync(StateHasChanged);
-        if (addFormRef is not null)
-            await addFormRef.UnlockScrollAsync();
+        if (_addFormRef is not null)
+            await _addFormRef.UnlockScrollAsync();
         await OnEditQuickMediaItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
     }
 
     // ================================================== Edit Dialog  ==================================================
-    private Boolean showEditDialog = false;
-    private int editingIndex = -1;
-    private PlayableItem? editingItem = null;
+    private Boolean _showEditDialog = false;
+    private int _editingIndex = -1;
+    private PlayableItem? _editingItem = null;
     private PlayableItem? _originalItem;
     // ToDo: Can we not remove this?
     @* private IQuickMediaButton? editingButton = null; *@
-    private EditPlayableItemForm? editFormRef;
+    private EditPlayableItemForm? _editFormRef;
 
     /// <summary>
     /// The mode of the EditPlayableItemForm
     /// Not used by the form itself, but when it returns we can know if we were adding or editing
     /// </summary>
-    private PlayableItemFormMode formMode;
+    private PlayableItemFormMode _formMode;
 
     /// <summary>
     /// Called when Edit is clicked on the QuickMedia page
@@ -103,9 +106,9 @@
     /// <param name="index"></param>
     async Task OnEditQuickMediaItem(PlayableItem item, int index, PlayableItemFormMode mode)
     {
-        editingIndex = index;
+        _editingIndex = index;
         _originalItem = item;
-        editingItem = item.Clone();
+        _editingItem = item.Clone();
         if (mode == PlayableItemFormMode.Add)
         {
             // In Add mode, the item being passed in is from the library, so we need to modify some properties.
@@ -113,12 +116,12 @@
             // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
             // Set PlayMode to LOOP and PlayModeValue to 1 by default...
             // ... because library items have FOREVER mode by default
-            editingItem.PlayMode = PlayMode.LOOP;
-            editingItem.PlayModeValue = 1;
+            _editingItem.PlayMode = PlayMode.LOOP;
+            _editingItem.PlayModeValue = 1;
         }
         @* editingButton = button; *@
-        formMode = mode;
-        showEditDialog = true;
+        _formMode = mode;
+        _showEditDialog = true;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -129,27 +132,28 @@
     /// <returns></returns>
     public async Task OnSaveQuickMediaItem((int editingIndex, PlayableItem item, PlayableItemFormMode formMode) args)
     {
-        if (editingItem is null || _originalItem is null || editingIndex < 0) return; // ToDo: Error handling
-        await QuickMediaService.OnEditFormSubmit(editingIndex, _originalItem, args.item, args.formMode);
-        showEditDialog = false;
-        editingItem = null;
+        if (_editingItem is null || _originalItem is null || _editingIndex < 0) return; // ToDo: Error handling
+        await QuickMediaService.OnEditFormSubmit(_editingIndex, _originalItem, args.item, args.formMode);
+        _showEditDialog = false;
+        _editingItem = null;
         _originalItem = null;
         await InvokeAsync(StateHasChanged);
-        if (editFormRef is not null)
-            await editFormRef.UnlockScrollAsync();
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
     }
 
     /// <summary>
     /// Hides the Edit Item dialog - called on Cancel
     /// </summary>
-    async Task HideEditDialog()
+    async Task OnEditFormCancel()
     {
-        showEditDialog = false;
-        editingItem = null;
+        _showEditDialog = false;
+        _showReConvertAllDialog = false;
+        _editingItem = null;
         _originalItem = null;
         await InvokeAsync(StateHasChanged);
-        if (editFormRef is not null)
-            await editFormRef.UnlockScrollAsync();
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
 
     }
 
@@ -165,18 +169,18 @@
     /// - OnReprocessAsync parameter from EditPlayableItemForm.razor
     private async Task<WearWare.Common.ReConvertTaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options, int relativeBrightness)
     {
-        if (editingIndex < 0)
+        if (_editingIndex < 0)
         {
             return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No quickmedia selected", ActualBrightness = 0 };
         }
-        var btn = quickButtons.ElementAtOrDefault(editingIndex);
+        var btn = quickButtons.ElementAtOrDefault(_editingIndex);
         if (btn?.Item is null)
         {
             return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "Selected quickmedia button has no item", ActualBrightness = 0 };
         }
         try
         {
-            var folder = System.IO.Path.Combine(WearWare.Config.PathConfig.QuickMediaPath, editingIndex.ToString());
+            var folder = System.IO.Path.Combine(WearWare.Config.PathConfig.QuickMediaPath, _editingIndex.ToString());
             return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, relativeBrightness, options);
         }
         catch (Exception ex)
@@ -201,6 +205,37 @@
             DeleteQuickMediaButton(index);
         }
     }
+
+    /// <summary>
+    /// Called when the Reconvert All (Global) is clicked
+    /// </summary>
+    private void ShowReConvertAllGlobal()
+    {
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllGlobal;
+        _showReConvertAllDialog = true;
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All (Embedded) is clicked
+    /// </summary>
+    private void ShowReConvertAllEmbedded()
+    {
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllEmbedded;
+        _showReConvertAllDialog = true;
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All form is submitted
+    /// </summary>
+    /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
+    private async Task OnReconvertAll((PlayableItemFormMode formMode, LedMatrixOptionsConfig? options) args)
+    {
+        _showReConvertAllDialog = false;
+        await QuickMediaService.ReConvertAllItems(args.formMode, args.options);
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
+        await InvokeAsync(StateHasChanged);
+    }
 }
 
 <PageTitle>Quick Media</PageTitle>
@@ -211,6 +246,8 @@
 }
 else
 {
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
 	<div class="qm-button-list">
 		@for (int i = 0; i < quickButtons.Count; i++)
 		{
@@ -241,28 +278,42 @@ else
 	</div>
 }
 
-@if (showAddDialog)
+@if (_showAddDialog)
 {
 	<AddPlayableItemForm 
-		@ref="addFormRef"
-		LibraryItems="libraryItems"
-		InsertIndex="addDialogInsertIndex"
-		PageTitle="@($"QuickMedia Button {addDialogInsertIndex+1}")"
+		@ref="_addFormRef"
+		LibraryItems="_libraryItems"
+		InsertIndex="_addDialogInsertIndex"
+		PageTitle="@($"QuickMedia Button {_addDialogInsertIndex+1}")"
 		OnCancel="OnAddDialogCancel"
 		OnAdd="OnAddDialogItemChosen" />
 }
 
-@if (showEditDialog && editingItem is not null)
+@if (_showEditDialog && _editingItem is not null)
 {
     <EditPlayableItemForm
-        @ref="editFormRef"
-        EditingItem="editingItem"
-        EditingIndex="editingIndex"
-        ImageUrl="@($"/quickmedia-images/{editingIndex}/{editingItem.SourceFileName}")"
-        OnCancel="HideEditDialog"
+        @ref="_editFormRef"
+        EditingItem="_editingItem"
+        EditingIndex="_editingIndex"
+        ImageUrl="@($"/quickmedia-images/{_editingIndex}/{_editingItem.SourceFileName}")"
+        OnCancel="OnEditFormCancel"
         OnSave="OnSaveQuickMediaItem"
         OnReprocessAsync="ReprocessQuickMediaButtonAsync"
         ItemType="PlayableItemType.QuickMedia"
-        FormMode="formMode"
+        FormMode="_formMode"
     />
+}
+
+@if (_showReConvertAllDialog)
+{
+    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
+        <div style="width:80%;">
+            <EditPlayableItemForm @ref="_editFormRef"
+                ItemType="PlayableItemType.QuickMedia"
+                FormMode="@_reconvertAllMode"
+                OnReconvertAllOk="OnReconvertAll"
+                OnCancel="OnEditFormCancel"
+            />
+        </div>
+    </div>
 }

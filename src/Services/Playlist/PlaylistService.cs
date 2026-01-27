@@ -355,19 +355,24 @@ namespace WearWare.Services.Playlist
                     item.MatrixOptions = options;
                 }
                 var folder = playlist.GetPlaylistAbsolutePath();
+                // ToDo: Check if needs re-convert, but would need to preserve reference to original item (ie use updateFromClone)
                 var result = await _streamConverterService.ConvertToStream(
                     folder,
                     item.SourceFileName,
                     folder,
                     item.Name,
                     item.RelativeBrightness,
-                    formMode == PlayableItemFormMode.ReConvertAllEmbedded ? item.MatrixOptions : options);
+                    formMode == PlayableItemFormMode.ReConvertAllGlobal ? options : item.MatrixOptions);
                 if (result.ExitCode != 0)
                 {
                     // Re-convert failed - show an alert and do not save changes
                     _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
                 }
                 item.CurrentBrightness = result.ActualBrightness;
+                if (formMode == PlayableItemFormMode.ReConvertAllGlobal && options != null)
+                {
+                    item.MatrixOptions = options;
+                }
                 itemIndex++;
             }
             _operationProgress.CompleteOperation(opId, true, "Done");

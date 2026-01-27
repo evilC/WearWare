@@ -13,6 +13,7 @@
     - Only show Matrix Options
     - Uses Global Matrix Options
     - Do not show Relative / Actual brightness on Matrix Options form
+  - ReConvert embedded would never do anything?
 
 ## Med Priority
 
