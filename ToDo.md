@@ -2,11 +2,6 @@
 
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
-- Progress / error reporting system
-  Overlay to show progress (eg on ReConvert)  
-  - Old unused overlay still left in `MatrixOptionsForm.razor` (`div class="mw-matrix-overlay"`)
-  - Locked out scrollbars in underlying page - see `modalScrollLock` in `EditPlayableItemForm.razor`
-  - AI recommended in chat `Nested Razor forms validation scenario`: `Service / pub-sub — OperationProgressService`
 - Can originalItem be stored in the `EditPlayableItemForm`?  
   That way, we do not need to implement storing it on each of the pages
 - ReConvert all functionality
