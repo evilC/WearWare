@@ -337,9 +337,40 @@ namespace WearWare.Services.Playlist
             // return true;
         }
 
-        public async Task ReConvertAllItems(PlayableItemFormMode mode, LedMatrixOptionsConfig? options)
+        /// <summary>
+        /// Called when OK is clicked in the ReConvertAllPlayableItemsForm
+        /// </summary>
+        public async Task ReConvertAllItems(PlayableItemFormMode formMode, LedMatrixOptionsConfig? options)
         {
-            
+            var playlist = GetPlaylistBeingEdited();
+            if (playlist == null)
+                return;
+            var opId = await _operationProgress.StartOperation("Re-Converting all Playlist Items");
+            int itemIndex = 0;
+            foreach (var item in playlist.GetPlaylistItems())
+            {
+                _operationProgress.ReportProgress(opId, $"Re-Converting item {itemIndex + 1} of {playlist.GetPlaylistItems().Count}: {item.Name}");
+                if (formMode == PlayableItemFormMode.Edit && options != null)
+                {
+                    item.MatrixOptions = options;
+                }
+                var folder = playlist.GetPlaylistAbsolutePath();
+                var result = await _streamConverterService.ConvertToStream(
+                    folder,
+                    item.SourceFileName,
+                    folder,
+                    item.Name,
+                    item.RelativeBrightness,
+                    formMode == PlayableItemFormMode.ReConvertAllEmbedded ? item.MatrixOptions : options);
+                if (result.ExitCode != 0)
+                {
+                    // Re-convert failed - show an alert and do not save changes
+                    _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
+                }
+                item.CurrentBrightness = result.ActualBrightness;
+                itemIndex++;
+            }
+            _operationProgress.CompleteOperation(opId, true, "Done");
         }    
 
         // ToDo: Should the bulk of this not be in PlaylistItems?
