@@ -12,6 +12,7 @@
   - Reconvert with default options
     - Only show relative brightness and Matrix Options
     - Uses Global Matrix Options
+    - Do not show Relative / Actual brightness on Matrix Options form
 
 ## Med Priority
 
