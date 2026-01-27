@@ -21,7 +21,7 @@ namespace WearWare.Services.Mocks
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
             if (mediaType == null){
-                return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
             }
             var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
             var inputPath = Path.Combine(sourcePath, odldFileName);
@@ -35,7 +35,7 @@ namespace WearWare.Services.Mocks
             File.Create(Path.Combine(destPath, $"{newFileNameNoExt}.stream")).Dispose();
             await Task.Delay(1000); // Simulate some work
             int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
-            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Mock conversion successful.", ActualBrightness = actualBrightness };
+            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Stream conversion successful.", ActualBrightness = actualBrightness };
         }
     }
 }

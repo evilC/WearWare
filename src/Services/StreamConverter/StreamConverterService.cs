@@ -41,7 +41,7 @@ namespace WearWare.Services.StreamConverter
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
-                return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
             }
             var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
             var inputPath = Path.Combine(sourcePath, oldFileName);
@@ -89,6 +89,8 @@ namespace WearWare.Services.StreamConverter
                 }
                 catch (Exception ex)
                 {
+                    // Clean up temp file on failure
+                    try { if (File.Exists(tmpStreamPath)) File.Delete(tmpStreamPath); } catch {}
                     return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "Stream conversion succeeded but failed to move temp file into place.", ActualBrightness = actualBrightness };
                 }
                 return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "Stream conversion successful.", ActualBrightness = actualBrightness };
