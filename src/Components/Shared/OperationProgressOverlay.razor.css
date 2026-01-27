@@ -22,3 +22,14 @@
 .mw-progress-bar { background: rgba(255,255,255,0.12); height: 10px; border-radius: 6px; overflow: hidden; }
 .mw-progress-fill { background: #2aa198; height: 100%; transition: width 200ms linear; }
 .mw-progress-message { margin-top: 8px; font-size: 0.9rem; opacity: 0.9; }
+.mw-progress-actions { margin-top: 12px; text-align: center; }
+.mw-btn-ok {
+  background: #d9534f;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.mw-btn-ok:hover { opacity: 0.9; }

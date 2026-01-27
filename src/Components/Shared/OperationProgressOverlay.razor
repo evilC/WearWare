@@ -6,12 +6,19 @@
     <div class="mw-progress-card">
         <div class="mw-progress-title">@(_current.Title)</div>
         <div class="mw-progress-message">@(_current.Message)</div>
+        @if (_current.IsCompleted && !_current.Success)
+        {
+            <div class="mw-progress-actions">
+                <button class="mw-btn-ok" @onclick="Acknowledge">OK</button>
+            </div>
+        }
     </div>
 </div>
 
 @code {
     private OperationProgressEvent _current = new OperationProgressEvent();
     private bool _visible;
+    private bool _acknowledged;
 
     protected override void OnInitialized()
     {
@@ -21,7 +28,33 @@
     private void HandleProgress(OperationProgressEvent ev)
     {
         _current = ev;
-        _visible = !ev.IsCompleted;
+        if (!ev.IsCompleted)
+        {
+            // New/ongoing operation: ensure visible and reset acknowledgement
+            _acknowledged = false;
+            _visible = true;
+        }
+        else
+        {
+            // Completed: if success, auto-hide; if failure, remain visible until user acknowledges
+            if (ev.Success)
+            {
+                _visible = false;
+            }
+            else
+            {
+                _visible = true;
+                _acknowledged = false;
+            }
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void Acknowledge()
+    {
+        _acknowledged = true;
+        _visible = false;
+        _current = new OperationProgressEvent();
         InvokeAsync(StateHasChanged);
     }
 
