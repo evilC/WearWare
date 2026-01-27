@@ -18,7 +18,7 @@
 
 @if (showEditDialog && _editingItem != null && selectedFileName != null)
 {
-    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.Import" FormMode="PlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnOptionsOk" />
+    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.Import" FormMode="PlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnEditFormCancel" />
 }
 else if (importFiles == null)
 {
@@ -78,6 +78,9 @@ else
         ImportService.StateChanged -= OnStateChanged;
     }
 
+    /// <summary>
+    /// Show the edit form for the selected incoming file.
+    /// </summary>
     private async Task ShowForm(string fileName)
     {
         selectedFileName = fileName;
@@ -112,8 +115,7 @@ else
         }
     }
 
-    // ImportForm removed; ShowForm() now creates the editing item directly.
-
+    
     private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
         showEditDialog = false;
@@ -130,7 +132,10 @@ else
         await InvokeAsync(StateHasChanged);
     }
 
-    private Task OnOptionsOk()
+    /// <summary>
+    /// Called when the edit form is cancelled or closed.
+    /// </summary>
+    private Task OnEditFormCancel()
     {
         // Close the edit form and return to the import list without importing
         showEditDialog = false;
@@ -140,6 +145,9 @@ else
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Called when a file is selected for upload.
+    /// </summary>
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
         var file = e.File;
