@@ -9,9 +9,6 @@
   - AI recommended in chat `Nested Razor forms validation scenario`: `Service / pub-sub — OperationProgressService`
 - Can originalItem be stored in the `EditPlayableItemForm`?  
   That way, we do not need to implement storing it on each of the pages
-- Library ReConvert needs to have Relative Brightness.  
-  Use new Edit form?
-- Move Import to new Edit form?
 - ReConvert all functionality
   - Library, Playlists, QuickMedia
   - Reconvert with embedded options
