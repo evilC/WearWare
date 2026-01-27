@@ -5,11 +5,14 @@ namespace WearWare.Services.OperationProgress
     public class OperationProgressService : IOperationProgressService
     {
         private readonly ConcurrentDictionary<Guid, OperationProgressEvent> _ops = new();
+        // Simple sequential lock: only one operation active at a time
+        private readonly System.Threading.SemaphoreSlim _operationLock = new(1, 1);
+        private Guid _lockOwner = Guid.Empty;
 
         public event Action<OperationProgressEvent> OnProgressChanged = _ => { };
-
-        public Guid StartOperation(string title = "")
+        public async Task<Guid> StartOperation(string title = "")
         {
+            await _operationLock.WaitAsync().ConfigureAwait(false);
             var id = Guid.NewGuid();
             var ev = new OperationProgressEvent
             {
@@ -21,6 +24,9 @@ namespace WearWare.Services.OperationProgress
                 Success = true
             };
             _ops[id] = ev;
+            // mark lock owner
+            _lockOwner = id;
+            // Publish a snapshot so subscribers get an immutable copy (helps Blazor diffs)
             OnProgressChanged?.Invoke(ev);
             return id;
         }
@@ -44,10 +50,15 @@ namespace WearWare.Services.OperationProgress
             }
             ev.IsCompleted = true;
             ev.Success = success;
-            if (success)
-                ReportProgress(operationId, message);
             OnProgressChanged?.Invoke(ev);
+            // remove stored op
             _ops.TryRemove(operationId, out _);
+            // if this operation held the sequential lock, release it so next can start
+            if (_lockOwner == operationId)
+            {
+                _lockOwner = Guid.Empty;
+                try { _operationLock.Release(); } catch { }
+            }
         }
     }
 }

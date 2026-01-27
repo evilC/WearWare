@@ -256,7 +256,7 @@ namespace WearWare.Services.Playlist
         public async Task OnEditFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
         {
             // ToDo: Try / catch needed in here
-            var opId = _operationProgress.StartOperation("Updating Playlist Item");
+            var opId = await _operationProgress.StartOperation("Updating Playlist Item");
             bool restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
             {
