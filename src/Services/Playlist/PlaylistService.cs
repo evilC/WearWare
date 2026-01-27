@@ -283,7 +283,7 @@ namespace WearWare.Services.Playlist
                     // Re-convert failed - show an alert and do not save changes
                     //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
                     // ToDo: Show error to user
-                    _operationProgress.CompleteOperation(opId, false, result.Message);
+                    _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
                     return;
                 }
             }

@@ -36,7 +36,6 @@ namespace WearWare.Services.OperationProgress
 
         public void CompleteOperation(Guid operationId, bool success = true, string message = "")
         {
-            ReportProgress(operationId, message);
             if (!_ops.TryGetValue(operationId, out var ev)) return;
             if (!string.IsNullOrEmpty(message))
             {
@@ -45,6 +44,8 @@ namespace WearWare.Services.OperationProgress
             }
             ev.IsCompleted = true;
             ev.Success = success;
+            if (success)
+                ReportProgress(operationId, message);
             OnProgressChanged?.Invoke(ev);
             _ops.TryRemove(operationId, out _);
         }
