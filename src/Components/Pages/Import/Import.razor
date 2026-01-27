@@ -6,6 +6,7 @@
 @using WearWare.Common.Media
 @using WearWare.Common
 @using Microsoft.AspNetCore.Components.Forms
+@using WearWare.Utils
 @rendermode InteractiveServer
 @inject WearWare.Services.Import.ImportService ImportService
 @inject WearWare.Services.MatrixConfig.MatrixConfigService MatrixConfigService
@@ -15,11 +16,7 @@
 
 <h3>Import</h3>
 
-@if (showForm && selectedFileName != null)
-{
-    <ImportForm FileName="@selectedFileName" OnFilenameConfirmed="OnFilenameConfirmed" />
-}
-else if (showEditDialog && _editingItem != null && selectedFileName != null)
+@if (showEditDialog && _editingItem != null && selectedFileName != null)
 {
     <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.Import" FormMode="PlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnOptionsOk" />
 }
@@ -56,11 +53,10 @@ else
 
 @code {
     private List<string>? importFiles;
-    private bool showForm = false;
     private string? selectedFileName;
     private bool showEditDialog = false;
     private string? pendingNewFileName;
-    private int pendingRelativeBrightness;
+    
     private PlayableItem? _editingItem;
     private EditPlayableItemForm? editFormRef;
     private string inputId = "fileInput_" + System.Guid.NewGuid().ToString("N");
@@ -82,10 +78,29 @@ else
         ImportService.StateChanged -= OnStateChanged;
     }
 
-    private void ShowForm(string fileName)
+    private async Task ShowForm(string fileName)
     {
         selectedFileName = fileName;
-        showForm = true;
+        // Prepare an editing PlayableItem immediately (ImportForm UI moved into EditPlayableItemForm)
+        var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(selectedFileName)) ?? MediaType.IMAGE;
+        var baseName = Path.GetFileNameWithoutExtension(selectedFileName);
+        var sanitized = FilenameValidator.Sanitize(baseName);
+        var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
+        var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, 100);
+        _editingItem = new PlayableItem(
+            sanitized,
+            PathConfig.LibraryFolder,
+            mediaType,
+            selectedFileName,
+            PlayMode.FOREVER,
+            1,
+            100,
+            actual,
+            MatrixConfigService.CloneOptions()
+        );
+        pendingNewFileName = sanitized;
+        showEditDialog = true;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ConfirmDelete(string fileName)
@@ -97,34 +112,7 @@ else
         }
     }
 
-    private Task OnFilenameConfirmed((string? newFileName, int relativeBrightness) arg)
-    {
-        showForm = false;
-        if (arg.newFileName != null && selectedFileName != null)
-        {
-            // Prepare an editing PlayableItem for the import flow
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(selectedFileName)) ?? MediaType.IMAGE;
-            var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
-            var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, arg.relativeBrightness);
-            _editingItem = new PlayableItem(
-                arg.newFileName,
-                PathConfig.LibraryFolder,
-                mediaType,
-                selectedFileName,
-                PlayMode.FOREVER,
-                1,
-                arg.relativeBrightness,
-                actual,
-                MatrixConfigService.CloneOptions()
-            );
-            pendingRelativeBrightness = arg.relativeBrightness;
-            pendingNewFileName = arg.newFileName;
-            showEditDialog = true;
-            return Task.CompletedTask;
-        }
-        selectedFileName = null;
-        return Task.CompletedTask;
-    }
+    // ImportForm removed; ShowForm() now creates the editing item directly.
 
     private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {

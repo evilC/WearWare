@@ -4,6 +4,8 @@
 @using WearWare.Common
 @using WearWare.Common.Media
 @using WearWare.Services.MatrixConfig
+@using WearWare.Utils
+@using System.ComponentModel.DataAnnotations
 
 @code {
     private readonly string _logTag = "EditPlayableItemForm";
@@ -52,6 +54,15 @@
     private int selectedRelativeBrightness;
 
     private LedMatrixOptionsConfig? selectedMatrixOptions;
+    private string nameInput = string.Empty;
+    private ImportNameModel importNameModel = new();
+
+    public class ImportNameModel
+    {
+        [Required]
+        [RegularExpression($"^[{FilenameValidator.AllowedPattern}]+$", ErrorMessage = "Name must only contain letters, numbers, dashes, or underscores.")]
+        public string Name { get; set; } = string.Empty;
+    }
 
     // === Form readouts ===
     // Holds the current brightness that the stream was last converted with
@@ -74,6 +85,8 @@
         selectedPlayModeValue = EditingItem.PlayModeValue;
         selectedRelativeBrightness = EditingItem.RelativeBrightness;
         selectedMatrixOptions = EditingItem.MatrixOptions.Clone();
+        nameInput = EditingItem.Name;
+        importNameModel.Name = nameInput;
         streamCurrentBrightness = EditingItem.CurrentBrightness;
         CalculateBrightness();
     }
@@ -192,6 +205,27 @@
             _logger.LogError($"{_logTag}: Cannot save PlayableItem; selectedMatrixOptions is null");
             return;
         }
+        // Copy mutable properties into the item to send back. For Import flows, Name is init-only,
+        // so construct a new PlayableItem with the edited name.
+        if (ItemType == PlayableItemType.Import)
+        {
+            // Validate name via importNameModel; sanitize before creating PlayableItem
+            var sanitized = FilenameValidator.Sanitize(importNameModel.Name ?? string.Empty);
+            var updated = new PlayableItem(
+                sanitized,
+                EditingItem.ParentFolder,
+                EditingItem.MediaType,
+                EditingItem.SourceFileName,
+                (PlayMode)selectedPlayMode,
+                selectedPlayModeValue,
+                Math.Clamp(selectedRelativeBrightness, 1, 100),
+                adjustedBrightness,
+                selectedMatrixOptions.Clone()
+            );
+            OnSave.InvokeAsync((EditingIndex, updated, FormMode));
+            return;
+        }
+
         EditingItem.PlayMode = (PlayMode)selectedPlayMode;
         EditingItem.PlayModeValue = selectedPlayModeValue;
         EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
@@ -246,6 +280,18 @@
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
             <h2>@BuildPageTitle()</h2>
+            @if (ItemType == PlayableItemType.Import)
+            {
+                <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
+                    <EditForm Model="importNameModel">
+                        <DataAnnotationsValidator />
+                        <label class="add-dialog-label">Name
+                            <InputText class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="importNameModel.Name" />
+                        </label>
+                        <ValidationMessage For="@(() => importNameModel.Name)" />
+                    </EditForm>
+                </div>
+            }
             @if (ItemType != PlayableItemType.Library && ItemType != PlayableItemType.Import)
             {
                 <div class="add-dialog-row">

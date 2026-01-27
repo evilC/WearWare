@@ -5,7 +5,7 @@ namespace WearWare.Common.Media
 {
     public class PlayableItem
     {
-        public string Name { get; init; }
+        public string Name { get; set; }
         public MediaType MediaType { get; init; }
         public string SourceFileName { get; init; }
         public int RelativeBrightness { get; set; } = 100;
