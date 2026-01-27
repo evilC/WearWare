@@ -110,6 +110,13 @@ namespace WearWare.Services.Library
             _mediaControllerService.PlayQuickMedia(libItem);
         }
 
+        /// <summary>
+        /// Called when the edit form is submitted in the Library page.
+        /// </summary>
+        /// <param name="originalItem"></param> The original item before editing
+        /// <param name="updatedItem"></param> The updated item with new values
+        /// <param name="formMode"></param> The mode of the form (Add or Edit)
+        /// <returns></returns>
         public async Task OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
         {
             var opId = await _operationProgress.StartOperation("Updating Library Item");

@@ -80,6 +80,14 @@ namespace WearWare.Services.Import
             StateChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Called when the edit form is submitted in the Import page.
+        /// </summary>
+        /// <param name="oldFileName"></param> The original filename in the incoming folder
+        /// <param name="newFileNameNoExt"></param> The new filename (without extension) to use in the library
+        /// <param name="relativeBrightness"></param> The relative brightness to set for the imported item
+        /// <param name="options"></param> The LED matrix options to use for the imported item
+        /// <returns></returns>
         public async Task OnEditFormSubmit(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var opId = await _operationProgress.StartOperation("Importing Item");
