@@ -115,12 +115,15 @@ namespace WearWare.Services.Library
             var opId = await _operationProgress.StartOperation("Updating Library Item");
             try
             {
-                _operationProgress.ReportProgress(opId, "Converting stream...");
-                var result = await _streamConverterService.ConvertToStream(PathConfig.LibraryPath, originalItem.SourceFileName, PathConfig.LibraryPath, originalItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
-                if (result.ExitCode != 0)
+                if (originalItem.NeedsReConvert(updatedItem))
                 {
-                    _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                    return;
+                    _operationProgress.ReportProgress(opId, "Converting stream...");
+                    var result = await _streamConverterService.ConvertToStream(PathConfig.LibraryPath, originalItem.SourceFileName, PathConfig.LibraryPath, originalItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                    if (result.ExitCode != 0)
+                    {
+                        _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
+                        return;
+                    }
                 }
 
                 // Update metadata and save
