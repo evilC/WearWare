@@ -16,6 +16,7 @@ namespace WearWare.Services.OperationProgress
                 OperationId = id,
                 Title = string.IsNullOrEmpty(title) ? "Operation" : title,
                 Message = string.Empty,
+                Steps = new List<string>(),
                 IsCompleted = false,
                 Success = true
             };
@@ -27,16 +28,23 @@ namespace WearWare.Services.OperationProgress
         public void ReportProgress(Guid operationId, string message = "")
         {
             if (!_ops.TryGetValue(operationId, out var ev)) return;
-            ev.Message = message ?? string.Empty;
+            var msg = message ?? string.Empty;
+            if (!string.IsNullOrEmpty(msg)) ev.Steps.Add(msg);
+            ev.Message = msg;
             OnProgressChanged?.Invoke(ev);
         }
 
         public void CompleteOperation(Guid operationId, bool success = true, string message = "")
         {
+            ReportProgress(operationId, message);
             if (!_ops.TryGetValue(operationId, out var ev)) return;
+            if (!string.IsNullOrEmpty(message))
+            {
+                ev.Steps.Add(message);
+                ev.Message = message;
+            }
             ev.IsCompleted = true;
             ev.Success = success;
-            if (!string.IsNullOrEmpty(message)) ev.Message = message;
             OnProgressChanged?.Invoke(ev);
             _ops.TryRemove(operationId, out _);
         }

@@ -4,8 +4,8 @@ namespace WearWare.Services.OperationProgress
     {
         public Guid OperationId { get; set; }
         public string Title { get; set; } = string.Empty;
-        // Percent removed — use message/state only
         public string Message { get; set; } = string.Empty;
+        public List<string> Steps { get; set; } = new List<string>();
         public bool IsCompleted { get; set; }
         public bool Success { get; set; }
     }

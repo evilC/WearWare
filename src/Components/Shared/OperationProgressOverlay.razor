@@ -1,11 +1,26 @@
 @using WearWare.Services.OperationProgress
+@using System.Threading.Tasks
 @inject IOperationProgressService OperationProgressService
 @rendermode InteractiveServer
 
 <div class="mw-progress-overlay" hidden="@(!_visible)">
     <div class="mw-progress-card">
         <div class="mw-progress-title">@(_current.Title)</div>
-        <div class="mw-progress-message">@(_current.Message)</div>
+        <div class="mw-progress-message">
+            @if (_current.Steps != null && _current.Steps.Count > 0)
+            {
+                <ul class="mw-progress-steps">
+                    @foreach (var s in _current.Steps)
+                    {
+                        <li>@s</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div>@(_current.Message)</div>
+            }
+        </div>
         @if (_current.IsCompleted && !_current.Success)
         {
             <div class="mw-progress-actions">
@@ -36,10 +51,23 @@
         }
         else
         {
-            // Completed: if success, auto-hide; if failure, remain visible until user acknowledges
+            // Completed: if success, show final message briefly then hide; if failure, remain visible until user acknowledges
             if (ev.Success)
             {
-                _visible = false;
+                // Keep overlay visible for a short time so user can read final message
+                _visible = true;
+                var opId = ev.OperationId;
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(500);
+                    // Only hide if the operation is still the same completed success
+                    if (_current.OperationId == opId && _current.IsCompleted && _current.Success)
+                    {
+                        _visible = false;
+                        _current = new OperationProgressEvent();
+                        await InvokeAsync(StateHasChanged);
+                    }
+                });
             }
             else
             {

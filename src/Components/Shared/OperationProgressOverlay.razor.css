@@ -33,3 +33,6 @@
   font-weight: 600;
 }
 .mw-btn-ok:hover { opacity: 0.9; }
+
+.mw-progress-steps { list-style: none; margin: 0; padding: 0; overflow: auto; }
+.mw-progress-steps li { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.95rem; }
