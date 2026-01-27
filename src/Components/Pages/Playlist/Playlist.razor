@@ -1,5 +1,6 @@
 @page "/playlist"
 @using Microsoft.AspNetCore.Mvc.ModelBinding.Binders
+@using WearWare.Services.MatrixConfig
 @using WearWare.Services.Playlist
 @using WearWare.Components.Pages.Shared.PlaylistItem
 @using WearWare.Common.Media
@@ -87,7 +88,7 @@
     /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
     private IReadOnlyList<PlayableItem>? libraryItems;
     /// <summary> Reference to the AddPlayableItemForm component </summary>
-    private AddPlayableItemForm? addFormRef;
+    private AddPlayableItemForm? _addFormRef;
     // Handler for AddPlayableItemForm component's OnAdd event
 
     /// <summary>
@@ -103,12 +104,12 @@
     /// <summary>
     /// Called when Cancel is clicked in the AddPlayableItemForm
     /// </summary>
-    async Task OnAddDialogCancel()
+    async Task OnAddFormCancel()
     {
         showAddDialog = false;
         await InvokeAsync(StateHasChanged);
-        if (addFormRef is not null)
-            await addFormRef.UnlockScrollAsync();
+        if (_addFormRef is not null)
+            await _addFormRef.UnlockScrollAsync();
     }
 
     /// <summary>
@@ -120,32 +121,35 @@
         if (_playlist is null) return;
         showAddDialog = false;
         await InvokeAsync(StateHasChanged);
-        if (addFormRef is not null)
-            await addFormRef.UnlockScrollAsync();
+        if (_addFormRef is not null)
+            await _addFormRef.UnlockScrollAsync();
         await OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
     }
 
     // ================================================== Edit Dialog  ==================================================
     /// <summary> Whether to show the Edit Item dialog </summary>
-    private bool showEditDialog = false;
+    private bool _showEditDialog = false;
 
     /// <summary> The PlayableItem being edited in the Edit dialog </summary>
-    private PlayableItem? editingItem;
+    private PlayableItem? _editingItem;
 
     /// <summary> A copy of the original PlayableItem (pre-editing) </summary>
     private PlayableItem? _originalItem;
 
     /// <summary> Reference to the EditPlayableItemForm component </summary>
-    private EditPlayableItemForm? editFormRef;
+    private EditPlayableItemForm? _editFormRef;
 
     /// <summary> The index of the PlayableItem being edited in the Edit dialog </summary>
-    private int editingIndex;
+    private int _editingIndex;
 
     /// <summary>
     /// The mode of the EditPlayableItemForm
     /// Not used by the form itself, but when it returns we can know if we were adding or editing
     /// </summary>
-    private PlayableItemFormMode formMode;
+    private PlayableItemFormMode _formMode;
+
+    private bool _showReConvertAllDialog = false;
+    private PlayableItemFormMode _reconvertAllMode;
 
     /// <summary>
     /// Called when Edit is clicked on the Playlist page
@@ -159,7 +163,7 @@
             return;
         }
         _originalItem = item;   // Store the original item for comparison later
-        editingItem = item.Clone();
+        _editingItem = item.Clone();
         if (mode == PlayableItemFormMode.Add)
         {
             // In Add mode, the item being passed in is from the library, so we need to modify some properties.
@@ -167,12 +171,12 @@
             // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
             // Set PlayMode to LOOP and PlayModeValue to 1 by default...
             // ... because library items have FOREVER mode by default
-            editingItem.PlayMode = PlayMode.LOOP;
-            editingItem.PlayModeValue = 1;
+            _editingItem.PlayMode = PlayMode.LOOP;
+            _editingItem.PlayModeValue = 1;
         }
-        editingIndex = itemIndex;
-        formMode = mode;
-        showEditDialog = true;
+        _editingIndex = itemIndex;
+        _formMode = mode;
+        _showEditDialog = true;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -182,29 +186,30 @@
     /// <param name="args"></param> Tuple of (editingIndex, updatedItem, formMode)
     async Task OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
-        if (_playlist is null || editingItem is null || _originalItem is null || editingIndex < 0) return; // ToDo: Error handling
+        if (_playlist is null || _editingItem is null || _originalItem is null || _editingIndex < 0) return; // ToDo: Error handling
         await PlaylistService.OnEditFormSubmit(_playlist, args.editingIndex, _originalItem, args.updatedItem, args.formMode);
 
-        showEditDialog = false;
-        editingItem = null;
+        _showEditDialog = false;
+        _editingItem = null;
         _originalItem = null;
         await InvokeAsync(StateHasChanged);
-        if (editFormRef is not null)
-            await editFormRef.UnlockScrollAsync();
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
     }
 
     /// <summary>
     /// Hides the Edit Item dialog - called on Cancel
     /// </summary>
-    async Task HideEditDialog()
+    async Task OnEditFormCancel()
     {
-        showEditDialog = false;
-        editingItem = null;
+        _showEditDialog = false;
+        _editingItem = null;
+        _showReConvertAllDialog = false;
         _originalItem = null;
         // Wait for the UI to update and the dialog to be removed
         await InvokeAsync(StateHasChanged);
-        if (editFormRef is not null)
-            await editFormRef.UnlockScrollAsync();
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
     }
 
     // ================================================= Delete Item ==================================================
@@ -393,23 +398,55 @@
     }
 
     /// <summary>
+    /// Called when the Reconvert All (Global) is clicked
+    /// </summary>
+    private void ShowReConvertAllGlobal()
+    {
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllGlobal;
+        _showReConvertAllDialog = true;
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All (Embedded) is clicked
+    /// </summary>
+    private void ShowReConvertAllEmbedded()
+    {
+        _reconvertAllMode = PlayableItemFormMode.ReConvertAllEmbedded;
+        _showReConvertAllDialog = true;
+    }
+
+    /// <summary>
+    /// Called when the Reconvert All form is submitted
+    /// </summary>
+    /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
+    private async Task OnReconvertAll((PlayableItemFormMode formMode, LedMatrixOptionsConfig? options) args)
+    {
+        _showReConvertAllDialog = false;
+        await PlaylistService.ReConvertAllItems(args.formMode, args.options);
+        if (_editFormRef is not null)
+            await _editFormRef.UnlockScrollAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    /// <summary>
     /// Builds the image path for the editing item based on whether we are adding or editing
     /// Images on the Edit form in ADD mode come from the library, in EDIT mode come from the folder of the playlist
     /// </summary>
     /// <returns>The path to the URL for the editing image</returns>
     private string BuildEditingImageURL(){
-        if (editingItem is null){
+        if (_editingItem is null){
             _logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
             return string.Empty;
         }
-        if (formMode == PlayableItemFormMode.Edit){
+        if (_formMode == PlayableItemFormMode.Edit){
             if (_playlist is null){
                 _logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
                 return string.Empty;
             }
-            return $"/playlist-images/{_playlist.Name}/{editingItem.SourceFileName}";
+            return $"/playlist-images/{_playlist.Name}/{_editingItem.SourceFileName}";
         }
-        return $"/library-image/{editingItem.SourceFileName}";        
+        return $"/library-image/{_editingItem.SourceFileName}";        
     }
 }
 
@@ -469,6 +506,8 @@
 @* Normal Playlist View: *@
 @if (_playlist is not null && _items is not null)
 {
+    <button class="playlist-add-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all (Global Matrix Options)</button>
+    <button class="playlist-add-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all (Embedded Matrix Options)</button>
     <div class="playlist-list">
         <button class="playlist-add-button" @onclick="() => OnAddDialogShow(0)">Add new item at start</button>
         @for (int i = 0; i < _items.Count; i++)
@@ -494,9 +533,9 @@
 @* Add Dialog:*@
 @if (showAddDialog)
 {
-    <AddPlayableItemForm @ref="addFormRef"
+    <AddPlayableItemForm @ref="_addFormRef"
         LibraryItems="libraryItems"
-        OnCancel="OnAddDialogCancel"
+        OnCancel="OnAddFormCancel"
         OnAdd="OnAddDialogItemChosen"
         InsertIndex="addDialogInsertIndex"
         PageTitle="Playlist item" />
@@ -504,18 +543,31 @@
 @using WearWare.Components.Forms
 
 @* Edit Dialog:*@
-@if (showEditDialog && editingItem is not null)
+@if (_showEditDialog && _editingItem is not null)
 {
     <EditPlayableItemForm
-        @ref="editFormRef"
-        EditingItem="editingItem"
-        EditingIndex="editingIndex"
+        @ref="_editFormRef"
+        EditingItem="_editingItem"
+        EditingIndex="_editingIndex"
         ImageUrl="@($"{BuildEditingImageURL()}")"
-        OnCancel="HideEditDialog"
+        OnCancel="OnEditFormCancel"
         OnSave="OnSavePlaylistItem"
         ItemType="PlayableItemType.Playlist"
-        FormMode="formMode"
+        FormMode="_formMode"
     />
 }
 
+@if (_showReConvertAllDialog)
+{
+    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
+        <div style="width:80%;">
+            <EditPlayableItemForm @ref="_editFormRef"
+                ItemType="PlayableItemType.Playlist"
+                FormMode="@_reconvertAllMode"
+                OnReconvertAllOk="OnReconvertAll"
+                OnCancel="OnEditFormCancel"
+            />
+        </div>
+    </div>
+}
 

@@ -338,7 +338,8 @@
                     </EditForm>
                 </div>
             }
-            @if (ItemType != PlayableItemType.Library && ItemType != PlayableItemType.Import)
+            @if (ItemType != PlayableItemType.Library && ItemType != PlayableItemType.Import && 
+                FormMode != PlayableItemFormMode.ReConvertAllGlobal && FormMode != PlayableItemFormMode.ReConvertAllEmbedded)
             {
                 <div class="add-dialog-row">
                     <div class="add-dialog-section">

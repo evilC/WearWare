@@ -337,6 +337,11 @@ namespace WearWare.Services.Playlist
             // return true;
         }
 
+        public async Task ReConvertAllItems(PlayableItemFormMode mode, LedMatrixOptionsConfig? options)
+        {
+            
+        }    
+
         // ToDo: Should the bulk of this not be in PlaylistItems?
         /// <summary>
         /// Removes a playlist item from the playlist being edited
