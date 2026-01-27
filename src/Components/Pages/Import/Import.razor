@@ -129,10 +129,9 @@ else
     private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
     {
         showEditDialog = false;
-        ReConvertTaskResult result = new ReConvertTaskResult { ExitCode = -1, Error = "", Message = "Unknown", ActualBrightness = 0 };
         if (pendingNewFileName != null && selectedFileName != null)
         {
-            result = await ImportService.ImportLibraryItem(selectedFileName, args.updatedItem.Name, args.updatedItem.RelativeBrightness, args.updatedItem.MatrixOptions);
+            await ImportService.ImportLibraryItem(selectedFileName, args.updatedItem.Name, args.updatedItem.RelativeBrightness, args.updatedItem.MatrixOptions);
         }
         // clear state
         pendingNewFileName = null;

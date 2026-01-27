@@ -110,7 +110,7 @@ namespace WearWare.Services.Library
             _mediaControllerService.PlayQuickMedia(libItem);
         }
 
-        public async Task<ReConvertTaskResult> OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
+        public async Task OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
         {
             var opId = await _operationProgress.StartOperation("Updating Library Item");
             try
@@ -120,7 +120,7 @@ namespace WearWare.Services.Library
                 if (result.ExitCode != 0)
                 {
                     _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                    return result;
+                    return;
                 }
 
                 // Update metadata and save
@@ -138,17 +138,17 @@ namespace WearWare.Services.Library
                     catch (Exception ex)
                     {
                         _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
-                        return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "ReConvert succeeded, but failed to write JSON metadata.", ActualBrightness = 0 };
+                        return;
                     }
                 }
 
                 _operationProgress.CompleteOperation(opId, true, "Done");
-                return result;
+                return;
             }
             catch (Exception ex)
             {
                 _operationProgress.CompleteOperation(opId, false, ex.Message);
-                return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed", ActualBrightness = 0 };
+                return;
             }
         }
     }

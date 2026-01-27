@@ -80,20 +80,21 @@ namespace WearWare.Services.Import
             StateChanged?.Invoke();
         }
 
-        public async Task<ReConvertTaskResult> ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var opId = await _operationProgress.StartOperation("Importing Item");
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
-            if (mediaType == null){
-                int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
-                return new ReConvertTaskResult { ExitCode = 0, Error = "Unknown media type", Message = "Import failed - unknown media type.", ActualBrightness = actual };
+            if (mediaType == null)
+            {
+                _operationProgress.CompleteOperation(opId, false, "Import failed - unknown media type.");
+                return;
             }
             _operationProgress.ReportProgress(opId, "Converting stream...");
             var result = await _streamConverterService.ConvertToStream(PathConfig.IncomingPath, oldFileName, PathConfig.LibraryPath, newFileNameNoExt, relativeBrightness, options);
             if (result.ExitCode != 0)
             {
                 _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                return result;
+                return;
             }
             _operationProgress.ReportProgress(opId, "Copying original file...");
             // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
@@ -110,8 +111,7 @@ namespace WearWare.Services.Import
             catch (Exception ex)
             {
                 _operationProgress.CompleteOperation(opId, false, "Import succeeded, but failed to copy original file: " + ex.Message);
-                int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
-                return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to copy original file.", ActualBrightness = actual };
+                return;
             }
             var item = new PlayableItem(
                 newFileNameNoExt,
@@ -145,12 +145,10 @@ namespace WearWare.Services.Import
             catch (Exception ex)
             {
                 _operationProgress.CompleteOperation(opId, false, "Import succeeded, but failed to write JSON metadata: " + ex.Message);
-                int actual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
-                return new ReConvertTaskResult { ExitCode = 0, Error = ex.Message, Message = "Import succeeded, but failed to write JSON metadata.", ActualBrightness = actual };
+                return;
             }
             _operationProgress.CompleteOperation(opId, true, "Done");
-            int finalActual = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness);
-            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Import successful.", ActualBrightness = finalActual };
+            return;
         }
     }
 }

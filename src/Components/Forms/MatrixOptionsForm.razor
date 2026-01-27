@@ -379,11 +379,6 @@
     [Parameter]
     public EventCallback<LedMatrixOptionsConfig> OnValidSubmit { get; set; }
 
-    // Optional async submit delegate that returns an operation `ReConvertTaskResult` to display
-    [Parameter]
-    public Func<LedMatrixOptionsConfig, Task<ReConvertTaskResult>>? OnValidSubmitAsync { get; set; }
-
-
     private EditContext? _editContext;
     private bool _hasValidationErrors = false;
 
@@ -626,12 +621,6 @@
 
     private async Task HandleValidSubmit()
     {
-        if (OnValidSubmitAsync != null)
-        {
-            await OnValidSubmitAsync(Options);
-            return;
-        }
-
         if (OnValidSubmit.HasDelegate)
         {
             await OnValidSubmit.InvokeAsync(Options);
