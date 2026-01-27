@@ -135,14 +135,15 @@ else
     /// <summary>
     /// Called when the edit form is cancelled or closed.
     /// </summary>
-    private Task OnEditFormCancel()
+    private async Task OnEditFormCancel()
     {
         // Close the edit form and return to the import list without importing
         showEditDialog = false;
         pendingNewFileName = null;
         selectedFileName = null;
         _editingItem = null;
-        return Task.CompletedTask;
+        if (editFormRef is not null)
+            await editFormRef.UnlockScrollAsync();
     }
 
     /// <summary>
