@@ -80,7 +80,7 @@ namespace WearWare.Services.Import
             StateChanged?.Invoke();
         }
 
-        public async Task ImportLibraryItem(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task OnEditFormSubmit(string oldFileName, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var opId = await _operationProgress.StartOperation("Importing Item");
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));

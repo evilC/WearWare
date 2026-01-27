@@ -119,7 +119,7 @@ else
         showEditDialog = false;
         if (pendingNewFileName != null && selectedFileName != null)
         {
-            await ImportService.ImportLibraryItem(selectedFileName, args.updatedItem.Name, args.updatedItem.RelativeBrightness, args.updatedItem.MatrixOptions);
+            await ImportService.OnEditFormSubmit(selectedFileName, args.updatedItem.Name, args.updatedItem.RelativeBrightness, args.updatedItem.MatrixOptions);
         }
         // clear state
         pendingNewFileName = null;
