@@ -1,6 +1,5 @@
 public enum PlayableItemFormMode
 {
-    ADD,
-    EDIT,
-    LIBRARY
+    Add,
+    Edit
 }

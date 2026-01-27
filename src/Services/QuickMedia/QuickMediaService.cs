@@ -93,7 +93,7 @@ public class QuickMediaService
     public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
     {
             IQuickMediaButton button;
-            if (formMode == PlayableItemFormMode.EDIT)
+            if (formMode == PlayableItemFormMode.Edit)
             {
                 var tmp = _buttons[itemIndex];
                 if (itemIndex < 0 || itemIndex >= _maxButtons || tmp == null) return; // ToDo: Error handling
@@ -123,7 +123,7 @@ public class QuickMediaService
                 _mediaController.Stop();
                 restartMediaController = true;
             // }
-            if (formMode == PlayableItemFormMode.ADD)
+            if (formMode == PlayableItemFormMode.Add)
             {
                 // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
                 updatedItem.ParentFolder = button.GetRelativePath();
@@ -131,7 +131,7 @@ public class QuickMediaService
 
             if (originalItem.NeedsReConvert(updatedItem)){
                 // If the updated item needs re-conversion, do it now
-                var readFrom = formMode == PlayableItemFormMode.ADD
+                var readFrom = formMode == PlayableItemFormMode.Add
                         ? PathConfig.LibraryPath                // For ADD, source is library folder
                         : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
                 var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
@@ -144,14 +144,14 @@ public class QuickMediaService
                     return;
                 }
             }
-            else if (formMode == PlayableItemFormMode.ADD)
+            else if (formMode == PlayableItemFormMode.Add)
             {
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
                 var copyFrom = originalItem.GetStreamFilePath();    // From library folder
                 var copyTo = updatedItem.GetStreamFilePath();       // To quickmedia folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
-            if (formMode == PlayableItemFormMode.ADD)
+            if (formMode == PlayableItemFormMode.Add)
             {
                 // Copy source file from library to quickmedia folder
                 var copyFrom = originalItem.GetSourceFilePath();    // From library folder
@@ -160,7 +160,7 @@ public class QuickMediaService
                     File.Copy(copyFrom, copyTo, overwrite: true);
                 }
             }
-            if (formMode == PlayableItemFormMode.ADD)
+            if (formMode == PlayableItemFormMode.Add)
             {
                 // Add new item
                 _buttons[itemIndex] = button;

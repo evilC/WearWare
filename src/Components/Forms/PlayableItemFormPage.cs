@@ -1,8 +1,7 @@
-namespace WearWare.Common.Media
+namespace WearWare.Components.Forms
 {
-    public enum PlayableItemType
+    public enum PlayableItemFormPage
     {
-        UNKNOWN,
         Import,
         Library,
         Playlist,

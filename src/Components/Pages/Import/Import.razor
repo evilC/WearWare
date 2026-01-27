@@ -21,7 +21,7 @@
 }
 else if (showEditDialog && _editingItem != null && selectedFileName != null)
 {
-    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.LIBRARY" FormMode="PlayableItemFormMode.LIBRARY" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnOptionsOk" />
+    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.Import" FormMode="PlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnOptionsOk" />
 }
 else if (importFiles == null)
 {

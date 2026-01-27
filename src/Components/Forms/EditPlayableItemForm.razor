@@ -34,7 +34,7 @@
     // Needs to be left until QuickMedia page is updated to not use it
     [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
     [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
-    [Parameter] public PlayableItemFormMode FormMode { get; set; } = PlayableItemFormMode.EDIT;
+    [Parameter] public PlayableItemFormMode FormMode { get; set; } = PlayableItemFormMode.Edit;
 
     private Dictionary<string, int> playModeOptions = new()
     {
@@ -213,15 +213,16 @@
     /// </summary>
     /// <returns>The page title</returns>
     private string BuildPageTitle(){
-        var title = FormMode == PlayableItemFormMode.EDIT ? "Edit " : FormMode == PlayableItemFormMode.ADD ? "Add " : "Import ";
-        
-        return title + ItemType switch
+        var title = ItemType == PlayableItemType.Import ? "" : $"{FormMode.ToString()} ";
+        title += ItemType.ToString();
+        if (ItemType == PlayableItemType.QuickMedia){
+            title += $" B{EditingIndex + 1}";
+        }
+        else
         {
-            PlayableItemType.LIBRARY => "Library Item",
-            PlayableItemType.PLAYLIST => "Playlist Item",
-            PlayableItemType.QUICKMEDIA => $"QuickMedia B{EditingIndex + 1}",
-            _ => "Playable Item"
-        };
+            title += " Item";
+        }
+        return title;
     }
 
     /// <summary>
@@ -231,9 +232,9 @@
     private string BuildMatrixOptionsTitle(){
         return ItemType switch
         {
-            PlayableItemType.LIBRARY => "Library Item Matrix Options",
-            PlayableItemType.PLAYLIST => "Playlist Item Matrix Options",
-            PlayableItemType.QUICKMEDIA => $"Button {EditingIndex + 1} Matrix Options",
+            PlayableItemType.Library => "Library Item Matrix Options",
+            PlayableItemType.Playlist => "Playlist Item Matrix Options",
+            PlayableItemType.QuickMedia => $"Button {EditingIndex + 1} Matrix Options",
             _ => "Matrix Options"
         };
     }
@@ -245,7 +246,7 @@
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
             <h2>@BuildPageTitle()</h2>
-            @if (FormMode != PlayableItemFormMode.LIBRARY)
+            @if (ItemType != PlayableItemType.Library && ItemType != PlayableItemType.Import)
             {
                 <div class="add-dialog-row">
                     <div class="add-dialog-section">

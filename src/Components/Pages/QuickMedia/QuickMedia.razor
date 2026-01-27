@@ -78,7 +78,7 @@
         await InvokeAsync(StateHasChanged);
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
-        await OnEditQuickMediaItem(args.libItem, args.insertIndex, PlayableItemFormMode.ADD);
+        await OnEditQuickMediaItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
     }
 
     // ================================================== Edit Dialog  ==================================================
@@ -106,7 +106,7 @@
         editingIndex = index;
         _originalItem = item;
         editingItem = item.Clone();
-        if (mode == PlayableItemFormMode.ADD)
+        if (mode == PlayableItemFormMode.Add)
         {
             // In Add mode, the item being passed in is from the library, so we need to modify some properties.
             // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
@@ -225,7 +225,7 @@ else
 					}
 					else
 					{
-						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index, PlayableItemFormMode.EDIT)">Edit</button>
+						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index, PlayableItemFormMode.Edit)">Edit</button>
 					}
                     @if (btn?.Item is not null)
                     {
@@ -262,7 +262,7 @@ else
         OnCancel="HideEditDialog"
         OnSave="OnSaveQuickMediaItem"
         OnReprocessAsync="ReprocessQuickMediaButtonAsync"
-        ItemType="PlayableItemType.QUICKMEDIA"
+        ItemType="PlayableItemType.QuickMedia"
         FormMode="formMode"
     />
 }

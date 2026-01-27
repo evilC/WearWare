@@ -264,7 +264,7 @@ namespace WearWare.Services.Playlist
                 _mediaController.Stop();
                 restartMediaController = true;
             }
-            if (formMode == PlayableItemFormMode.ADD)
+            if (formMode == PlayableItemFormMode.Add)
             {
                 // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
                 updatedItem.ParentFolder = playlist.GetPlaylistRelativePath();
@@ -273,7 +273,7 @@ namespace WearWare.Services.Playlist
             if (originalItem.NeedsReConvert(updatedItem)){
                 _operationProgress.ReportProgress(opId, "Converting stream...");
                 // If the updated item needs re-conversion, do it now
-                var readFrom = formMode == PlayableItemFormMode.ADD
+                var readFrom = formMode == PlayableItemFormMode.Add
                         ? PathConfig.LibraryPath                    // For ADD, source is library folder
                         : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
                 var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
@@ -287,7 +287,7 @@ namespace WearWare.Services.Playlist
                     return;
                 }
             }
-            else if (formMode == PlayableItemFormMode.ADD)
+            else if (formMode == PlayableItemFormMode.Add)
             {
                 _operationProgress.ReportProgress(opId, "Copying stream file...");
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
@@ -295,7 +295,7 @@ namespace WearWare.Services.Playlist
                 var copyTo = updatedItem.GetStreamFilePath();       // To playlist folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
-            if (formMode == PlayableItemFormMode.ADD)
+            if (formMode == PlayableItemFormMode.Add)
             {
                 _operationProgress.ReportProgress(opId, "copying source file...");
                 // Copy source file from library to playlist folder
@@ -306,7 +306,7 @@ namespace WearWare.Services.Playlist
                 }
             }
             _operationProgress.ReportProgress(opId, "Updating playlist...");
-            if (formMode == PlayableItemFormMode.ADD)
+            if (formMode == PlayableItemFormMode.Add)
             {
                 // Add new item
                 playlist.AddItem(itemIndex, updatedItem);

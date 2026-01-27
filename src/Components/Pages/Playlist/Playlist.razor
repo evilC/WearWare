@@ -122,7 +122,7 @@
         await InvokeAsync(StateHasChanged);
         if (addFormRef is not null)
             await addFormRef.UnlockScrollAsync();
-        await OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.ADD);
+        await OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
     }
 
     // ================================================== Edit Dialog  ==================================================
@@ -160,7 +160,7 @@
         }
         _originalItem = item;   // Store the original item for comparison later
         editingItem = item.Clone();
-        if (mode == PlayableItemFormMode.ADD)
+        if (mode == PlayableItemFormMode.Add)
         {
             // In Add mode, the item being passed in is from the library, so we need to modify some properties.
             // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
@@ -251,7 +251,7 @@
         var originalItem = item.Clone();    // Take a clone so that we can pass the original state (Enabled in original state) to the service
         item.Enabled = newState;
         @* PlaylistService.EditPlaylistItem(_playlist, itemIndex); *@
-        await PlaylistService.OnEditFormSubmit(_playlist, itemIndex, originalItem, item, PlayableItemFormMode.EDIT);
+        await PlaylistService.OnEditFormSubmit(_playlist, itemIndex, originalItem, item, PlayableItemFormMode.Edit);
         StateHasChanged();
     }
 
@@ -402,7 +402,7 @@
             _logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
             return string.Empty;
         }
-        if (formMode == PlayableItemFormMode.EDIT){
+        if (formMode == PlayableItemFormMode.Edit){
             if (_playlist is null){
                 _logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
                 return string.Empty;
@@ -477,7 +477,7 @@
             var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
             <div class="playlist-item">
                 <div class="playlist-item-controls">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index, PlayableItemFormMode.EDIT)">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index, PlayableItemFormMode.Edit)">Edit</button>
                     <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeletePlaylistItem(index)">Delete</button>
                 </div>
                 <div class="playlist-item-enabled">
@@ -513,7 +513,7 @@
         ImageUrl="@($"{BuildEditingImageURL()}")"
         OnCancel="HideEditDialog"
         OnSave="OnSavePlaylistItem"
-        ItemType="PlayableItemType.PLAYLIST"
+        ItemType="PlayableItemType.Playlist"
         FormMode="formMode"
     />
 }

@@ -114,8 +114,8 @@ else
             <EditPlayableItemForm @ref="editFormRef"
                 EditingItem="_editingClone"
                 EditingIndex="0"
-                ItemType="PlayableItemType.LIBRARY"
-                FormMode="PlayableItemFormMode.LIBRARY"
+                ItemType="PlayableItemType.Library"
+                FormMode="PlayableItemFormMode.Edit"
                 ImageUrl="@($"/library-image/{_originalItem.SourceFileName}")"
                 OnSave="OnSaveLibraryItem"
                 OnCancel="OnOptionsOk" />
