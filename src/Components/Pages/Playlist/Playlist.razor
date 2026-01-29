@@ -86,15 +86,14 @@
 }
 
 @* Add Dialog:*@
-@if (showAddDialog)
-{
-    <AddPlayableItemForm @ref="_addFormRef"
-        LibraryItems="libraryItems"
-        OnCancel="OnAddFormCancel"
-        OnAdd="OnAddDialogItemChosen"
-        InsertIndex="addDialogInsertIndex"
-        PageTitle="Playlist item" />
-}
+<AddPlayableItemForm @ref="_addFormRef"
+    FormDto="_addFormDto"
+    LibraryItems="libraryItems"
+    OnCancel="OnAddFormCancel"
+    OnAdd="OnAddDialogItemChosen"
+    PageTitle="Playlist item"
+/>
+
 @* Edit Dialog:*@
 @if (_showEditDialog && _editingItem is not null)
 {

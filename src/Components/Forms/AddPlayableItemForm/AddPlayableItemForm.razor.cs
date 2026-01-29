@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
+using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Components.Forms.AddPlayableItemForm
 {
@@ -21,6 +22,7 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         {
             await JS.InvokeVoidAsync("modalScrollLock.unlock");
         }
+        [Parameter] public EditPlayableItemFormDto? FormDto { get; set; }
         [Parameter] public IReadOnlyList<PlayableItem>? LibraryItems { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
         [Parameter] public EventCallback<(int insertIndex, PlayableItem libItem)> OnAdd { get; set; }
@@ -28,12 +30,12 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         // ToDo: Remove
         [Parameter] public string PageTitle { get; set; } = "Playlist";
 
-        private PlayableItem? selectedLibraryItem;
-
         // Called when an item is selected from the list
         private void ItemSelected(PlayableItem libItem)
         {
-            selectedLibraryItem = libItem;
+            if (FormDto == null)
+                return;
+            FormDto.SelectedLibraryItem = libItem;
             OnAdd.InvokeAsync((InsertIndex, libItem));
         }
 

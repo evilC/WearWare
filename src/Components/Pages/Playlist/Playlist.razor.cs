@@ -16,11 +16,13 @@ namespace WearWare.Components.Pages.Playlist
         [Inject] public LibraryService LibraryService { get; set; } = null!;
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
 
-                /// <summary> Whether to show the Add Item dialog </summary>
-        private bool showAddDialog = false;
-
+        /// <summary> Whether to show the Add Item dialog </summary>
+        // private bool showAddDialog = false;
         /// <summary> The index to insert the new item at when adding to the playlist </summary>
-        private int addDialogInsertIndex = 0;
+        // private int addDialogInsertIndex = 0;
+
+        private EditPlayableItemFormDto? _addFormDto = null;
+        private EditPlayableItemFormDto? _editFormDto = null;
 
         /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
         private IReadOnlyList<PlayableItem>? libraryItems;
@@ -128,8 +130,12 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="insertIndex"></param> The index to insert the item at
         void OnAddDialogShow(int insertIndex)
         {
-            addDialogInsertIndex = insertIndex;
-            showAddDialog = true;
+            _addFormDto = new EditPlayableItemFormDto
+            {
+                FormMode = EditPlayableItemFormMode.Add,
+                FormPage = EditPlayableItemFormPage.Playlist,
+                InsertTindex = insertIndex
+            };
         }
 
         /// <summary>
@@ -137,7 +143,7 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         async Task OnAddFormCancel()
         {
-            showAddDialog = false;
+            _addFormDto = null;
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();
@@ -149,8 +155,9 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="args"></param> Tuple of (insertIndex, libItem)
         async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem) args)
         {
-            if (_playlist is null) return;
-            showAddDialog = false;
+            if (_addFormDto is null || _playlist is null) return;
+            _editFormDto = _addFormDto;
+            _addFormDto = null;
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();
