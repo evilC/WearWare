@@ -7,12 +7,17 @@ namespace WearWare.Components.Pages.Log
 {
     public partial class Log
     {
-        [Inject]
-        public InMemoryLogService LogService { get; set; } = null!;
+        [Inject] public InMemoryLogService LogService { get; set; } = null!;
 
-        [Inject]
-        public IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject] public IJSRuntime JSRuntime { get; set; } = null!;
 
+        private List<LogEvent> logEntries = new();
+        private long lastIndex = 0;
+        private readonly LogEventLevel[] logLevels = (LogEventLevel[])Enum.GetValues(typeof(LogEventLevel));
+        private Timer? timer;
+        private ElementReference logEntriesDiv;
+        private bool shouldScroll = false;
+        private bool autoscrollEnabled = true;
         private LogEventLevel _selectedLevel = LogEventLevel.Warning;
         private LogEventLevel selectedLevel
         {
@@ -33,13 +38,6 @@ namespace WearWare.Components.Pages.Log
                 }
             }
         }
-        private List<LogEvent> logEntries = new();
-        private long lastIndex = 0;
-        private readonly LogEventLevel[] logLevels = (LogEventLevel[])Enum.GetValues(typeof(LogEventLevel));
-        private Timer? timer;
-        private ElementReference logEntriesDiv;
-        private bool shouldScroll = false;
-        private bool autoscrollEnabled = true;
 
         protected override void OnInitialized()
         {

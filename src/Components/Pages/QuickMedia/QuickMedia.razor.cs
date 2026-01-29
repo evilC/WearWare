@@ -17,9 +17,26 @@ namespace WearWare.Components.Pages.QuickMedia
         [Inject] private IStreamConverterService StreamConverterService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
-        // ================================================== Common ==================================================
         private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
         private IReadOnlyList<PlayableItem>? _libraryItems;
+        private bool _showAddDialog = false;
+        private int _addDialogInsertIndex = 0;
+        private AddPlayableItemForm? _addFormRef;
+        private bool _showReConvertAllDialog = false;
+        private PlayableItemFormMode _reconvertAllMode;
+
+        private bool _showEditDialog = false;
+        private int _editingIndex = -1;
+        private PlayableItem? _editingItem = null;
+        private PlayableItem? _originalItem;
+        private EditPlayableItemForm? _editFormRef;
+        /// <summary>
+        /// The mode of the EditPlayableItemForm
+        /// Not used by the form itself, but when it returns we can know if we were adding or editing
+        /// </summary>
+        private PlayableItemFormMode _formMode;
+
+
 
         protected override void OnInitialized()
         {
@@ -53,14 +70,7 @@ namespace WearWare.Components.Pages.QuickMedia
         }
 
 
-
         // ================================================== Add Dialog  ==================================================
-        private bool _showAddDialog = false;
-        private int _addDialogInsertIndex = 0;
-        private AddPlayableItemForm? _addFormRef;
-        private bool _showReConvertAllDialog = false;
-        private PlayableItemFormMode _reconvertAllMode;
-
         void OnAddDialogShow(int index)
         {
             _addDialogInsertIndex = index;
@@ -87,17 +97,6 @@ namespace WearWare.Components.Pages.QuickMedia
         }
 
         // ================================================== Edit Dialog  ==================================================
-        private bool _showEditDialog = false;
-        private int _editingIndex = -1;
-        private PlayableItem? _editingItem = null;
-        private PlayableItem? _originalItem;
-        private EditPlayableItemForm? _editFormRef;
-
-        /// <summary>
-        /// The mode of the EditPlayableItemForm
-        /// Not used by the form itself, but when it returns we can know if we were adding or editing
-        /// </summary>
-        private PlayableItemFormMode _formMode;
 
         /// <summary>
         /// Called when Edit is clicked on the QuickMedia page

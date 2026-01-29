@@ -15,8 +15,19 @@ namespace WearWare.Components.Pages.Playlist
         [Inject] public PlaylistService PlaylistService { get; set; } = null!;
         [Inject] public LibraryService LibraryService { get; set; } = null!;
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
-        
-        // ================================================== Common ==================================================
+
+                /// <summary> Whether to show the Add Item dialog </summary>
+        private bool showAddDialog = false;
+
+        /// <summary> The index to insert the new item at when adding to the playlist </summary>
+        private int addDialogInsertIndex = 0;
+
+        /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
+        private IReadOnlyList<PlayableItem>? libraryItems;
+        /// <summary> Reference to the AddPlayableItemForm component </summary>
+        private AddPlayableItemForm? _addFormRef;
+        // Handler for AddPlayableItemForm component's OnAdd event
+
         private readonly string _logTag = "Playlist.razor";
         /// <summary> The list of available playlist names </summary>
         private List<string>? availablePlaylists;
@@ -27,6 +38,37 @@ namespace WearWare.Components.Pages.Playlist
         private List<PlayableItem>? _items;
 
         private string? activePlaylist;
+
+        /// <summary> Whether to show the Edit Item dialog </summary>
+        private bool _showEditDialog = false;
+
+        /// <summary> The PlayableItem being edited in the Edit dialog </summary>
+        private PlayableItem? _editingItem;
+
+        /// <summary> A copy of the original PlayableItem (pre-editing) </summary>
+        private PlayableItem? _originalItem;
+
+        /// <summary> Reference to the EditPlayableItemForm component </summary>
+        private EditPlayableItemForm? _editFormRef;
+
+        /// <summary> The index of the PlayableItem being edited in the Edit dialog </summary>
+        private int _editingIndex;
+
+        /// <summary>
+        /// The mode of the EditPlayableItemForm
+        /// Not used by the form itself, but when it returns we can know if we were adding or editing
+        /// </summary>
+        private PlayableItemFormMode _formMode;
+
+        private bool _showReConvertAllDialog = false;
+        private PlayableItemFormMode _reconvertAllMode;
+
+        // Dropdown for selecting which playlist to edit
+        private string? _editingPlaylist;
+
+        private bool showAddPlaylistModal = false;
+        private string newPlaylistName = string.Empty;
+        private string? addPlaylistError = null;
 
         protected override void OnInitialized()
         {
@@ -80,19 +122,6 @@ namespace WearWare.Components.Pages.Playlist
             }
         }
 
-        // ================================================== Add Dialog  ==================================================
-        /// <summary> Whether to show the Add Item dialog </summary>
-        private bool showAddDialog = false;
-
-        /// <summary> The index to insert the new item at when adding to the playlist </summary>
-        private int addDialogInsertIndex = 0;
-
-        /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
-        private IReadOnlyList<PlayableItem>? libraryItems;
-        /// <summary> Reference to the AddPlayableItemForm component </summary>
-        private AddPlayableItemForm? _addFormRef;
-        // Handler for AddPlayableItemForm component's OnAdd event
-
         /// <summary>
         /// Called to show the Add Item dialog to add an item at the specified index
         /// </summary>
@@ -127,31 +156,6 @@ namespace WearWare.Components.Pages.Playlist
                 await _addFormRef.UnlockScrollAsync();
             await OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
         }
-
-        // ================================================== Edit Dialog  ==================================================
-        /// <summary> Whether to show the Edit Item dialog </summary>
-        private bool _showEditDialog = false;
-
-        /// <summary> The PlayableItem being edited in the Edit dialog </summary>
-        private PlayableItem? _editingItem;
-
-        /// <summary> A copy of the original PlayableItem (pre-editing) </summary>
-        private PlayableItem? _originalItem;
-
-        /// <summary> Reference to the EditPlayableItemForm component </summary>
-        private EditPlayableItemForm? _editFormRef;
-
-        /// <summary> The index of the PlayableItem being edited in the Edit dialog </summary>
-        private int _editingIndex;
-
-        /// <summary>
-        /// The mode of the EditPlayableItemForm
-        /// Not used by the form itself, but when it returns we can know if we were adding or editing
-        /// </summary>
-        private PlayableItemFormMode _formMode;
-
-        private bool _showReConvertAllDialog = false;
-        private PlayableItemFormMode _reconvertAllMode;
 
         /// <summary>
         /// Called when Edit is clicked on the Playlist page
@@ -292,11 +296,6 @@ namespace WearWare.Components.Pages.Playlist
             }
         }
 
-
-        // ============================================ Editing Playlist controls ===============================================
-        // Dropdown for selecting which playlist to edit
-        private string? _editingPlaylist;
-
         /// <summary>
         /// Handles when the editing playlist selection is changed
         /// </summary>
@@ -320,11 +319,6 @@ namespace WearWare.Components.Pages.Playlist
                 StateHasChanged();
             }
         }
-
-        // Add Playlist Modal
-        private bool showAddPlaylistModal = false;
-        private string newPlaylistName = string.Empty;
-        private string? addPlaylistError = null;
 
         private void AddPlaylist()
         {

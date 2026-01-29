@@ -26,61 +26,7 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
         private EditContext? _editContext;
         private bool _hasValidationErrors = false;
 
-        protected override void OnParametersSet()
-        {
-            // Recreate the EditContext when the Options instance changes so validation is wired correctly.
-            if (_editContext == null || _editContext.Model != Options)
-            {
-                if (_editContext != null)
-                {
-                    _editContext.OnValidationStateChanged -= HandleValidationStateChanged;
-                    _editContext.OnFieldChanged -= HandleFieldChanged;
-                }
-
-                _editContext = new EditContext(Options);
-                _editContext.OnValidationStateChanged += HandleValidationStateChanged;
-                _editContext.OnFieldChanged += HandleFieldChanged;
-                // initial error state
-                _hasValidationErrors = _editContext.GetValidationMessages().Any();
-                UpdateArgsPreview();
-            }
-        }
-
         private string ArgsPreview { get; set; } = string.Empty;
-
-        private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
-        {
-            UpdateArgsPreview();
-        }
-
-        private void UpdateArgsPreview()
-        {
-            ArgsPreview = Options?.ToArgsString(RelativeBrightness) ?? string.Empty;
-            InvokeAsync(StateHasChanged);
-        }
-
-        private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
-        {
-            if (_editContext == null) return;
-            _hasValidationErrors = _editContext.GetValidationMessages().Any();
-            InvokeAsync(StateHasChanged);
-        }
-
-        private bool FieldHasErrors(string propertyName)
-        {
-            if (_editContext == null) return false;
-            var fi = new FieldIdentifier(Options, propertyName);
-            return _editContext.GetValidationMessages(fi).Any();
-        }
-
-        public void Dispose()
-        {
-            if (_editContext != null)
-            {
-                _editContext.OnValidationStateChanged -= HandleValidationStateChanged;
-                _editContext.OnFieldChanged -= HandleFieldChanged;
-            }
-        }
 
         // Helper properties for rendering
         private int ActualBrightness => BrightnessCalculator.CalculateAbsoluteBrightness(Options?.Brightness ?? _defaults.Brightness, RelativeBrightness);
@@ -252,6 +198,72 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
             set => Options.ScanMode = value == 0 ? null : Enum.GetName(typeof(ScanModes), value);
         }
 
+        private bool DisableHardwarePulsingChecked
+        {
+            get => Options.DisableHardwarePulsing ?? false;
+            set => Options.DisableHardwarePulsing = value ? true : null;
+        }
+
+        private bool InverseColorsChecked
+        {
+            get => Options.InverseColors ?? false;
+            set => Options.InverseColors = value ? true : null;
+        }
+
+        protected override void OnParametersSet()
+        {
+            // Recreate the EditContext when the Options instance changes so validation is wired correctly.
+            if (_editContext == null || _editContext.Model != Options)
+            {
+                if (_editContext != null)
+                {
+                    _editContext.OnValidationStateChanged -= HandleValidationStateChanged;
+                    _editContext.OnFieldChanged -= HandleFieldChanged;
+                }
+
+                _editContext = new EditContext(Options);
+                _editContext.OnValidationStateChanged += HandleValidationStateChanged;
+                _editContext.OnFieldChanged += HandleFieldChanged;
+                // initial error state
+                _hasValidationErrors = _editContext.GetValidationMessages().Any();
+                UpdateArgsPreview();
+            }
+        }
+
+        private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+        {
+            UpdateArgsPreview();
+        }
+
+        private void UpdateArgsPreview()
+        {
+            ArgsPreview = Options?.ToArgsString(RelativeBrightness) ?? string.Empty;
+            InvokeAsync(StateHasChanged);
+        }
+
+        private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
+        {
+            if (_editContext == null) return;
+            _hasValidationErrors = _editContext.GetValidationMessages().Any();
+            InvokeAsync(StateHasChanged);
+        }
+
+        private bool FieldHasErrors(string propertyName)
+        {
+            if (_editContext == null) return false;
+            var fi = new FieldIdentifier(Options, propertyName);
+            return _editContext.GetValidationMessages(fi).Any();
+        }
+
+        public void Dispose()
+        {
+            if (_editContext != null)
+            {
+                _editContext.OnValidationStateChanged -= HandleValidationStateChanged;
+                _editContext.OnFieldChanged -= HandleFieldChanged;
+            }
+        }
+
         private async Task HandleOk()
         {
             if (OnCancel.HasDelegate)
@@ -266,18 +278,6 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
             {
                 await OnValidSubmit.InvokeAsync(Options);
             }
-        }
-
-        private bool DisableHardwarePulsingChecked
-        {
-            get => Options.DisableHardwarePulsing ?? false;
-            set => Options.DisableHardwarePulsing = value ? true : null;
-        }
-
-        private bool InverseColorsChecked
-        {
-            get => Options.InverseColors ?? false;
-            set => Options.InverseColors = value ? true : null;
         }
     }
 }
