@@ -1,31 +1,5 @@
 @page "/mocks"
-@using WearWare.Services.QuickMedia
-@using WearWare.Services.MediaController
-
 @rendermode InteractiveServer
-
-@inject QuickMediaService QuickMediaService
-@inject MediaControllerService MediaController
-
-@implements IDisposable
-
-@code {
-    protected override void OnInitialized()
-    {
-        QuickMediaService.StateChanged += OnStateChanged;
-    }
-
-    private void OnStateChanged()
-    {
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        QuickMediaService.StateChanged -= OnStateChanged;
-    }
-}
-
 
 <PageTitle>Mock Quick Media</PageTitle>
 
