@@ -3,7 +3,7 @@
 @using WearWare.Common.Media
 @using WearWare.Components.Forms.AddPlayableItemForm
 @using WearWare.Components.Forms.EditPlayableItemForm
-@using WearWare.Components.Shared.PlaylistItem
+@using WearWare.Components.Shared.PlayableItemCard
 
 <PageTitle>Playlist</PageTitle>
 
@@ -78,7 +78,7 @@
                     <span>On</span>
                     <input type="checkbox" class="checkbox" checked="@item.Enabled" @onchange="(e) => ItemEnableToggled(item, index, ((ChangeEventArgs)e).Value is bool b && b)" />
                 </div>
-                <PlaylistItem ImageSrc="@($"/playlist-images/{_playlist.Name}/{item.SourceFileName}")" Item="item" ImageClicked="@(() => OnPlaylistItemImageClicked(item, index))" />
+                <PlayableItemCard ImageSrc="@($"/playlist-images/{_playlist.Name}/{item.SourceFileName}")" Item="item" ImageClicked="@(() => OnPlaylistItemImageClicked(item, index))" />
             </div>
             <button class="playlist-add-button" @onclick="() => OnAddDialogShow(index+1)">@((index == _items.Count - 1) ? "Add new item at end" : "Add new item here")</button>
         }

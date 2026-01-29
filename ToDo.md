@@ -6,7 +6,6 @@
 
 ### Code overhaul
 - Components
-  - Rename PlaylistItem to PlayableItemCard
   - More re-use of components.
     - Library does not use PlaylistItem
     - AddPlayableItemForm could use PlaylistItem (But would need PlayMode hidden)

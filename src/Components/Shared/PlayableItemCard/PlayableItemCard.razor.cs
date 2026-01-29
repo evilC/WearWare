@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using WearWare.Common.Media;
 
-namespace WearWare.Components.Shared.PlaylistItem
+namespace WearWare.Components.Shared.PlayableItemCard
 {
-    public partial class PlaylistItem
+    public partial class PlayableItemCard
     {
         [Parameter] public PlayableItem? Item { get; set; }
         [Parameter] public string? ImageSrc { get; set; }

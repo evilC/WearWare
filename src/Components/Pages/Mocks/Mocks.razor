@@ -1,5 +1,5 @@
 @page "/mocks"
-@using WearWare.Components.Shared.PlaylistItem
+@using WearWare.Components.Shared.PlayableItemCard
 @rendermode InteractiveServer
 
 <PageTitle>Mock Quick Media</PageTitle>
@@ -24,7 +24,7 @@ else
                 <span class="qm-button-title">B@(i + 1)</span>
                 @if (button?.Item is not null)
                 {
-                    <PlaylistItem 
+                    <PlayableItemCard 
                         ImageSrc="@($"/quickmedia-images/{index}/{button.Item.SourceFileName}")" 
                         Item="@button.Item" 
                         ImageClicked="@(() => MediaController.PlayQuickMedia(button.Item))" />

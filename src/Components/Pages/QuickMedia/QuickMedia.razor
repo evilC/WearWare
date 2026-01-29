@@ -2,7 +2,7 @@
 @using WearWare.Common.Media
 @using WearWare.Components.Forms.AddPlayableItemForm
 @using WearWare.Components.Forms.EditPlayableItemForm
-@using WearWare.Components.Shared.PlaylistItem
+@using WearWare.Components.Shared.PlayableItemCard
 @rendermode InteractiveServer
 
 <PageTitle>Quick Media</PageTitle>
@@ -38,7 +38,7 @@ else
 				</div>
 				@if (btn?.Item is not null)
 				{
-					<PlaylistItem ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")" Item="btn.Item" />
+					<PlayableItemCard ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")" Item="btn.Item" />
 				}
 			</div>
 		}
