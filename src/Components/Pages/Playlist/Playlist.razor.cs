@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
-using WearWare.Components.Forms;
+using WearWare.Components.Forms.AddPlayableItemForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
