@@ -1,33 +1,31 @@
 @rendermode InteractiveServer
 
-@if (FormDto != null){
-    <div class="add-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
-        <div class="add-dialog__content" @onclick:stopPropagation>
-            <h2>Choose an item</h2>
-            @if (LibraryItems is null || !LibraryItems.Any())
-            {
-                <div>No items found.</div>
-            }
-            else
-            {
-                <div class="add-dialog__list">
-                    <ul>
-                        @foreach (var libItem in LibraryItems)
-                        {
-                            <li class="add-dialog__item" @onclick="() => ItemSelected(libItem)">
-                                <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
-                                <div>
-                                    <strong>@libItem.Name</strong><br />
-                                    <span class="add-dialog__item-desc">Brightness: @libItem.CurrentBrightness %</span>
-                                </div>
-                            </li>
-                        }
-                    </ul>
-                </div>
-                <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
-                    <button type="button" @onclick="() => OnCancel.InvokeAsync(null)" class="add-dialog__cancel-button">Cancel</button>
-                </div>
-            }
-        </div>
+<div class="add-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
+    <div class="add-dialog__content" @onclick:stopPropagation>
+        <h2>Choose an item</h2>
+        @if (LibraryItems is null || !LibraryItems.Any())
+        {
+            <div>No items found.</div>
+        }
+        else
+        {
+            <div class="add-dialog__list">
+                <ul>
+                    @foreach (var libItem in LibraryItems)
+                    {
+                        <li class="add-dialog__item" @onclick="() => ItemSelected(libItem)">
+                            <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
+                            <div>
+                                <strong>@libItem.Name</strong><br />
+                                <span class="add-dialog__item-desc">Brightness: @libItem.CurrentBrightness %</span>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+            <div style="display:flex; gap:0.5rem; justify-content:center; margin-top:0.5rem;">
+                <button type="button" @onclick="() => OnCancel.InvokeAsync(null)" class="add-dialog__cancel-button">Cancel</button>
+            </div>
+        }
     </div>
-}
+</div>

@@ -10,7 +10,10 @@
     - Library and AddPlayableItemForm do not use PlayableItemCard (But would need PlayMode hidden)
   - Parameters of components can be made non-nullable by setting to `default!`;
   - Dialog show / hide can be handled by the dialog.  
-    eg we do not need `showAddDialog`in playlist.razor, it could be in `AddPlayableItemForm`  
+    NOT WITH CURRENT IMPLEMENTATION.  
+    `if (firstRender)` is called if there is no conditional around the Component in `Playlist.razor`,  
+    causing the scrollbars to hide when the Playliist page loads
+    ~~eg we do not need `showAddDialog`in playlist.razor, it could be in `AddPlayableItemForm`~~  
     Can use `OnParametersSet` to detect when parameter is set.  
     May need to make the form use interactive render mode?
   - PlayableItem list item (eg With arbitrary buttons to left) could be done as a component.  
