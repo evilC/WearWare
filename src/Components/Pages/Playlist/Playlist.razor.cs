@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
 using WearWare.Components.Forms;
+using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.Playlist;
 
@@ -11,6 +12,12 @@ namespace WearWare.Components.Pages.Playlist
     {
         [Inject]
         public IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject]
+        public PlaylistService PlaylistService { get; set; } = null!;
+        [Inject]
+        public LibraryService LibraryService { get; set; } = null!;
+        [Inject]
+        public ILogger<Playlist> Logger { get; set; } = null!;
         
         // ================================================== Common ==================================================
         private readonly string _logTag = "Playlist.razor";
@@ -157,7 +164,7 @@ namespace WearWare.Components.Pages.Playlist
         async Task OnEditPlaylistItem(PlayableItem item, int itemIndex, PlayableItemFormMode mode)
         {
             if (_playlist is null){
-                _logger.LogError($"{_logTag}: OnEditPlaylistItem called but _playlist is null");
+                Logger.LogError($"{_logTag}: OnEditPlaylistItem called but _playlist is null");
                 return;
             }
             _originalItem = item;   // Store the original item for comparison later
@@ -433,12 +440,12 @@ namespace WearWare.Components.Pages.Playlist
         /// <returns>The path to the URL for the editing image</returns>
         private string BuildEditingImageURL(){
             if (_editingItem is null){
-                _logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
+                Logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
                 return string.Empty;
             }
             if (_formMode == PlayableItemFormMode.Edit){
                 if (_playlist is null){
-                    _logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
+                    Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
                     return string.Empty;
                 }
                 return $"/playlist-images/{_playlist.Name}/{_editingItem.SourceFileName}";

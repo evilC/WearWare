@@ -1,15 +1,6 @@
 @page "/playlist"
-@using Microsoft.AspNetCore.Mvc.ModelBinding.Binders
-@using WearWare.Services.MatrixConfig
-@using WearWare.Services.Playlist
-@using WearWare.Components.Pages.Shared.PlaylistItem
-@using WearWare.Common.Media
-@using WearWare.Services.Library
 @rendermode InteractiveServer
-
-@inject PlaylistService PlaylistService
-@inject LibraryService LibraryService
-@inject ILogger<Playlist> _logger
+@using WearWare.Common.Media
 
 <PageTitle>Playlist</PageTitle>
 
@@ -101,8 +92,6 @@
         InsertIndex="addDialogInsertIndex"
         PageTitle="Playlist item" />
 }
-@using WearWare.Components.Forms
-
 @* Edit Dialog:*@
 @if (_showEditDialog && _editingItem is not null)
 {
@@ -131,4 +120,3 @@
         </div>
     </div>
 }
-
