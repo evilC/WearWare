@@ -1,5 +1,4 @@
 @using WearWare.Common.Media
-@using Microsoft.AspNetCore.Components
 
 <div class="playlist-item-image-and-info">
     @if (!string.IsNullOrEmpty(ImageSrc))
@@ -26,17 +25,3 @@
         }
     </div>
 </div>
-
-@code {
-    [Parameter] public PlayableItem? Item { get; set; }
-    [Parameter] public string? ImageSrc { get; set; }
-    [Parameter] public EventCallback<PlayableItem?> ImageClicked { get; set; }
-
-    private async Task HandleImageClick()
-    {
-        if (ImageClicked.HasDelegate)
-        {
-            await ImageClicked.InvokeAsync(Item);
-        }
-    }
-}
