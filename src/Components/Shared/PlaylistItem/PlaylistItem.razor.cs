@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using WearWare.Common.Media;
 
-namespace WearWare.Components.Pages.Shared.PlaylistItem
+namespace WearWare.Components.Shared.PlaylistItem
 {
     public partial class PlaylistItem
     {
