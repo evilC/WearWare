@@ -11,6 +11,7 @@
   - Rename PlaylistItem to PlayableItemCard
   - More re-use of components.
     - Library does not use PlaylistItem
+    - AddPlayableItemForm could use PlaylistItem (But would need PlayMode hidden)
   - Parameters of components can be made non-nullable by setting to `default!`;
   - Dialog show / hide can be handled by the dialog.  
     eg we do not need `showAddDialog`in playlist.razor, it could be in `AddPlayableItemForm`  
