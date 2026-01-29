@@ -16,7 +16,10 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
         // True if we are on the Global version of the Matrix Options form
         // Only on this page are all fields shown, and checkboxes rendered to enable/disable each option
         // Also when on the Global form, the Relative and Actual Brightness fields are not shown
-        [Parameter] public bool OnGlobalOptionsForm { get; set; } = false;
+        [Parameter] public bool OnGlobalOptionsForm { get; set; }
+        // True if we are on the Reconvert All form
+        // Relative / Actual Brightness fields are not shown
+        [Parameter] public bool HideRelativeBrightness { get; set; }
         [Parameter] public EventCallback<LedMatrixOptionsConfig> OnValidSubmit { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
         // Defaults from the underlying native options - used to show cue text when

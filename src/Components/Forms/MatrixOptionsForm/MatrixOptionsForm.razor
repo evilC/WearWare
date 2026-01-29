@@ -29,7 +29,7 @@
             <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Brightness" placeholder="@($"(Default: {_defaults.Brightness})")" />
         </div>
     }
-    @if (!OnGlobalOptionsForm)
+    @if (!HideRelativeBrightness)
     {
         // Helper fields to show current relative and calculated brightness
         <div class="mw-matrix-form-row">

@@ -51,7 +51,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
 
         // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
         // Needs to be left until QuickMedia page is updated to not use it
-        [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
+        [Parameter] public Func<LedMatrixOptionsConfig, int, Task<ReConvertTaskResult>>? OnReprocessAsync { get; set; }
         [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
         [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
 

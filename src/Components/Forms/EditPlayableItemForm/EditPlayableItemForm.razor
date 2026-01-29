@@ -102,9 +102,11 @@
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
             <div style="width:80%;">
-            <MatrixOptionsForm Options="selectedMatrixOptions.Clone()"
+            <MatrixOptionsForm
+                Options="selectedMatrixOptions.Clone()"
                 Visibility="MatrixConfigService.Visibility"
                 RelativeBrightness="selectedRelativeBrightness"
+                HideRelativeBrightness="FormMode == EditPlayableItemFormMode.ReConvertAllMatrix"
                 OnValidSubmit="OnMatrixOptionsOk"
                 OnCancel="OnMatrixOptionsCancel"
                 Action="OK"

@@ -3,7 +3,6 @@
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Duplicate playlist
-- Hide Relative / Actual Brightness in MatrixOptionsForm when in ReConvert All mode
 
 ### Code overhaul
 - Components
