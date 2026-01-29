@@ -134,7 +134,7 @@ namespace WearWare.Components.Pages.Playlist
             {
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Playlist,
-                InsertTindex = insertIndex
+                InsertIindex = insertIndex
             };
         }
 
