@@ -3,6 +3,7 @@
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Duplicate playlist
+- Hide Relative / Actual Brightness in MatrixOptionsForm when in ReConvert All mode
 
 ### Code overhaul
 - Components
@@ -28,7 +29,8 @@
   - MatrixOptionsForm
     - Check to see if all still needed. Did not see errors pop up when I cut some to move
     - Large number mainly to do with nullability and enabled / disabled  
-      Can we create a custom form component for each field type (TextInput, NumberInput etc) that encapsulates this?
+    - Can we create a custom form component for each field type (TextInput, NumberInput etc) that encapsulates this?  
+      If doing this, bear in mind we may want Dynamic Form Validation on Brightness to facilitate Max Brightness option
 - Can we replace modalScrollLock with something else?  
   Used when showing a full screen overlay over a page which will have a scrollbar, to hide the scrollbar while the overlay is visible  
   Set overflow to none on parent page instead?
@@ -41,6 +43,11 @@
 - More stuff in _Imports.razor?
 
 ## Med Priority
+- Implement Max Brightness option  
+  Limits maximum brightness that could ever be set.  
+  eg BEC will not handle 100% brightness for full white images  
+  Would require dynamic form validation?
+
 ### Misc
 - Can originalItem be stored in the `EditPlayableItemForm`?  
   That way, we do not need to implement storing it on each of the pages
