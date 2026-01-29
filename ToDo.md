@@ -29,7 +29,10 @@
   - Largely to do with passing values to forms
     - Some could be moved into forms?
     - Some could be consolidated into objects?
-  - MatrixOptionsForm: Check to see if all still needed. Did not see errors pop up when I cut some to move
+  - MatrixOptionsForm
+    - Check to see if all still needed. Did not see errors pop up when I cut some to move
+    - Large number mainly to do with nullability and enabled / disabled  
+      Can we create a custom form component for each field type (TextInput, NumberInput etc) that encapsulates this?
 - More stuff in _Imports.razor?
 
 ## Med Priority
