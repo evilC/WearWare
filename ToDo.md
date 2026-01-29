@@ -33,6 +33,15 @@
     - Check to see if all still needed. Did not see errors pop up when I cut some to move
     - Large number mainly to do with nullability and enabled / disabled  
       Can we create a custom form component for each field type (TextInput, NumberInput etc) that encapsulates this?
+- Can we replace modalScrollLock with something else?  
+  Used when showing a full screen overlay over a page which will have a scrollbar, to hide the scrollbar while the overlay is visible  
+  Set overflow to none on parent page instead?
+- Headers and footers  
+  On some pages it would be nice if we could have headers or footers that were always visible  
+  - MatrixOptionsForm  
+    OK / Cancel in footer
+  - Playlist  
+    Playlist selection in header
 - More stuff in _Imports.razor?
 
 ## Med Priority
