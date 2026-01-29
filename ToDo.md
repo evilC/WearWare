@@ -4,6 +4,28 @@
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Duplicate playlist
 
+### Code overhaul
+- Components
+  - Use code-behind partial classes for components, especially pages  
+    - `[Inject]` in `.cs` file seems to replace `@inject` in `.razor` file?
+  - Rename PlaylistItem to PlayableItemCard
+  - More re-use of components.
+    - Library does not use PlaylistItem
+  - Parameters of components can be made non-nullable by setting to `default!`;
+  - Dialog show / hide can be handled by the dialog.  
+    eg we do not need `showAddDialog`in playlist.razor, it could be in `AddPlayableItemForm`  
+    Can use `OnParametersSet` to detect when parameter is set.  
+    May need to make the form use interactive render mode?
+  - PlayableItem list item (eg With arbitrary buttons to left) could be done as a component.  
+    Use `RenderFragment` to pass in the buttons
+  - Components can be wrapped in an `<ErrorBoundary>`  
+    If something goes wrong, alternate UI can be shown and error does not bubble up to parent
+- Enable Streaming Rendering  
+  `@attribute [StreamRendering(true)]` to start of all pages.  
+  - Generally, the stub seems to be there (eg `if (importFiles == null)` on Import page)  
+    However, even in that example, it's after another check. Should always be first?
+- More stuff in _Imports.razor?
+
 ## Med Priority
 ### Misc
 - Can originalItem be stored in the `EditPlayableItemForm`?  
@@ -79,3 +101,41 @@ Either way, need to be able to tell if original file got overwritten or not
   Need some way to disable the page until it has fully loaded  
   Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
   Investigate "lazy loading" next?
+
+# Notes
+## Blazor
+- Project is currently .net9, but was created with .net8 template  
+  Does not actually need to be .net9 any more.
+  - There are differences between 8 and 9  
+      [Detailed at 8:14 here](https://app.pluralsight.com/ilx/video-courses/9500d8a5-f365-44e2-be7f-5657c0622651/2066ef53-e33b-4ea1-95f4-f9559c1265a5/a9ad7c83-732d-4b7e-b8c6-d23d2f4e853f)  
+      - net9 adds `app.MapStaticAssets()` just before `app.MapRazorComponents<App>()`
+      - net9 adds `@Assets` pointing to CSS stuff (inc bootstrap) and an `ImportMap` component.
+  - NET9 has unminified JS / CSS for bootstrap that may make it easier to do CSS overhaul
+  - NET9 has same EOL date as NET8 (End of 2026)
+  - NET10 has EOL of 2 years' time
+
+## CSS styling
+  - EditForms cannot be directly styled with normal CSS classes, because razor components are isolated.  
+    An EditForm **is** a component, so trying to style it from outside (eg on the parent page) is blocked.
+  - Bootstrap is not affected by this, not 100% why, but probably something to do with bootstrap bein bundles with Blazor
+  - To create a custom class that affects both Blazor EditForms and other elements, we can do the following:  
+    `MyComponent.razor`
+    ```
+    <div class="my-div">
+        <EditForm Model="MyModel" FormName="my-form">
+            <div style="width:50%">
+                <InputText class="my-class" @bind-value="@MyModel.Name"></InputText>
+            </div>
+        </EditForm>
+    </div>
+    <form>
+        <input class="my-class" value="bar"/>
+    </form>
+    ```
+    `MyComponent.razor.css`
+    ```
+    .my-div ::deep .my-class, .my-class {
+        width: 500px;
+    }
+    ```
+    Have also seen examples with `.my-div ::deep .my-class ::after`. Not sure what that does
