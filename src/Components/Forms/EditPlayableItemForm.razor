@@ -3,6 +3,7 @@
 @inject ILogger<EditPlayableItemForm> _logger
 @using WearWare.Common
 @using WearWare.Common.Media
+@using WearWare.Components.Forms.MatrixOptionsForm
 @using WearWare.Services.MatrixConfig
 @using WearWare.Utils
 @using System.ComponentModel.DataAnnotations
@@ -412,7 +413,7 @@
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
             <div style="width:80%;">
-            <WearWare.Components.Forms.MatrixOptionsForm Options="selectedMatrixOptions.Clone()"
+            <MatrixOptionsForm Options="selectedMatrixOptions.Clone()"
                 Visibility="MatrixConfigService.Visibility"
                 RelativeBrightness="selectedRelativeBrightness"
                 OnValidSubmit="OnMatrixOptionsOk"
