@@ -38,6 +38,7 @@
     Dodgy form inside of form
 - Probably lots of redundant CSS around
 - Lots of CSS could probably be centralized
+- Styles on Import page all embedded. Move to CSS file
 
 ### Crash hardening.  
 - Various places where null-forgiving operators are used
