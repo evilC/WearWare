@@ -6,8 +6,6 @@
 
 ### Code overhaul
 - Components
-  - Use code-behind partial classes for components, especially pages  
-    - `[Inject]` in `.cs` file seems to replace `@inject` in `.razor` file?
   - Rename PlaylistItem to PlayableItemCard
   - More re-use of components.
     - Library does not use PlaylistItem
