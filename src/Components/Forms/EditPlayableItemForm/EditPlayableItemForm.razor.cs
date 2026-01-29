@@ -8,6 +8,10 @@ using WearWare.Utils;
 
 namespace WearWare.Components.Forms.EditPlayableItemForm
 {
+    /// <summary>
+    /// The EditPlayableItemForm is actually used for both Add and Edit
+    /// In Add mode, an item is first chosen, but after that, the flow is basically the same as Edit
+    /// </summary>
     public partial class EditPlayableItemForm
     {
         [Inject] private ILogger<EditPlayableItemForm> _logger { get; set; } = null!;
@@ -39,17 +43,17 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <summary>
         /// Callback for clicking OK in regular Add / Edit mode
         /// </summary>
-        [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode)> OnSave { get; set; }
+        [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode)> OnSave { get; set; }
         /// <summary>
         /// Callback for clicking OK in ReConvert All mode
         /// </summary>
-        [Parameter] public EventCallback<(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)> OnReconvertAllOk { get; set; }
+        [Parameter] public EventCallback<(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)> OnReconvertAllOk { get; set; }
 
         // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
         // Needs to be left until QuickMedia page is updated to not use it
         [Parameter] public Func<LedMatrixOptionsConfig, int, Task<WearWare.Common.ReConvertTaskResult>>? OnReprocessAsync { get; set; }
         [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
-        [Parameter] public PlayableItemFormMode FormMode { get; set; } = PlayableItemFormMode.Edit;
+        [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
 
         private Dictionary<string, int> playModeOptions = new()
     {
@@ -95,7 +99,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                 // If we're being used for ReConvertAll flows, EditingItem may be null.
                 // Initialize reasonable defaults so the dialog can render and be used
                 // to select relative brightness and matrix options.
-                if (FormMode == PlayableItemFormMode.ReConvertAllMatrix || FormMode == PlayableItemFormMode.ReConvertAllBrightness)
+                if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
                 {
                     selectedPlayMode = (int)PlayMode.LOOP;
                     selectedPlayModeValue = 1;
@@ -229,7 +233,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         private void SaveEdit()
         {
             // If we're in a ReConvertAll mode, call the dedicated callback instead
-            if (FormMode == PlayableItemFormMode.ReConvertAllMatrix || FormMode == PlayableItemFormMode.ReConvertAllBrightness)
+            if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 OnReconvertAllOk.InvokeAsync((FormMode, selectedRelativeBrightness, selectedMatrixOptions));
                 return;
@@ -288,11 +292,11 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <returns>The page title</returns>
         private string BuildPageTitle()
         {
-            if (FormMode == PlayableItemFormMode.ReConvertAllMatrix)
+            if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
                 return $"ReConvert {ItemType} (Matrix Options)";
             }
-            else if (FormMode == PlayableItemFormMode.ReConvertAllBrightness)
+            else if (FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 return $"ReConvert {ItemType} (Brightness)";
             }

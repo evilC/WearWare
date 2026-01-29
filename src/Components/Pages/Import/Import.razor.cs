@@ -86,7 +86,7 @@ namespace WearWare.Components.Pages.Import
         }
 
 
-        private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
+        private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode) args)
         {
             showEditDialog = false;
             if (pendingNewFileName != null && selectedFileName != null)

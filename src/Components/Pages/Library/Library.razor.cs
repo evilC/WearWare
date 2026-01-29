@@ -16,7 +16,7 @@ namespace WearWare.Components.Pages.Library
         private PlayableItem? _editingClone;
         private EditPlayableItemForm? _editFormRef;
         private bool _showReConvertAllDialog = false;
-        private PlayableItemFormMode _reconvertAllMode;
+        private EditPlayableItemFormMode _reconvertAllMode;
         private IReadOnlyList<PlayableItem>? items;
 
         protected override void OnInitialized()
@@ -74,7 +74,7 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         /// <param name="args"></param> The arguments containing the updated item and form mode
         /// <returns></returns>
-        private async Task OnSaveLibraryItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
+        private async Task OnSaveLibraryItem((int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode) args)
         {
             if (_originalItem is null) return;
             await LibraryService.OnEditFormSubmit(_originalItem, args.updatedItem, args.formMode);
@@ -91,7 +91,7 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         private void ShowReConvertAllGlobal()
         {
-            _reconvertAllMode = PlayableItemFormMode.ReConvertAllMatrix;
+            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
             _showReConvertAllDialog = true;
         }
 
@@ -100,7 +100,7 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         private void ShowReConvertAllEmbedded()
         {
-            _reconvertAllMode = PlayableItemFormMode.ReConvertAllBrightness;
+            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
             _showReConvertAllDialog = true;
         }
 
@@ -108,7 +108,7 @@ namespace WearWare.Components.Pages.Library
         /// Called when the Reconvert All form is submitted
         /// </summary>
         /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll((PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
+        private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
         {
             _showReConvertAllDialog = false;
             await LibraryService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);

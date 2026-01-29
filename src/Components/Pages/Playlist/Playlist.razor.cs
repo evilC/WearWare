@@ -58,10 +58,10 @@ namespace WearWare.Components.Pages.Playlist
         /// The mode of the EditPlayableItemForm
         /// Not used by the form itself, but when it returns we can know if we were adding or editing
         /// </summary>
-        private PlayableItemFormMode _formMode;
+        private EditPlayableItemFormMode _formMode;
 
         private bool _showReConvertAllDialog = false;
-        private PlayableItemFormMode _reconvertAllMode;
+        private EditPlayableItemFormMode _reconvertAllMode;
 
         // Dropdown for selecting which playlist to edit
         private string? _editingPlaylist;
@@ -154,7 +154,7 @@ namespace WearWare.Components.Pages.Playlist
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();
-            await OnEditPlaylistItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
+            await OnEditPlaylistItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         /// <param name="item"></param> The PlayableItem to edit
         /// <param name="itemIndex"></param> The index of the PlayableItem to edit
-        async Task OnEditPlaylistItem(PlayableItem item, int itemIndex, PlayableItemFormMode mode)
+        async Task OnEditPlaylistItem(PlayableItem item, int itemIndex, EditPlayableItemFormMode mode)
         {
             if (_playlist is null){
                 Logger.LogError($"{_logTag}: OnEditPlaylistItem called but _playlist is null");
@@ -170,7 +170,7 @@ namespace WearWare.Components.Pages.Playlist
             }
             _originalItem = item;   // Store the original item for comparison later
             _editingItem = item.Clone();
-            if (mode == PlayableItemFormMode.Add)
+            if (mode == EditPlayableItemFormMode.Add)
             {
                 // In Add mode, the item being passed in is from the library, so we need to modify some properties.
                 // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
@@ -190,7 +190,7 @@ namespace WearWare.Components.Pages.Playlist
         /// Called when Save is clicked in the EditPlayableItemForm
         /// </summary>
         /// <param name="args"></param> Tuple of (editingIndex, updatedItem, formMode)
-        async Task OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, PlayableItemFormMode formMode) args)
+        async Task OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode) args)
         {
             if (_playlist is null || _editingItem is null || _originalItem is null || _editingIndex < 0) return; // ToDo: Error handling
             await PlaylistService.OnEditFormSubmit(_playlist, args.editingIndex, _originalItem, args.updatedItem, args.formMode);
@@ -261,7 +261,7 @@ namespace WearWare.Components.Pages.Playlist
                 return;
             var originalItem = item.Clone();    // Take a clone so that we can pass the original state (Enabled in original state) to the service
             item.Enabled = newState;
-            await PlaylistService.OnEditFormSubmit(_playlist, itemIndex, originalItem, item, PlayableItemFormMode.Edit);
+            await PlaylistService.OnEditFormSubmit(_playlist, itemIndex, originalItem, item, EditPlayableItemFormMode.Edit);
             StateHasChanged();
         }
 
@@ -397,7 +397,7 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         private void ShowReConvertAllGlobal()
         {
-            _reconvertAllMode = PlayableItemFormMode.ReConvertAllMatrix;
+            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
             _showReConvertAllDialog = true;
         }
 
@@ -406,7 +406,7 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         private void ShowReConvertAllEmbedded()
         {
-            _reconvertAllMode = PlayableItemFormMode.ReConvertAllBrightness;
+            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
             _showReConvertAllDialog = true;
         }
 
@@ -414,7 +414,7 @@ namespace WearWare.Components.Pages.Playlist
         /// Called when the Reconvert All form is submitted
         /// </summary>
         /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll((PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
+        private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
         {
             _showReConvertAllDialog = false;
             await PlaylistService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
@@ -434,7 +434,7 @@ namespace WearWare.Components.Pages.Playlist
                 Logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
                 return string.Empty;
             }
-            if (_formMode == PlayableItemFormMode.Edit){
+            if (_formMode == EditPlayableItemFormMode.Edit){
                 if (_playlist is null){
                     Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
                     return string.Empty;

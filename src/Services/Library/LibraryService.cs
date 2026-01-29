@@ -5,6 +5,7 @@ using WearWare.Common;
 using WearWare.Utils;
 using WearWare.Services.MediaController;
 using WearWare.Services.MatrixConfig;
+using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Services.Library
 {
@@ -117,7 +118,7 @@ namespace WearWare.Services.Library
         /// <param name="updatedItem"></param> The updated item with new values
         /// <param name="formMode"></param> The mode of the form (Add or Edit)
         /// <returns></returns>
-        public async Task OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
+        public async Task OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
         {
             var opId = await _operationProgress.StartOperation("Updating Library Item");
             try
@@ -166,7 +167,7 @@ namespace WearWare.Services.Library
         /// Called when OK is clicked in the ReConvert All dialog.
         /// </summary>
         /// <param name="relativeBrightness"></param> The relative brightness to set for all items
-        public async Task ReConvertAllItems(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
             int itemCount = 0;
@@ -178,11 +179,11 @@ namespace WearWare.Services.Library
             foreach (var originalItem in _items.Values)
             {
                 var item = originalItem.Clone();
-                if (formMode == PlayableItemFormMode.ReConvertAllBrightness)
+                if (formMode == EditPlayableItemFormMode.ReConvertAllBrightness)
                 {
                     item.RelativeBrightness = relativeBrightness;
                 }
-                else if (formMode == PlayableItemFormMode.ReConvertAllMatrix && options != null)
+                else if (formMode == EditPlayableItemFormMode.ReConvertAllMatrix && options != null)
                 {
                     item.MatrixOptions = options;
                 }

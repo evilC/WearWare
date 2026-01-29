@@ -23,7 +23,7 @@ namespace WearWare.Components.Pages.QuickMedia
         private int _addDialogInsertIndex = 0;
         private AddPlayableItemForm? _addFormRef;
         private bool _showReConvertAllDialog = false;
-        private PlayableItemFormMode _reconvertAllMode;
+        private EditPlayableItemFormMode _reconvertAllMode;
 
         private bool _showEditDialog = false;
         private int _editingIndex = -1;
@@ -34,7 +34,7 @@ namespace WearWare.Components.Pages.QuickMedia
         /// The mode of the EditPlayableItemForm
         /// Not used by the form itself, but when it returns we can know if we were adding or editing
         /// </summary>
-        private PlayableItemFormMode _formMode;
+        private EditPlayableItemFormMode _formMode;
 
 
 
@@ -93,7 +93,7 @@ namespace WearWare.Components.Pages.QuickMedia
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();
-            await OnEditQuickMediaItem(args.libItem, args.insertIndex, PlayableItemFormMode.Add);
+            await OnEditQuickMediaItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
         }
 
         // ================================================== Edit Dialog  ==================================================
@@ -103,12 +103,12 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         /// <param name="button"></param>
         /// <param name="index"></param>
-        async Task OnEditQuickMediaItem(PlayableItem item, int index, PlayableItemFormMode mode)
+        async Task OnEditQuickMediaItem(PlayableItem item, int index, EditPlayableItemFormMode mode)
         {
             _editingIndex = index;
             _originalItem = item;
             _editingItem = item.Clone();
-            if (mode == PlayableItemFormMode.Add)
+            if (mode == EditPlayableItemFormMode.Add)
             {
                 // In Add mode, the item being passed in is from the library, so we need to modify some properties.
                 // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
@@ -128,7 +128,7 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async Task OnSaveQuickMediaItem((int editingIndex, PlayableItem item, PlayableItemFormMode formMode) args)
+        public async Task OnSaveQuickMediaItem((int editingIndex, PlayableItem item, EditPlayableItemFormMode formMode) args)
         {
             if (_editingItem is null || _originalItem is null || _editingIndex < 0) return; // ToDo: Error handling
             await QuickMediaService.OnEditFormSubmit(_editingIndex, _originalItem, args.item, args.formMode);
@@ -209,7 +209,7 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         private void ShowReConvertAllGlobal()
         {
-            _reconvertAllMode = PlayableItemFormMode.ReConvertAllMatrix;
+            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
             _showReConvertAllDialog = true;
         }
 
@@ -218,7 +218,7 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         private void ShowReConvertAllEmbedded()
         {
-            _reconvertAllMode = PlayableItemFormMode.ReConvertAllBrightness;
+            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
             _showReConvertAllDialog = true;
         }
 
@@ -226,7 +226,7 @@ namespace WearWare.Components.Pages.QuickMedia
         /// Called when the Reconvert All form is submitted
         /// </summary>
         /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll((PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
+        private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
         {
             _showReConvertAllDialog = false;
             await QuickMediaService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);

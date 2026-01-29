@@ -1,4 +1,5 @@
 using WearWare.Common.Media;
+using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
@@ -253,7 +254,7 @@ namespace WearWare.Services.Playlist
         /// <param name="updatedItem"></param> The updated item from the form
         /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
         /// </summary>
-        public async Task OnEditFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
+        public async Task OnEditFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
         {
             // ToDo: Try / catch needed in here
             var opId = await _operationProgress.StartOperation("Updating Playlist Item");
@@ -264,7 +265,7 @@ namespace WearWare.Services.Playlist
                 _mediaController.Stop();
                 restartMediaController = true;
             }
-            if (formMode == PlayableItemFormMode.Add)
+            if (formMode == EditPlayableItemFormMode.Add)
             {
                 // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
                 updatedItem.ParentFolder = playlist.GetPlaylistRelativePath();
@@ -273,7 +274,7 @@ namespace WearWare.Services.Playlist
             if (originalItem.NeedsReConvert(updatedItem)){
                 _operationProgress.ReportProgress(opId, "Converting stream...");
                 // If the updated item needs re-conversion, do it now
-                var readFrom = formMode == PlayableItemFormMode.Add
+                var readFrom = formMode == EditPlayableItemFormMode.Add
                         ? PathConfig.LibraryPath                    // For ADD, source is library folder
                         : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
                 var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
@@ -287,7 +288,7 @@ namespace WearWare.Services.Playlist
                     return;
                 }
             }
-            else if (formMode == PlayableItemFormMode.Add)
+            else if (formMode == EditPlayableItemFormMode.Add)
             {
                 _operationProgress.ReportProgress(opId, "Copying stream file...");
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
@@ -295,7 +296,7 @@ namespace WearWare.Services.Playlist
                 var copyTo = updatedItem.GetStreamFilePath();       // To playlist folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
-            if (formMode == PlayableItemFormMode.Add)
+            if (formMode == EditPlayableItemFormMode.Add)
             {
                 _operationProgress.ReportProgress(opId, "copying source file...");
                 // Copy source file from library to playlist folder
@@ -306,7 +307,7 @@ namespace WearWare.Services.Playlist
                 }
             }
             _operationProgress.ReportProgress(opId, "Updating playlist...");
-            if (formMode == PlayableItemFormMode.Add)
+            if (formMode == EditPlayableItemFormMode.Add)
             {
                 // Add new item
                 playlist.AddItem(itemIndex, updatedItem);
@@ -340,7 +341,7 @@ namespace WearWare.Services.Playlist
         /// <summary>
         /// Called when OK is clicked in the ReConvertAllPlayableItemsForm
         /// </summary>
-        public async Task ReConvertAllItems(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
+        public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
         {
             var playlist = GetPlaylistBeingEdited();
             if (playlist == null)
@@ -350,11 +351,11 @@ namespace WearWare.Services.Playlist
             foreach (var originalItem in playlist.GetPlaylistItems())
             {
                 var item = originalItem.Clone();
-                if (formMode == PlayableItemFormMode.ReConvertAllBrightness)
+                if (formMode == EditPlayableItemFormMode.ReConvertAllBrightness)
                 {
                     item.RelativeBrightness = relativeBrightness;
                 }
-                else if (formMode == PlayableItemFormMode.ReConvertAllMatrix && options != null)
+                else if (formMode == EditPlayableItemFormMode.ReConvertAllMatrix && options != null)
                 {
                     item.MatrixOptions = options;
                 }
@@ -363,7 +364,7 @@ namespace WearWare.Services.Playlist
                     continue;
                 }
                 _operationProgress.ReportProgress(opId, $"Re-Converting item {itemIndex + 1} of {playlist.GetPlaylistItems().Count}: {item.Name}");
-                if (formMode == PlayableItemFormMode.Edit && options != null)
+                if (formMode == EditPlayableItemFormMode.Edit && options != null)
                 {
                     item.MatrixOptions = options;
                 }

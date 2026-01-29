@@ -3,18 +3,18 @@
 @rendermode InteractiveServer
 
 @* Main Razor Markup: *@
-@if (EditingItem is not null || FormMode == PlayableItemFormMode.ReConvertAllMatrix || FormMode == PlayableItemFormMode.ReConvertAllBrightness)
+@if (EditingItem is not null || FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
 {
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
             <h4>@BuildPageTitle()</h4>
-            @if(FormMode == PlayableItemFormMode.ReConvertAllMatrix)
+            @if(FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
                 <div style ="margin-bottom:1rem;">
                     <span>ReConverts all @ItemType items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
                 </div>
             }
-            else if(FormMode == PlayableItemFormMode.ReConvertAllBrightness)
+            else if(FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 <div style ="margin-bottom:1rem;">
                     <span>ReConverts all @ItemType items with a new Relative Brightness and their embedded Matrix Options</span>
@@ -33,7 +33,7 @@
                 </div>
             }
             @if (ItemType != PlayableItemType.Library && ItemType != PlayableItemType.Import && 
-                FormMode != PlayableItemFormMode.ReConvertAllMatrix && FormMode != PlayableItemFormMode.ReConvertAllBrightness)
+                FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 <div class="add-dialog-row">
                     <div class="add-dialog-section">
@@ -53,7 +53,7 @@
                     </div>
                 </div>
             }
-            @if (FormMode != PlayableItemFormMode.ReConvertAllMatrix && FormMode != PlayableItemFormMode.ReConvertAllBrightness){
+            @if (FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog__list">
                     <div style="display:flex; align-items:center; gap:1rem;">
                         <img class="add-dialog__item-image" src="@ImageUrl" alt="@EditingItem?.Name" />
@@ -69,21 +69,21 @@
                     </label>
                 </div>
             }
-            @if (FormMode != PlayableItemFormMode.ReConvertAllMatrix){
+            @if (FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
                 <div class="add-dialog-row">
                     <label class="add-dialog-label">Relative Brightness (%)
                         <input type="number" class="add-dialog-number" @bind="SelectedRelativeBrightness" @bind:event="oninput" min="1" max="100" />
                     </label>
                 </div>
             }
-            @if (FormMode != PlayableItemFormMode.ReConvertAllMatrix && FormMode != PlayableItemFormMode.ReConvertAllBrightness){
+            @if (FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog-row">
                     <label class="add-dialog-label">Adjusted Brightness (%)
                         <input type="number" disabled class="add-dialog-number" @bind="adjustedBrightness" @bind:event="oninput" min="1" max="100" />
                     </label>
                 </div>
             }
-            @if (FormMode != PlayableItemFormMode.ReConvertAllBrightness)
+            @if (FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 <button type="button" class="add-dialog__cancel-button" @onclick="ShowMatrixOptions">Matrix Options</button>
             }

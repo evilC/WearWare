@@ -1,5 +1,6 @@
 using Iot.Device.ExplorerHat;
 using WearWare.Common.Media;
+using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
@@ -96,11 +97,11 @@ public class QuickMediaService
     /// <param name="updatedItem"></param> The updated item from the form
     /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
     /// </summary>
-    public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, PlayableItemFormMode formMode)
+    public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
     {
         IQuickMediaButton button;
-        var opId = await _operationProgress.StartOperation($"{(formMode == PlayableItemFormMode.Add ? "Adding" : "Editing")} Quick Media Item");
-        if (formMode == PlayableItemFormMode.Edit)
+        var opId = await _operationProgress.StartOperation($"{(formMode == EditPlayableItemFormMode.Add ? "Adding" : "Editing")} Quick Media Item");
+        if (formMode == EditPlayableItemFormMode.Edit)
         {
             var tmp = _buttons[itemIndex];
             if (itemIndex < 0 || itemIndex >= _maxButtons || tmp == null)
@@ -130,7 +131,7 @@ public class QuickMediaService
                 return;
             }
         }
-        if (formMode == PlayableItemFormMode.Add)
+        if (formMode == EditPlayableItemFormMode.Add)
         {
             // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
             updatedItem.ParentFolder = button.GetRelativePath();
@@ -139,7 +140,7 @@ public class QuickMediaService
         if (originalItem.NeedsReConvert(updatedItem)){
             _operationProgress.ReportProgress(opId, "Converting stream");
             // If the updated item needs re-conversion, do it now
-            var readFrom = formMode == PlayableItemFormMode.Add
+            var readFrom = formMode == EditPlayableItemFormMode.Add
                     ? PathConfig.LibraryPath                // For ADD, source is library folder
                     : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
             var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
@@ -151,7 +152,7 @@ public class QuickMediaService
                 return;
             }
         }
-        else if (formMode == PlayableItemFormMode.Add)
+        else if (formMode == EditPlayableItemFormMode.Add)
         {
             try
             {
@@ -167,7 +168,7 @@ public class QuickMediaService
                 return;
             }
         }
-        if (formMode == PlayableItemFormMode.Add)
+        if (formMode == EditPlayableItemFormMode.Add)
         {
             try
             {
@@ -185,7 +186,7 @@ public class QuickMediaService
                 return;
             }
         }
-        if (formMode == PlayableItemFormMode.Add)
+        if (formMode == EditPlayableItemFormMode.Add)
         {
             _operationProgress.ReportProgress(opId, "Adding button to collection");
             _buttons[itemIndex] = button;
@@ -215,7 +216,7 @@ public class QuickMediaService
     /// <param name="formMode"></param> The mode of the form (ReConvertAllGlobal or ReConvertAllEmbedded)
     /// <param name="options"></param> The new matrix options to use if ReConvertAllGlobal
     /// <returns></returns>
-    public async Task ReConvertAllItems(PlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
+    public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
     {
         var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
         for (int i = 0; i < _maxButtons; i++)
@@ -225,11 +226,11 @@ public class QuickMediaService
             var originalItem = button.Item;
             if (originalItem == null) continue;
             var item = originalItem.Clone();
-            if (formMode == PlayableItemFormMode.ReConvertAllBrightness)
+            if (formMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 item.RelativeBrightness = relativeBrightness;
             }
-            else if (formMode == PlayableItemFormMode.ReConvertAllMatrix && options != null)
+            else if (formMode == EditPlayableItemFormMode.ReConvertAllMatrix && options != null)
             {
                 item.MatrixOptions = options;
             }
