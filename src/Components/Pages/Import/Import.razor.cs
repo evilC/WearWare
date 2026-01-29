@@ -5,6 +5,7 @@ using Microsoft.JSInterop;
 using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Components.Forms;
+using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Config;
 using WearWare.Services.Import;
 using WearWare.Services.MatrixConfig;
@@ -14,17 +15,12 @@ namespace WearWare.Components.Pages.Import
 {
     public partial class Import
     {
-        [Inject]
-        private ImportService ImportService { get; set; } = null!;
-        [Inject]
-        private MatrixConfigService MatrixConfigService { get; set; } = null!;
-        [Inject]
-        private HttpClient Http { get; set; } = null!;
+        [Inject] private ImportService ImportService { get; set; } = null!;
+        [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
+        [Inject] private HttpClient Http { get; set; } = null!;
         // ToDo: Used for confirmations - replace with Blazor component?
-        [Inject]
-        private IJSRuntime JSRuntime { get; set; } = null!;
-        [Inject]
-        private NavigationManager Navigation { get; set; } = null!;
+        [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject] private NavigationManager Navigation { get; set; } = null!;
         
         private List<string>? importFiles;
         private string? selectedFileName;

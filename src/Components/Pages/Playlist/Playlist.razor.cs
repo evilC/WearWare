@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
 using WearWare.Components.Forms;
+using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.Playlist;
@@ -10,14 +11,10 @@ namespace WearWare.Components.Pages.Playlist
 {
     public partial class Playlist
     {
-        [Inject]
-        public IJSRuntime JSRuntime { get; set; } = null!;
-        [Inject]
-        public PlaylistService PlaylistService { get; set; } = null!;
-        [Inject]
-        public LibraryService LibraryService { get; set; } = null!;
-        [Inject]
-        public ILogger<Playlist> Logger { get; set; } = null!;
+        [Inject] public IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject] public PlaylistService PlaylistService { get; set; } = null!;
+        [Inject] public LibraryService LibraryService { get; set; } = null!;
+        [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
         
         // ================================================== Common ==================================================
         private readonly string _logTag = "Playlist.razor";

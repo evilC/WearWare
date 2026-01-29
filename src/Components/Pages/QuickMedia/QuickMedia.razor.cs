@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
 using WearWare.Components.Forms;
+using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.QuickMedia;
@@ -11,14 +12,10 @@ namespace WearWare.Components.Pages.QuickMedia
 {
     public partial class QuickMedia
     {
-        [Inject]
-        private QuickMediaService QuickMediaService { get; set; } = null!;
-        [Inject]
-        private LibraryService LibraryService { get; set; } = null!;
-        [Inject]
-        private IStreamConverterService StreamConverterService { get; set; } = null!;
-        [Inject]
-        private IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject] private QuickMediaService QuickMediaService { get; set; } = null!;
+        [Inject] private LibraryService LibraryService { get; set; } = null!;
+        [Inject] private IStreamConverterService StreamConverterService { get; set; } = null!;
+        [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
         // ================================================== Common ==================================================
         private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
@@ -90,7 +87,7 @@ namespace WearWare.Components.Pages.QuickMedia
         }
 
         // ================================================== Edit Dialog  ==================================================
-        private Boolean _showEditDialog = false;
+        private bool _showEditDialog = false;
         private int _editingIndex = -1;
         private PlayableItem? _editingItem = null;
         private PlayableItem? _originalItem;

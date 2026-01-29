@@ -5,8 +5,7 @@ namespace WearWare.Components.Pages.Options
 {
     public partial class Options
     {
-        [Inject]
-        private MatrixConfigService MatrixConfigService { get; set; } = null!;
+        [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
         
         private bool showForm = false;
         private LedMatrixOptionsConfig modalOptions = new();

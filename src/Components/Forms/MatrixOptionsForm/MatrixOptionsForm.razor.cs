@@ -8,39 +8,23 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
 {
     public partial class MatrixOptionsForm
     {
-        [Parameter]
-        public string Action { get; set; } = "Save";
-
-        [Parameter]
-        public string? Title { get; set; }
-
-        [Parameter]
-        public LedMatrixOptionsConfig Options { get; set; } = new LedMatrixOptionsConfig();
-
-        [Parameter]
-        public LedMatrixOptionsVisibility Visibility { get; set; } = new LedMatrixOptionsVisibility();
-
-        [Parameter]
-        public int RelativeBrightness { get; set; }
-
+        [Parameter] public string Action { get; set; } = "Save";
+        [Parameter] public string? Title { get; set; }
+        [Parameter] public LedMatrixOptionsConfig Options { get; set; } = new LedMatrixOptionsConfig();
+        [Parameter] public LedMatrixOptionsVisibility Visibility { get; set; } = new LedMatrixOptionsVisibility();
+        [Parameter] public int RelativeBrightness { get; set; }
         // True if we are on the Global version of the Matrix Options form
         // Only on this page are all fields shown, and checkboxes rendered to enable/disable each option
         // Also when on the Global form, the Relative and Actual Brightness fields are not shown
-        [Parameter]
-        public bool OnGlobalOptionsForm { get; set; } = false;
-
+        [Parameter] public bool OnGlobalOptionsForm { get; set; } = false;
+        [Parameter] public EventCallback<LedMatrixOptionsConfig> OnValidSubmit { get; set; }
+        [Parameter] public EventCallback OnCancel { get; set; }
         // Defaults from the underlying native options - used to show cue text when
         // a nullable option is left empty.
         private readonly RGBLedMatrixOptions _defaults = new RGBLedMatrixOptions();
 
-        [Parameter]
-        public EventCallback<LedMatrixOptionsConfig> OnValidSubmit { get; set; }
-
         private EditContext? _editContext;
         private bool _hasValidationErrors = false;
-
-        [Parameter]
-        public EventCallback OnCancel { get; set; }
 
         protected override void OnParametersSet()
         {
