@@ -17,6 +17,7 @@ using WearWare.Services.ShutdownService;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
 using WearWare.Services.OperationProgress;
+using WearWare.Services.Environment;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -63,6 +64,8 @@ builder.Services.AddScoped<ImportService>();
 builder.Services.AddSingleton<LibraryService>();
 
 var env = builder.Environment.EnvironmentName;
+builder.Services.AddSingleton(sp =>{return new EnvironmentService(env);});  // Allow Nav Menu to detect if running on Desktop or RPi
+
 if (env == "Desktop")
 {
     // Desktop specific services (mocks)

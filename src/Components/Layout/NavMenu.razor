@@ -1,4 +1,7 @@
-﻿<div class="nav-scrollable">
+﻿@using WearWare.Services.Environment
+@inject EnvironmentService EnvironmentService
+
+<div class="nav-scrollable">
     <nav class="flex-column">
         <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
@@ -41,6 +44,15 @@
                 Options
             </NavLink>
         </div>
+
+        @if (EnvironmentService.EnvironmentName == "Desktop")
+        {
+            <div class="nav-item">
+                <NavLink class="nav-link" href="mocks">
+                    Mocks
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
