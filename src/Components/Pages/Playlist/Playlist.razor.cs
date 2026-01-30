@@ -209,7 +209,7 @@ namespace WearWare.Components.Pages.Playlist
         {
             if (_playlist is null) return;
             _editFormModel = null;
-            await PlaylistService.OnEditFormSubmit(_playlist, formModel.InsertIindex, formModel.OriginalItem, formModel.UpdatedItem, formModel.FormMode);
+            await PlaylistService.OnEditFormSubmit(_playlist, formModel);
             await InvokeAsync(StateHasChanged);
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
@@ -274,7 +274,16 @@ namespace WearWare.Components.Pages.Playlist
                 return;
             var originalItem = item.Clone();    // Take a clone so that we can pass the original state (Enabled in original state) to the service
             item.Enabled = newState;
-            await PlaylistService.OnEditFormSubmit(_playlist, itemIndex, originalItem, item, EditPlayableItemFormMode.Edit);
+            var formModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.Edit,
+                FormPage = EditPlayableItemFormPage.Playlist,
+                InsertIindex = itemIndex,
+                OriginalItem = originalItem,
+                UpdatedItem = item,
+            };
+            formModel.UpdatedItem.Enabled = newState;
+            await PlaylistService.OnEditFormSubmit(_playlist, formModel);
             StateHasChanged();
         }
 

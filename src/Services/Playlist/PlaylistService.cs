@@ -254,8 +254,7 @@ namespace WearWare.Services.Playlist
         /// <param name="updatedItem"></param> The updated item from the form
         /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
         /// </summary>
-        // ToDo: Refactor this method to use EditPlayableItemFormModel
-        public async Task OnEditFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
+        public async Task OnEditFormSubmit(PlaylistItems playlist, EditPlayableItemFormModel formModel)
         {
             // ToDo: Try / catch needed in here
             var opId = await _operationProgress.StartOperation("Updating Playlist Item");
@@ -266,23 +265,23 @@ namespace WearWare.Services.Playlist
                 _mediaController.Stop();
                 restartMediaController = true;
             }
-            if (formMode == EditPlayableItemFormMode.Add)
+            if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
                 // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
-                updatedItem.ParentFolder = playlist.GetPlaylistRelativePath();
+                formModel.UpdatedItem.ParentFolder = playlist.GetPlaylistRelativePath();
             }
 
-            if (originalItem.NeedsReConvert(updatedItem)){
+            if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem)){
                 _operationProgress.ReportProgress(opId, "Converting stream...");
                 // If the updated item needs re-conversion, do it now
-                var readFrom = formMode == EditPlayableItemFormMode.Add
+                var readFrom = formModel.FormMode == EditPlayableItemFormMode.Add
                         ? PathConfig.LibraryPath                    // For ADD, source is library folder
                         : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
                 var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
-                var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                var result = await _streamConverterService.ConvertToStream(readFrom, formModel.UpdatedItem.SourceFileName, writeTo, formModel.UpdatedItem.Name, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
                 if (result.ExitCode == 0)
                 {
-                    updatedItem.CurrentBrightness = result.ActualBrightness;
+                    formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
                 }
                 else
                 {
@@ -293,37 +292,37 @@ namespace WearWare.Services.Playlist
                     return;
                 }
             }
-            else if (formMode == EditPlayableItemFormMode.Add)
+            else if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
                 _operationProgress.ReportProgress(opId, "Copying stream file...");
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
-                var copyFrom = originalItem.GetStreamFilePath();    // From library folder
-                var copyTo = updatedItem.GetStreamFilePath();       // To playlist folder
+                var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To playlist folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
-            if (formMode == EditPlayableItemFormMode.Add)
+            if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
                 _operationProgress.ReportProgress(opId, "copying source file...");
                 // Copy source file from library to playlist folder
-                var copyFrom = originalItem.GetSourceFilePath();    // From library folder
-                var copyTo = updatedItem.GetSourceFilePath();       // To playlist folder
+                var copyFrom = formModel.OriginalItem.GetSourceFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetSourceFilePath();       // To playlist folder
                 if (!File.Exists(copyTo)){
                     File.Copy(copyFrom, copyTo, overwrite: true);
                 }
             }
             _operationProgress.ReportProgress(opId, "Updating playlist...");
-            if (formMode == EditPlayableItemFormMode.Add)
+            if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
                 // Add new item
-                playlist.AddItem(itemIndex, updatedItem);
+                playlist.AddItem(formModel.InsertIindex, formModel.UpdatedItem);
             }
             else
             {
-                originalItem.UpdateFromClone(updatedItem);
-                if (!originalItem.Enabled)
+                formModel.OriginalItem.UpdateFromClone(formModel.UpdatedItem);
+                if (!formModel.OriginalItem.Enabled)
                 {
                     // If item is now disabled, and it is the current item, we need to move to the next item
-                    if (playlist.GetCurrentItem() == originalItem)
+                    if (playlist.GetCurrentItem() == formModel.OriginalItem)
                     {
                         if (playlist.MoveNext() == null)
                         {
