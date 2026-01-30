@@ -11,9 +11,7 @@ namespace WearWare.Components.Pages.Library
     {
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
-        private bool _showEditDialog = false;
-        private PlayableItem? _originalItem;
-        private PlayableItem? _editingClone;
+        private EditPlayableItemFormModel? _editFormModel;
         private EditPlayableItemForm? _editFormRef;
         private bool _showReConvertAllDialog = false;
         private EditPlayableItemFormMode _reconvertAllMode;
@@ -51,9 +49,14 @@ namespace WearWare.Components.Pages.Library
         /// <param name="item"></param>
         private void ShowReconvert(PlayableItem item)
         {
-            _originalItem = item;
-            _editingClone = item.Clone();
-            _showEditDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.Edit,
+                FormPage = EditPlayableItemFormPage.Library,
+                ImageUrl = $"/library-image/{item.SourceFileName}",
+                OriginalItem = item,
+                UpdatedItem = item.Clone(),
+            };
         }
 
         /// <summary>
@@ -61,10 +64,7 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         private async Task OnEditFormCancel()
         {
-            _showEditDialog = false;
-            _editingClone = null;
-            _originalItem = null;
-            _showReConvertAllDialog = false;
+            _editFormModel = null;
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
         }
@@ -74,13 +74,10 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         /// <param name="args"></param> The arguments containing the updated item and form mode
         /// <returns></returns>
-        private async Task OnSaveLibraryItem((int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode) args)
+        private async Task OnSaveLibraryItem(EditPlayableItemFormModel formModel)
         {
-            if (_originalItem is null) return;
-            await LibraryService.OnEditFormSubmit(_originalItem, args.updatedItem, args.formMode);
-            _showEditDialog = false;
-            _editingClone = null;
-            _originalItem = null;
+            _editFormModel = null;
+            await LibraryService.OnEditFormSubmit(formModel);
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
             await InvokeAsync(StateHasChanged);

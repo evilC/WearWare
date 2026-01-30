@@ -36,17 +36,13 @@ else
     </ul>
 }
 
-@if (_showEditDialog && _editingClone is not null && _originalItem is not null)
+@if (_editFormModel != null)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
             <EditPlayableItemForm @ref="_editFormRef"
-                EditingItem="_editingClone"
-                EditingIndex="0"
-                FormPage="EditPlayableItemFormPage.Library"
-                FormMode="EditPlayableItemFormMode.Edit"
-                ImageUrl="@($"/library-image/{_originalItem.SourceFileName}")"
-                OnSave="OnSaveLibraryItem"
+                FormModel="_editFormModel"
+                OnNewSave="OnSaveLibraryItem"
                 OnCancel="OnEditFormCancel"
             />
         </div>

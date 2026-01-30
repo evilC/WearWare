@@ -117,15 +117,22 @@ namespace WearWare.Services.Library
         /// <param name="updatedItem"></param> The updated item with new values
         /// <param name="formMode"></param> The mode of the form (Add or Edit)
         /// <returns></returns>
-        public async Task OnEditFormSubmit(PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
+        public async Task OnEditFormSubmit(EditPlayableItemFormModel formModel)
         {
             var opId = await _operationProgress.StartOperation("Updating Library Item");
             try
             {
-                if (originalItem.NeedsReConvert(updatedItem))
+                if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem))
                 {
                     _operationProgress.ReportProgress(opId, "Converting stream...");
-                    var result = await _streamConverterService.ConvertToStream(PathConfig.LibraryPath, originalItem.SourceFileName, PathConfig.LibraryPath, originalItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+                    var result = await _streamConverterService.ConvertToStream(
+                        PathConfig.LibraryPath, 
+                        formModel.OriginalItem.SourceFileName, 
+                        PathConfig.LibraryPath, 
+                        formModel.OriginalItem.Name,
+                        formModel.UpdatedItem.RelativeBrightness, 
+                        formModel.UpdatedItem.MatrixOptions
+                    );
                     if (result.ExitCode != 0)
                     {
                         _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
@@ -134,23 +141,20 @@ namespace WearWare.Services.Library
                 }
 
                 // Update metadata and save
-                if (_items.ContainsKey(originalItem.Name))
+                try
                 {
-                    var item = _items[originalItem.Name];
-                    item.UpdateFromClone(updatedItem);
-                    try
-                    {
-                        _operationProgress.ReportProgress(opId, "Writing metadata...");
-                        var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
-                        JsonUtils.ToJsonFile(jsonPath, item);
-                        ItemsChanged?.Invoke();
-                    }
-                    catch (Exception ex)
-                    {
-                        _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
-                        return;
-                    }
+                    _operationProgress.ReportProgress(opId, "Writing metadata...");
+                    var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.UpdatedItem.Name}.json");
+                    JsonUtils.ToJsonFile(jsonPath, formModel.UpdatedItem);
+                    ItemsChanged?.Invoke();
                 }
+                catch (Exception ex)
+                {
+                    _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
+                    return;
+                }
+                // Update the original item with data from the clone
+                formModel.OriginalItem.UpdateFromClone(formModel.UpdatedItem);
 
                 _operationProgress.CompleteOperation(opId, true, "Done");
                 return;
