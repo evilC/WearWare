@@ -1,4 +1,5 @@
 @using WearWare.Common.Media
+@using WearWare.Common
 @using WearWare.Components.Forms.MatrixOptionsForm
 @rendermode InteractiveServer
 
@@ -38,11 +39,11 @@
                 <div class="add-dialog-row">
                     <div class="add-dialog-section">
                         <div class="add-dialog-options">
-                            @foreach (var mode in playModeOptions)
+                            @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
                             {
                                 <label class="add-dialog-radio-label">
-                                    <span class="add-dialog-mode-text">@mode.Key</span>
-                                    <input type="radio" name="editPlayMode" value="@mode.Value" @onchange="() => OnSelectPlayMode(mode.Value)" checked="@(selectedPlayMode == mode.Value)" class="add-dialog-radio" />
+                                    <span class="add-dialog-mode-text">@playMode.ToString()</span>
+                                    <input type="radio" name="editPlayMode" value="@((int)playMode)" @onchange="() => OnSelectPlayMode((int)playMode)" checked="@(selectedPlayMode == (int)playMode)" class="add-dialog-radio" />
                                 </label>
                             }
                         </div>
