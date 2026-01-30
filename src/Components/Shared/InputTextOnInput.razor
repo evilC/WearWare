@@ -4,5 +4,5 @@
 @* Bind the oninput event *@
 <input @attributes="AdditionalAttributes"
        class="@CssClass"
-       value="@CurrentValue"
-       @oninput="EventCallback.Factory.CreateBinder<string>(this, __value => CurrentValueAsString = __value, CurrentValueAsString)" />
+       value="@(CurrentValueAsString ?? string.Empty)"
+       @oninput="EventCallback.Factory.CreateBinder<string>(this, __value => CurrentValueAsString = __value ?? string.Empty, CurrentValueAsString ?? string.Empty)" />

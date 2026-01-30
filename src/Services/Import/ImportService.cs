@@ -98,12 +98,13 @@ namespace WearWare.Services.Import
                 _operationProgress.CompleteOperation(opId, false, "Import failed - unknown media type.");
                 return;
             }
+            formModel.UpdatedItem.Name = FilenameValidator.Sanitize(formModel.NewName);
             _operationProgress.ReportProgress(opId, "Converting stream...");
             var result = await _streamConverterService.ConvertToStream(
                 PathConfig.IncomingPath, 
                 formModel.OriginalFileName, 
                 PathConfig.LibraryPath, 
-                formModel.NewName, 
+                formModel.UpdatedItem.Name, 
                 formModel.UpdatedItem.RelativeBrightness, 
                 formModel.UpdatedItem.MatrixOptions
             );
@@ -115,7 +116,7 @@ namespace WearWare.Services.Import
             _operationProgress.ReportProgress(opId, "Copying original file...");
             // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
             var ext = Path.GetExtension(formModel.OriginalFileName);
-            var destPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.NewName}{ext}");
+            var destPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.UpdatedItem.Name}{ext}");
             try {
                 var sourcePath = Path.Combine(PathConfig.IncomingPath, formModel.OriginalFileName);
                 if (File.Exists(destPath))
@@ -130,7 +131,7 @@ namespace WearWare.Services.Import
                 return;
             }
             var item = new PlayableItem(
-                formModel.NewName,
+                formModel.UpdatedItem.Name,
                 PathConfig.LibraryFolder,
                 mediaType.Value,
                 Path.GetFileName(destPath),  
@@ -145,7 +146,7 @@ namespace WearWare.Services.Import
             {
                 _operationProgress.ReportProgress(opId, "Writing metadata...");
                 var json = JsonUtils.ToJson(item);
-                var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.NewName}.json");
+                var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.UpdatedItem.Name}.json");
                 await File.WriteAllTextAsync(jsonPath, json, Encoding.UTF8);
                 // Notify library service that new items are available
                 try
