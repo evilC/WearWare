@@ -60,14 +60,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
         
         // === Form edited values ===
-        // The currently selected play mode in the form
-        private int selectedPlayMode;
-        // The currently selected play mode value in the form
-        private int selectedPlayModeValue;
-        // The currently selected relative brightness in the form
-        private int selectedRelativeBrightness;
-
-        private LedMatrixOptionsConfig? selectedMatrixOptions;
         private string nameInput = string.Empty;
         private ImportNameModel importNameModel = new();
 
@@ -105,6 +97,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             }
         }
 
+        /*
         // Old way of setting variables when form is opened
         // Remove
         protected override void OnInitialized()
@@ -138,6 +131,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             // streamCurrentBrightness = EditingItem.CurrentBrightness;
             CalculateBrightness();
         }
+        */
 
         /// <summary>
         /// Called after the component has been rendered.
@@ -187,23 +181,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         //         selectedPlayModeValue = v;
         // }
 
-        /// <summary>
-        /// Setter is called when the Relative Brightness input is changed
-        /// </summary>
-        public int SelectedRelativeBrightness
-        {
-            get => selectedRelativeBrightness;
-            set
-            {
-                if (selectedRelativeBrightness != value)
-                {
-                    selectedRelativeBrightness = value;
-                    CalculateBrightness();
-                    InvokeAsync(StateHasChanged);
-                }
-            }
-        }
-
         // Recalculates adjusted brightness based on current matrix options and selected relative brightness
         private void CalculateBrightness()
         {
@@ -226,7 +203,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <param name="opts">The updated matrix options</param>
         private async Task OnMatrixOptionsOk(LedMatrixOptionsConfig opts)
         {
-            selectedMatrixOptions = opts;
+            // selectedMatrixOptions = opts;
             showMatrixOptionsForm = false;
             CalculateBrightness();
             await InvokeAsync(StateHasChanged);
@@ -255,7 +232,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             // If we're in a ReConvertAll mode, call the dedicated callback instead
             if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                OnReconvertAllOk.InvokeAsync((FormModel.FormMode, FormModel.UpdatedItem.RelativeBrightness, selectedMatrixOptions));
+                OnReconvertAllOk.InvokeAsync((FormModel.FormMode, FormModel.UpdatedItem.RelativeBrightness, FormModel.UpdatedItem.MatrixOptions));
                 return;
             }
             OnNewSave.InvokeAsync(FormModel);
