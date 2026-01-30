@@ -7,6 +7,7 @@
 @if (FormModel is not null)
 {
     <EditForm Model="@(FormModel.UpdatedItem ?? (object)FormModel)" OnValidSubmit="SaveEdit">
+    <DataAnnotationsValidator />
     <div class="edit-dialog" @onclick="() => OnCancel.InvokeAsync(null)">
         <div class="edit-dialog__content" @onclick:stopPropagation>
             <h4>@BuildPageTitle()</h4>
@@ -24,11 +25,10 @@
             }
             @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
             {
+                <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
                 <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
-                    <DataAnnotationsValidator />
-                    <ValidationMessage For="@(() => FormModel.UpdatedItem.Name)" />
                     <label class="add-dialog-label">Name
-                        <InputTextOnInput class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem.Name" />
+                        <InputTextOnInput class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" />
                     </label>
                 </div>
             }
@@ -37,20 +37,17 @@
             {
                 <div class="add-dialog-row">
                     <div class="add-dialog-section">
-                        @if (FormModel.UpdatedItem != null)
-                        {
-                            <div class="add-dialog-options">
-                                <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem.PlayMode">
-                                    @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
-                                    {
-                                        <label class="add-dialog-radio-label">
-                                            <span class="add-dialog-mode-text">@playMode.ToString()</span>
-                                            <InputRadio class="add-dialog-radio" TValue="PlayMode" Value="playMode" />
-                                        </label>
-                                    }
-                                </InputRadioGroup>
-                            </div>
-                        }
+                        <div class="add-dialog-options">
+                            <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem!.PlayMode">
+                                @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
+                                {
+                                    <label class="add-dialog-radio-label">
+                                        <span class="add-dialog-mode-text">@playMode.ToString()</span>
+                                        <InputRadio class="add-dialog-radio" TValue="PlayMode" Value="playMode" />
+                                    </label>
+                                }
+                            </InputRadioGroup>
+                        </div>
                     </div>
                     <div class="add-dialog-section">
                         <label class="add-dialog-label">Value</label>
@@ -64,32 +61,26 @@
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog__list">
                     <div style="display:flex; align-items:center; gap:1rem;">
-                        <img class="add-dialog__item-image" src="@FormModel.ImageUrl" alt="@FormModel.UpdatedItem?.Name" />
+                        <img class="add-dialog__item-image" src="@FormModel.ImageUrl" alt="@FormModel.UpdatedItem!.Name" />
                         <div>
-                            <strong>@FormModel.UpdatedItem?.Name</strong><br />
-                            <span class="add-dialog__item-type">@FormModel.UpdatedItem?.MediaType</span>
+                            <strong>@FormModel.UpdatedItem!.Name</strong><br />
+                            <span class="add-dialog__item-type">@FormModel.UpdatedItem!.MediaType</span>
                         </div>
                     </div>
                 </div>
-                @if (FormModel.UpdatedItem != null){    // IDE seems to want a null check here
-                    <div class="add-dialog-row" style="margin-top: 1em;">
-                        <label class="add-dialog-label">Stream Current Brightness (%)
-                            <input type="number" disabled class="add-dialog-number" @bind="FormModel.UpdatedItem.CurrentBrightness"/>
-                        </label>
-                    </div>
-                }
+                <div class="add-dialog-row" style="margin-top: 1em;">
+                    <label class="add-dialog-label">Stream Current Brightness (%)
+                        <input type="number" disabled class="add-dialog-number" @bind="FormModel.UpdatedItem!.CurrentBrightness"/>
+                    </label>
+                </div>
             }
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
-                @if (FormModel.UpdatedItem != null){    // IDE seems to want a null check here
-                    <div class="add-dialog-row">
-                        <label class="add-dialog-label">Relative Brightness (%)
-                            <input type="number" class="add-dialog-number" @bind="FormModel.UpdatedItem.RelativeBrightness" 
-                                @bind:event="oninput" min="1" max="100" 
-                                @onchange="e => CalculateBrightness()"
-                            />
-                        </label>
-                    </div>
-                }
+                <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
+                <div class="add-dialog-row">
+                    <label class="add-dialog-label">Relative Brightness (%)
+                        <InputNumber class="add-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" min="1" max="100" @onchange="e => CalculateBrightness()" />
+                    </label>
+                </div>
             }
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog-row">

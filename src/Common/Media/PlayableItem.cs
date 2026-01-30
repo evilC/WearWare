@@ -12,6 +12,7 @@ namespace WearWare.Common.Media
         public string Name { get; set; }
         public MediaType MediaType { get; init; }
         public string SourceFileName { get; init; }
+        [Range(1, 100, ErrorMessage = "Must be between 1 and 100.")]
         public int RelativeBrightness { get; set; } = 100;
         public int CurrentBrightness { get; set; } = 100;
         public PlayMode PlayMode { get; set; } = PlayMode.Loop;
