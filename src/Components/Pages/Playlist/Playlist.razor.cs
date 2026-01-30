@@ -21,8 +21,8 @@ namespace WearWare.Components.Pages.Playlist
         /// <summary> The index to insert the new item at when adding to the playlist </summary>
         // private int addDialogInsertIndex = 0;
 
-        private EditPlayableItemFormModel? _addFormDto = null;
-        private EditPlayableItemFormModel? _editFormDto = null;
+        private EditPlayableItemFormModel? _addFormModel = null;
+        private EditPlayableItemFormModel? _editFormModel = null;
 
         /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
         private IReadOnlyList<PlayableItem>? libraryItems;
@@ -130,7 +130,7 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="insertIndex"></param> The index to insert the item at
         void OnAddDialogShow(int insertIndex)
         {
-            _addFormDto = new EditPlayableItemFormModel
+            _addFormModel = new EditPlayableItemFormModel
             {
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Playlist,
@@ -143,7 +143,7 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         async Task OnAddFormCancel()
         {
-            _addFormDto = null;
+            _addFormModel = null;
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();
@@ -155,9 +155,9 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="args"></param> Tuple of (insertIndex, libItem)
         async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem) args)
         {
-            if (_addFormDto is null || _playlist is null) return;
-            _editFormDto = _addFormDto;
-            _addFormDto = null;
+            if (_addFormModel is null || _playlist is null) return;
+            _editFormModel = _addFormModel;
+            _addFormModel = null;
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();

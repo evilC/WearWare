@@ -86,9 +86,9 @@
 }
 
 @* Add Dialog:*@
-@if (_addFormDto != null){
+@if (_addFormModel != null){
     <AddPlayableItemForm @ref="_addFormRef"
-        FormDto="_addFormDto"
+        FormDto="_addFormModel"
         LibraryItems="libraryItems"
         OnCancel="OnAddFormCancel"
         OnAdd="OnAddDialogItemChosen"
