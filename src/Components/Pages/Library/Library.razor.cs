@@ -11,15 +11,10 @@ namespace WearWare.Components.Pages.Library
     {
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
         private EditPlayableItemFormModel? _editFormModel;
         private EditPlayableItemForm? _editFormRef;
         private IReadOnlyList<PlayableItem>? items;
-        private readonly MatrixConfigService _matrixConfigService;
-
-        public Library(MatrixConfigService matrixConfigService)
-        {
-            _matrixConfigService = matrixConfigService;
-        }
 
         protected override void OnInitialized()
         {
@@ -77,7 +72,6 @@ namespace WearWare.Components.Pages.Library
         /// Called when the edit form is submitted for a library item.
         /// </summary>
         /// <param name="args"></param> The arguments containing the updated item and form mode
-        /// <returns></returns>
         private async Task OnSaveLibraryItem(EditPlayableItemFormModel formModel)
         {
             _editFormModel = null;
@@ -96,7 +90,7 @@ namespace WearWare.Components.Pages.Library
             {
                 FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
                 FormPage = EditPlayableItemFormPage.Library,
-                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
+                UpdatedItem = PlayableItem.CreateDummyItem(MatrixConfigService.CloneOptions()),
             };
         }
 
@@ -109,7 +103,7 @@ namespace WearWare.Components.Pages.Library
             {
                 FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
                 FormPage = EditPlayableItemFormPage.Library,
-                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
+                UpdatedItem = PlayableItem.CreateDummyItem(MatrixConfigService.CloneOptions()),
             };
         }
 
