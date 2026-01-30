@@ -21,8 +21,8 @@ namespace WearWare.Components.Pages.Playlist
         /// <summary> The index to insert the new item at when adding to the playlist </summary>
         // private int addDialogInsertIndex = 0;
 
-        private EditPlayableItemFormDto? _addFormDto = null;
-        private EditPlayableItemFormDto? _editFormDto = null;
+        private EditPlayableItemFormModel? _addFormDto = null;
+        private EditPlayableItemFormModel? _editFormDto = null;
 
         /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
         private IReadOnlyList<PlayableItem>? libraryItems;
@@ -130,7 +130,7 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="insertIndex"></param> The index to insert the item at
         void OnAddDialogShow(int insertIndex)
         {
-            _addFormDto = new EditPlayableItemFormDto
+            _addFormDto = new EditPlayableItemFormModel
             {
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Playlist,

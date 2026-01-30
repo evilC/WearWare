@@ -2,7 +2,7 @@ using WearWare.Common.Media;
 
 namespace WearWare.Components.Forms.EditPlayableItemForm
 {
-    public class EditPlayableItemFormDto
+    public class EditPlayableItemFormModel
     {
         public EditPlayableItemFormMode FormMode { get; set; }
         public EditPlayableItemFormPage FormPage { get; set; } = default;
