@@ -2,7 +2,6 @@ namespace WearWare.Common.Media
 {
     public enum PlayableItemType
     {
-        UNKNOWN,
         Import,
         Library,
         Playlist,
