@@ -184,7 +184,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         private void CalculateBrightness()
         {
             adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(
-                FormModel.UpdatedItem.MatrixOptions.Brightness ?? 100, FormModel.UpdatedItem.RelativeBrightness
+                FormModel.UpdatedItem.RelativeBrightness, FormModel.UpdatedItem.MatrixOptions.Brightness ?? 100
             );
         }
 

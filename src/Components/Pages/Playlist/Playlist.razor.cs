@@ -15,6 +15,7 @@ namespace WearWare.Components.Pages.Playlist
         [Inject] public PlaylistService PlaylistService { get; set; } = null!;
         [Inject] public LibraryService LibraryService { get; set; } = null!;
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
+        [Inject] public MatrixConfigService _matrixConfigService { get; set; } = null!;
 
         /// <summary> Whether to show the Add Item dialog </summary>
         // private bool showAddDialog = false;
@@ -416,21 +417,33 @@ namespace WearWare.Components.Pages.Playlist
         }
 
         /// <summary>
-        /// Called when the Reconvert All (Global) is clicked
+        /// Called when the Reconvert All (Matrix) is clicked
         /// </summary>
-        private void ShowReConvertAllGlobal()
+        private void ShowReConvertAllMatrix()
         {
-            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
-            _showReConvertAllDialog = true;
+            // _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
+            // _showReConvertAllDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
+                FormPage = EditPlayableItemFormPage.Playlist,
+                UpdatedItem = new PlayableItem("dummy", "", MediaType.ANIMATION, "", PlayMode.Duration, 1, 100, 100, _matrixConfigService.CloneOptions()),
+            };
         }
 
         /// <summary>
-        /// Called when the Reconvert All (Embedded) is clicked
+        /// Called when the Reconvert All (Brightness) is clicked
         /// </summary>
-        private void ShowReConvertAllEmbedded()
+        private void ShowReConvertAllBrightness()
         {
-            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
-            _showReConvertAllDialog = true;
+            // _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
+            // _showReConvertAllDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
+                FormPage = EditPlayableItemFormPage.Playlist,
+                UpdatedItem = new PlayableItem("dummy", "", MediaType.ANIMATION, "", PlayMode.Duration, 1, 100, 100, _matrixConfigService.CloneOptions()),
+            };
         }
 
         /// <summary>
@@ -445,7 +458,6 @@ namespace WearWare.Components.Pages.Playlist
                 await _editFormRef.UnlockScrollAsync();
             await InvokeAsync(StateHasChanged);
         }
-
 
         /// <summary>
         /// Builds the image path for the editing item based on whether we are adding or editing

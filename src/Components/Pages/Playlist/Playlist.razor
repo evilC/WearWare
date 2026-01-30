@@ -61,8 +61,8 @@
 @* Normal Playlist View: *@
 @if (_playlist is not null && _items is not null)
 {
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllMatrix()">ReConvert all with new Matrix Options</button>
+    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllBrightness()">ReConvert all with new Brightness</button>
     <div class="playlist-list">
         <button class="playlist-add-button" @onclick="() => OnAddDialogShow(0)">Add new item at start</button>
         @for (int i = 0; i < _items.Count; i++)
@@ -97,7 +97,7 @@
 }
 
 @* Edit Dialog:*@
-@if (_editFormModel is not null)
+@if (_editFormModel is not null && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
 {
     <EditPlayableItemForm
         @ref="_editFormRef"
@@ -108,14 +108,12 @@
 }
 
 @* ToDo: should be able to get rid of this. In ReConvert all mode, we will still be using _editFormModel *@
-@if (_showReConvertAllDialog)
+@if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
             <EditPlayableItemForm @ref="_editFormRef"
                 FormModel="_editFormModel"
-                FormPage="EditPlayableItemFormPage.Playlist"
-                FormMode="@_reconvertAllMode"
                 OnReconvertAllOk="OnReconvertAll"
                 OnCancel="OnEditFormCancel"
             />
