@@ -280,7 +280,11 @@ namespace WearWare.Services.Playlist
                         : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
                 var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
                 var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
-                if (result.ExitCode != 0)
+                if (result.ExitCode == 0)
+                {
+                    updatedItem.CurrentBrightness = result.ActualBrightness;
+                }
+                else
                 {
                     // Re-convert failed - show an alert and do not save changes
                     //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
