@@ -82,7 +82,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// Called when the form opens
         /// </summary>
         // ToDo: Whould we be using the Async version of this?
-        protected override void OnParametersSet()
+        protected override void OnInitialized()
         {
             // Sync FormModel.UpdatedItem properties to local selected* variables
             if (FormModel != null)
@@ -92,7 +92,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                     FormModel.UpdatedItem.PlayMode = PlayMode.Loop;
                     FormModel.UpdatedItem.PlayModeValue = 1;
                 }
-                FormModel.UpdatedItem = FormModel.OriginalItem.Clone();
                 CalculateBrightness();
             }
         }

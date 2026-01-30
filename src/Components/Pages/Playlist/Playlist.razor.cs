@@ -175,6 +175,7 @@ namespace WearWare.Components.Pages.Playlist
                     FormPage = EditPlayableItemFormPage.Playlist,
                     InsertIindex = itemIndex,
                     OriginalItem = item,
+                    UpdatedItem = item.Clone(),
                 };
                 editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
                 _editFormModel = editFormModel;
