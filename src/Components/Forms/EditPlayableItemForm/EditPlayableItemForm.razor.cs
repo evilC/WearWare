@@ -55,12 +55,13 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         [Parameter] public PlayableItemType ItemType { get; set; } = PlayableItemType.UNKNOWN;
         [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
 
+        
         private Dictionary<string, int> playModeOptions = new()
-    {
-        { "Loop", (int)PlayMode.LOOP },
-        { "Duration", (int)PlayMode.DURATION },
-        { "Forever", (int)PlayMode.FOREVER }
-    };
+        {
+            { "Loop", (int)PlayMode.LOOP },
+            { "Duration", (int)PlayMode.DURATION },
+            { "Forever", (int)PlayMode.FOREVER }
+        };
 
         // === Form edited values ===
         // The currently selected play mode in the form
