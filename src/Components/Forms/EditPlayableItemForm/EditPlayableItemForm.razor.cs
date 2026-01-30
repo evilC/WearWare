@@ -14,38 +14,24 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
     /// </summary>
     public partial class EditPlayableItemForm
     {
+        private readonly string _logTag = "EditPlayableItemForm";
         [Inject] private ILogger<EditPlayableItemForm> _logger { get; set; } = null!;
         [Inject] private IJSRuntime JS { get; set; } = null!;
         [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
 
+        /// <summary>
+        /// The model for the form
+        /// </summary>
         [Parameter] public EditPlayableItemFormModel FormModel { get; set; } = default!;
-        private readonly string _logTag = "EditPlayableItemForm";
-        /// <summary>
-        /// The PlayableItem being edited.
-        /// In ADD mode, this will be a Library item clone.
-        /// In EDIT mode, this will be the Playlist or QuickMedia item being edited.
-        /// </summary>
-        [Parameter] public PlayableItem? EditingItem { get; set; }
-        /// <summary>
-        /// The index of the item being edited in the Playlist or QuickMedia list.
-        /// In ADD mode, this will be the index where the new item will be inserted.
-        /// In EDIT mode, this will be the index of the item being edited.
-        /// </summary>
-
-        [Parameter] public int EditingIndex { get; set; }
 
         /// <summary>
-        /// The URL of the image to display for the item being edited
-        /// In ADD mode, this will be the Library image URL.
-        /// In EDIT mode, this will be the Playlist or QuickMedia image URL depending on where the item is from.
+        /// Callback for clicking Cancel
         /// </summary>
         [Parameter] public EventCallback OnCancel { get; set; }
         /// <summary>
         /// Callback for clicking OK in regular Add / Edit mode
         /// </summary>
-        // ToDo: Delete once Import and QuickMedia uses OnNewSave
-        [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode)> OnSave { get; set; }
-        [Parameter] public EventCallback<EditPlayableItemFormModel> OnNewSave { get; set; }
+        [Parameter] public EventCallback<EditPlayableItemFormModel> OnSave { get; set; }
         /// <summary>
         /// Callback for clicking OK in ReConvert All mode
         /// </summary>
@@ -209,46 +195,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                 OnReconvertAllOk.InvokeAsync(FormModel);
                 return;
             }
-            OnNewSave.InvokeAsync(FormModel);
-            /*
-            if (EditingItem == null)
-            {
-                _logger.LogError($"{_logTag}: Cannot save PlayableItem; EditingItem is null");
-                return;
-            }
-            if (selectedMatrixOptions == null)
-            {
-                _logger.LogError($"{_logTag}: Cannot save PlayableItem; selectedMatrixOptions is null");
-                return;
-            }
-            // Copy mutable properties into the item to send back. For Import flows, Name is init-only,
-            // so construct a new PlayableItem with the edited name.
-            if (FormPage == EditPlayableItemFormPage.Import)
-            {
-                // Validate name via importNameModel; sanitize before creating PlayableItem
-                var sanitized = FilenameValidator.Sanitize(importNameModel.Name ?? string.Empty);
-                var updated = new PlayableItem(
-                    sanitized,
-                    EditingItem.ParentFolder,
-                    EditingItem.MediaType,
-                    EditingItem.SourceFileName,
-                    (PlayMode)selectedPlayMode,
-                    selectedPlayModeValue,
-                    Math.Clamp(selectedRelativeBrightness, 1, 100),
-                    adjustedBrightness,
-                    selectedMatrixOptions.Clone()
-                );
-                OnSave.InvokeAsync((EditingIndex, updated, FormMode));
-                return;
-            }
-
-            EditingItem.PlayMode = (PlayMode)selectedPlayMode;
-            EditingItem.PlayModeValue = selectedPlayModeValue;
-            EditingItem.RelativeBrightness = Math.Clamp(selectedRelativeBrightness, 1, 100);
-            EditingItem.CurrentBrightness = adjustedBrightness;
-            EditingItem.MatrixOptions = selectedMatrixOptions;
-            OnSave.InvokeAsync((EditingIndex, EditingItem, FormMode));
-            */
+            OnSave.InvokeAsync(FormModel);
         }
 
         /// <summary>
@@ -277,7 +224,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             title += FormModel.FormPage.ToString();
             if (FormModel.FormPage == EditPlayableItemFormPage.QuickMedia)
             {
-                title += $" B{EditingIndex + 1}";
+                title += $" B{FormModel.ItemIndex + 1}";
             }
             else
             {
@@ -296,7 +243,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             {
                 EditPlayableItemFormPage.Library => "Library Item Matrix Options",
                 EditPlayableItemFormPage.Playlist => "Playlist Item Matrix Options",
-                EditPlayableItemFormPage.QuickMedia => $"Button {EditingIndex + 1} Matrix Options",
+                EditPlayableItemFormPage.QuickMedia => $"Button {FormModel.ItemIndex + 1} Matrix Options",
                 _ => "Matrix Options"
             };
         }

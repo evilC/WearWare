@@ -193,10 +193,10 @@ namespace WearWare.Components.Pages.Playlist
         }
 
         // ToDo: Update PlaylistService.OnEditFormSubmit to accept EditPlayableItemFormModel
-        async Task OnNewSavePlaylistItem(EditPlayableItemFormModel formModel)
+        async Task OnSavePlaylistItem(EditPlayableItemFormModel formModel)
         {
             if (_playlist is null){
-                Logger.LogError($"{_logTag}: OnNewSavePlaylistItem called but _playlist is null");
+                Logger.LogError($"{_logTag}: OnSavePlaylistItem called but _playlist is null");
                 await UnlockScrollbar();
                 return;
             }
