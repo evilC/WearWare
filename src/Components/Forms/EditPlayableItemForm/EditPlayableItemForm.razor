@@ -61,28 +61,32 @@
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog__list">
                     <div style="display:flex; align-items:center; gap:1rem;">
-                        <img class="add-dialog__item-image" src="@FormModel.ImageUrl" alt="@EditingItem?.Name" />
+                        <img class="add-dialog__item-image" src="@FormModel.ImageUrl" alt="@FormModel.UpdatedItem?.Name" />
                         <div>
-                            <strong>@EditingItem?.Name</strong><br />
-                            <span class="add-dialog__item-type">@EditingItem?.MediaType</span>
+                            <strong>@FormModel.UpdatedItem?.Name</strong><br />
+                            <span class="add-dialog__item-type">@FormModel.UpdatedItem?.MediaType</span>
                         </div>
                     </div>
                 </div>
-                <div class="add-dialog-row" style="margin-top: 1em;">
-                    <label class="add-dialog-label">Stream Current Brightness (%)
-                        <input type="number" disabled class="add-dialog-number" @bind="FormModel.UpdatedItem.CurrentBrightness"/>
-                    </label>
-                </div>
+                @if (FormModel.UpdatedItem != null){    // IDE seems to want a null check here
+                    <div class="add-dialog-row" style="margin-top: 1em;">
+                        <label class="add-dialog-label">Stream Current Brightness (%)
+                            <input type="number" disabled class="add-dialog-number" @bind="FormModel.UpdatedItem.CurrentBrightness"/>
+                        </label>
+                    </div>
+                }
             }
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
-                <div class="add-dialog-row">
-                    <label class="add-dialog-label">Relative Brightness (%)
-                        <input type="number" class="add-dialog-number" @bind="FormModel.UpdatedItem.RelativeBrightness" 
-                            @bind:event="oninput" min="1" max="100" 
-                            @onchange="e => CalculateBrightness()"
-                        />
-                    </label>
-                </div>
+                @if (FormModel.UpdatedItem != null){    // IDE seems to want a null check here
+                    <div class="add-dialog-row">
+                        <label class="add-dialog-label">Relative Brightness (%)
+                            <input type="number" class="add-dialog-number" @bind="FormModel.UpdatedItem.RelativeBrightness" 
+                                @bind:event="oninput" min="1" max="100" 
+                                @onchange="e => CalculateBrightness()"
+                            />
+                        </label>
+                    </div>
+                }
             }
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog-row">
@@ -106,7 +110,7 @@
 }
 
 @* Matrix Options form *@
-@if (FormModel is not null && showMatrixOptionsForm)
+@if (FormModel is not null && showMatrixOptionsForm && FormModel.UpdatedItem != null)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
             <div style="width:80%;">

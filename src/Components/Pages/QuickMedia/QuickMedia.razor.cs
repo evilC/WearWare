@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Components.Forms.AddPlayableItemForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
+using WearWare.Config;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.QuickMedia;
@@ -16,27 +18,17 @@ namespace WearWare.Components.Pages.QuickMedia
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IStreamConverterService StreamConverterService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+        [Inject] private ILogger<QuickMedia> Logger { get; set; } = null!;
 
         private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
         private IReadOnlyList<PlayableItem>? _libraryItems;
-        private bool _showAddDialog = false;
-        private int _addDialogInsertIndex = 0;
+        private EditPlayableItemFormModel? _addFormModel = null;
+        private EditPlayableItemFormModel? _editFormModel = null;
         private AddPlayableItemForm? _addFormRef;
         private bool _showReConvertAllDialog = false;
         private EditPlayableItemFormMode _reconvertAllMode;
 
-        private bool _showEditDialog = false;
-        private int _editingIndex = -1;
-        private PlayableItem? _editingItem = null;
-        private PlayableItem? _originalItem;
         private EditPlayableItemForm? _editFormRef;
-        /// <summary>
-        /// The mode of the EditPlayableItemForm
-        /// Not used by the form itself, but when it returns we can know if we were adding or editing
-        /// </summary>
-        private EditPlayableItemFormMode _formMode;
-
-
 
         protected override void OnInitialized()
         {
@@ -63,6 +55,16 @@ namespace WearWare.Components.Pages.QuickMedia
             InvokeAsync(StateHasChanged);
         }
 
+        /// <summary>
+        /// Unlocks the scrollbar if it was locked
+        /// </summary>
+        private async Task UnlockScrollbar(){
+            if (_addFormRef is not null)
+                await _addFormRef.UnlockScrollAsync();
+            if (_editFormRef is not null)
+                await _editFormRef.UnlockScrollAsync();
+        }
+
         public void Dispose()
         {
             if (QuickMediaService != null)
@@ -73,27 +75,34 @@ namespace WearWare.Components.Pages.QuickMedia
         // ================================================== Add Dialog  ==================================================
         void OnAddDialogShow(int index)
         {
-            _addDialogInsertIndex = index;
-            _showAddDialog = true;
+            _addFormModel = new EditPlayableItemFormModel
+            {
+                FormMode = EditPlayableItemFormMode.Add,
+                FormPage = EditPlayableItemFormPage.QuickMedia,
+                ItemIndex = index,
+            };
         }
 
-        void OnAddDialogCancel()
+        async Task OnAddDialogCancel()
         {
-            _showAddDialog = false;
+            _addFormModel = null;
             StateHasChanged();
+            await UnlockScrollbar();
         }
 
         /// <summary>
         /// Called after we click "Add" and a playable item is picked from the list
         /// </summary>
         /// <param name="args"></param> Tuple of (insertIndex, libItem)
-        async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem) args)
+        async Task OnAddDialogItemChosen(EditPlayableItemFormModel editFormModel)
         {
-            _showAddDialog = false;
+            _addFormModel = null;
+            editFormModel.UpdatedItem.PlayMode = PlayMode.Loop;
+            editFormModel.UpdatedItem.PlayModeValue = 1;
+            editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
+            _editFormModel = editFormModel;
             await InvokeAsync(StateHasChanged);
-            if (_addFormRef is not null)
-                await _addFormRef.UnlockScrollAsync();
-            await OnEditQuickMediaItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
+            await UnlockScrollbar();
         }
 
         // ================================================== Edit Dialog  ==================================================
@@ -103,23 +112,17 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         /// <param name="button"></param>
         /// <param name="index"></param>
-        async Task OnEditQuickMediaItem(PlayableItem item, int index, EditPlayableItemFormMode mode)
+        async Task OnEditQuickMediaItem(PlayableItem item, int index)
         {
-            _editingIndex = index;
-            _originalItem = item;
-            _editingItem = item.Clone();
-            if (mode == EditPlayableItemFormMode.Add)
-            {
-                // In Add mode, the item being passed in is from the library, so we need to modify some properties.
-                // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
-                // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
-                // Set PlayMode to Loop and PlayModeValue to 1 by default...
-                // ... because library items have FOREVER mode by default
-                _editingItem.PlayMode = PlayMode.Loop;
-                _editingItem.PlayModeValue = 1;
-            }
-            _formMode = mode;
-            _showEditDialog = true;
+            var editFormModel = new EditPlayableItemFormModel() {
+                FormMode = EditPlayableItemFormMode.Edit,
+                FormPage = EditPlayableItemFormPage.Playlist,
+                ItemIndex = index,
+                OriginalItem = item,
+                UpdatedItem = item.Clone(),
+            };
+            editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
+            _editFormModel = editFormModel;
             await InvokeAsync(StateHasChanged);
         }
 
@@ -128,16 +131,12 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         /// <param name="args"></param>
         /// <returns></returns>
-        public async Task OnSaveQuickMediaItem((int editingIndex, PlayableItem item, EditPlayableItemFormMode formMode) args)
+        public async Task OnSaveQuickMediaItem(EditPlayableItemFormModel formModel)
         {
-            if (_editingItem is null || _originalItem is null || _editingIndex < 0) return; // ToDo: Error handling
-            await QuickMediaService.OnEditFormSubmit(_editingIndex, _originalItem, args.item, args.formMode);
-            _showEditDialog = false;
-            _editingItem = null;
-            _originalItem = null;
+            _editFormModel = null;
+            await QuickMediaService.OnEditFormSubmit(formModel);
             await InvokeAsync(StateHasChanged);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
         }
 
         /// <summary>
@@ -145,47 +144,12 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         async Task OnEditFormCancel()
         {
-            _showEditDialog = false;
             _showReConvertAllDialog = false;
-            _editingItem = null;
-            _originalItem = null;
+            _editFormModel = null;
             await InvokeAsync(StateHasChanged);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
-
+            await UnlockScrollbar();
         }
 
-        /// <summary>
-        /// Called to reprocess (re-convert) the quickmedia button's item with new options
-        /// </summary>
-        /// <param name="options"></param>
-        /// <param name="relativeBrightness"></param>
-        /// <returns></returns>
-        /// ToDo: Needs to be removed - Reprocessing should be handled by the Service instead.
-        /// Once removed, also remove:
-        /// - OnReprocessAsync parameter from EditPlayableItemForm in this page.
-        /// - OnReprocessAsync parameter from EditPlayableItemForm.razor
-        private async Task<WearWare.Common.ReConvertTaskResult> ReprocessQuickMediaButtonAsync(WearWare.Services.MatrixConfig.LedMatrixOptionsConfig? options, int relativeBrightness)
-        {
-            if (_editingIndex < 0)
-            {
-                return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "No quickmedia selected", ActualBrightness = 0 };
-            }
-            var btn = quickButtons.ElementAtOrDefault(_editingIndex);
-            if (btn?.Item is null)
-            {
-                return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = "Invalid", Message = "Selected quickmedia button has no item", ActualBrightness = 0 };
-            }
-            try
-            {
-                var folder = System.IO.Path.Combine(WearWare.Config.PathConfig.QuickMediaPath, _editingIndex.ToString());
-                return await StreamConverterService.ConvertToStream(folder, btn.Item.SourceFileName, folder, btn.Item.Name, relativeBrightness, options);
-            }
-            catch (Exception ex)
-            {
-                return new WearWare.Common.ReConvertTaskResult { ExitCode = -1, Error = ex.Message, Message = "ReConvert failed", ActualBrightness = 0 };
-            }
-        }
         // ================================================= Delete Item ==================================================
         void DeleteQuickMediaButton(int index)
         {
@@ -230,9 +194,15 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             _showReConvertAllDialog = false;
             await QuickMediaService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
+        }
+
+        private string BuildEditingImageURL(EditPlayableItemFormModel formModel){
+            if (formModel.FormMode == EditPlayableItemFormMode.Edit){
+                return $"/quickmedia-images/{formModel.ItemIndex}/{formModel.OriginalItem.SourceFileName}";
+            }
+            return $"/library-image/{formModel.OriginalItem.SourceFileName}";        
         }
     }
 }

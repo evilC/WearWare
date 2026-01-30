@@ -29,7 +29,7 @@ else
 					}
 					else
 					{
-						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index, EditPlayableItemFormMode.Edit)">Edit</button>
+						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index)">Edit</button>
 					}
                     @if (btn?.Item is not null)
                     {
@@ -45,29 +45,25 @@ else
 	</div>
 }
 
-@if (_showAddDialog)
+@if (_addFormModel is not null)
 {
 	<AddPlayableItemForm 
 		@ref="_addFormRef"
 		LibraryItems="_libraryItems"
-		InsertIndex="_addDialogInsertIndex"
-		PageTitle="@($"QuickMedia Button {_addDialogInsertIndex+1}")"
+		FormModel="_addFormModel"
+		PageTitle="@($"QuickMedia Button {_addFormModel.ItemIndex+1}")"
 		OnCancel="OnAddDialogCancel"
-		OnAdd="OnAddDialogItemChosen" />
+		OnAdd="OnAddDialogItemChosen"
+	/>
 }
 
-@if (_showEditDialog && _editingItem is not null)
+@if (_editFormModel is not null)
 {
     <EditPlayableItemForm
         @ref="_editFormRef"
-        EditingItem="_editingItem"
-        EditingIndex="_editingIndex"
-        ImageUrl="@($"/quickmedia-images/{_editingIndex}/{_editingItem.SourceFileName}")"
+		FormModel="_editFormModel"
         OnCancel="OnEditFormCancel"
-        OnSave="OnSaveQuickMediaItem"
-        OnReprocessAsync="ReprocessQuickMediaButtonAsync"
-		FormPage="EditPlayableItemFormPage.QuickMedia"
-        FormMode="_formMode"
+        OnNewSave="OnSaveQuickMediaItem"
     />
 }
 
@@ -76,8 +72,7 @@ else
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
 			<EditPlayableItemForm @ref="_editFormRef"
-				FormPage="EditPlayableItemFormPage.QuickMedia"
-				FormMode="@_reconvertAllMode"
+				FormModel="_editFormModel"
                 OnReconvertAllOk="OnReconvertAll"
                 OnCancel="OnEditFormCancel"
             />

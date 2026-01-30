@@ -39,6 +39,11 @@ namespace WearWare.Components.Pages.Import
             InvokeAsync(StateHasChanged);
         }
 
+        private async Task UnlockScrollbar(){
+            if (editFormRef is not null)
+                await editFormRef.UnlockScrollAsync();
+        }
+
         public void Dispose()
         {
             ImportService.StateChanged -= OnStateChanged;
@@ -98,8 +103,7 @@ namespace WearWare.Components.Pages.Import
             _editFormModel = null;
             await ImportService.OnEditFormSubmit(formModel);
             // clear state
-            if (editFormRef is not null)
-                await editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 
@@ -109,8 +113,7 @@ namespace WearWare.Components.Pages.Import
         private async Task OnEditFormCancel()
         {
             _editFormModel = null;
-            if (editFormRef is not null)
-                await editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 

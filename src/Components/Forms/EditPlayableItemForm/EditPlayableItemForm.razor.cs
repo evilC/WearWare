@@ -51,12 +51,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// Callback for clicking OK in ReConvert All mode
         /// </summary>
         [Parameter] public EventCallback<(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)> OnReconvertAllOk { get; set; }
-
-        // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
-        // Needs to be left until QuickMedia page is updated to not use it
-        [Parameter] public Func<LedMatrixOptionsConfig, int, Task<ReConvertTaskResult>>? OnReprocessAsync { get; set; }
-        [Parameter] public EditPlayableItemFormPage FormPage { get; set; } = default!;
-        [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
         
         // === Form edited values ===
 

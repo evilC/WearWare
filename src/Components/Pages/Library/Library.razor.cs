@@ -22,6 +22,11 @@ namespace WearWare.Components.Pages.Library
             items = LibraryService.Items;
         }
 
+        private async Task UnlockScrollbar(){
+            if (_editFormRef is not null)
+                await _editFormRef.UnlockScrollAsync();
+        }
+
         private void OnItemsChanged()
         {
             items = LibraryService.Items;
@@ -64,8 +69,7 @@ namespace WearWare.Components.Pages.Library
         private async Task OnEditFormCancel()
         {
             _editFormModel = null;
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
         }
 
         /// <summary>
@@ -76,8 +80,7 @@ namespace WearWare.Components.Pages.Library
         {
             _editFormModel = null;
             await LibraryService.OnEditFormSubmit(formModel);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 
@@ -115,8 +118,7 @@ namespace WearWare.Components.Pages.Library
         {
             _editFormModel = null;
             await LibraryService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
     }

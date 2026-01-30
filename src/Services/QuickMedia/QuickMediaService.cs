@@ -97,14 +97,14 @@ public class QuickMediaService
     /// <param name="updatedItem"></param> The updated item from the form
     /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
     /// </summary>
-    public async Task OnEditFormSubmit(int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
+    public async Task OnEditFormSubmit(EditPlayableItemFormModel formModel)
     {
         IQuickMediaButton button;
-        var opId = await _operationProgress.StartOperation($"{(formMode == EditPlayableItemFormMode.Add ? "Adding" : "Editing")} Quick Media Item");
-        if (formMode == EditPlayableItemFormMode.Edit)
+        var opId = await _operationProgress.StartOperation($"{(formModel.FormMode == EditPlayableItemFormMode.Add ? "Adding" : "Editing")} Quick Media Item");
+        if (formModel.FormMode == EditPlayableItemFormMode.Edit)
         {
-            var tmp = _buttons[itemIndex];
-            if (itemIndex < 0 || itemIndex >= _maxButtons || tmp == null)
+            var tmp = _buttons[formModel.ItemIndex];
+            if (formModel.ItemIndex < 0 || formModel.ItemIndex >= _maxButtons || tmp == null)
             {
                 _operationProgress.CompleteOperation(opId, false, "Error: Quick Media button not found for editing.");
                 return; // ToDo: Error handling
@@ -117,49 +117,56 @@ public class QuickMediaService
             try
             {
                 _operationProgress.ReportProgress(opId, "Creating folder");
-                if (!Directory.Exists(GetQuickMediaPath(itemIndex)))
+                if (!Directory.Exists(GetQuickMediaPath(formModel.ItemIndex)))
                 {
-                    Directory.CreateDirectory(GetQuickMediaPath(itemIndex));
+                    Directory.CreateDirectory(GetQuickMediaPath(formModel.ItemIndex));
                 }
                 _operationProgress.ReportProgress(opId, "Creating button");
-                button = _buttonFactory.Create(_mediaController, itemIndex, updatedItem);
+                button = _buttonFactory.Create(_mediaController, formModel.ItemIndex, formModel.UpdatedItem);
             }
             catch (Exception ex)
             {
                 _operationProgress.CompleteOperation(opId, false, "Error creating Quick Media button: " + ex.Message);
-                _logger.LogError(ex, "{tag} Error adding Quick Media button for file {filename}: {message}", _logTag, updatedItem.SourceFileName, ex.Message);
+                _logger.LogError(ex, "{tag} Error adding Quick Media button for file {filename}: {message}", _logTag, formModel.UpdatedItem.SourceFileName, ex.Message);
                 return;
             }
         }
-        if (formMode == EditPlayableItemFormMode.Add)
+        if (formModel.FormMode == EditPlayableItemFormMode.Add)
         {
             // In ADD mode, the originalItem is from the library, so we need to set the ParentFolder of updatedItem
-            updatedItem.ParentFolder = button.GetRelativePath();
+            formModel.UpdatedItem.ParentFolder = button.GetRelativePath();
         }
 
-        if (originalItem.NeedsReConvert(updatedItem)){
+        if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem)){
             _operationProgress.ReportProgress(opId, "Converting stream");
             // If the updated item needs re-conversion, do it now
-            var readFrom = formMode == EditPlayableItemFormMode.Add
+            var readFrom = formModel.FormMode == EditPlayableItemFormMode.Add
                     ? PathConfig.LibraryPath                // For ADD, source is library folder
                     : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
             var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
-            var result = await _streamConverterService.ConvertToStream(readFrom, updatedItem.SourceFileName, writeTo, updatedItem.Name, updatedItem.RelativeBrightness, updatedItem.MatrixOptions);
+            var result = await _streamConverterService.ConvertToStream(
+                readFrom, 
+                formModel.UpdatedItem.SourceFileName, 
+                writeTo, formModel.UpdatedItem.Name, 
+                formModel.UpdatedItem.RelativeBrightness, 
+                formModel.UpdatedItem.MatrixOptions
+            );
             if (result.ExitCode != 0)
             {
                 // Re-convert failed - show an alert and do not save changes
                 _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
                 return;
             }
+            formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
         }
-        else if (formMode == EditPlayableItemFormMode.Add)
+        else if (formModel.FormMode == EditPlayableItemFormMode.Add)
         {
             try
             {
                 _operationProgress.ReportProgress(opId, "Copying stream file");
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
-                var copyFrom = originalItem.GetStreamFilePath();    // From library folder
-                var copyTo = updatedItem.GetStreamFilePath();       // To quickmedia folder
+                var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To quickmedia folder
                 File.Copy(copyFrom, copyTo, overwrite: true);
             }
             catch
@@ -168,14 +175,14 @@ public class QuickMediaService
                 return;
             }
         }
-        if (formMode == EditPlayableItemFormMode.Add)
+        if (formModel.FormMode == EditPlayableItemFormMode.Add)
         {
             try
             {
                 _operationProgress.ReportProgress(opId, "Copying source file");
                 // Copy source file from library to quickmedia folder
-                var copyFrom = originalItem.GetSourceFilePath();    // From library folder
-                var copyTo = updatedItem.GetSourceFilePath();       // To quickmedia folder
+                var copyFrom = formModel.OriginalItem.GetSourceFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetSourceFilePath();       // To quickmedia folder
                 if (!File.Exists(copyTo)){
                     File.Copy(copyFrom, copyTo, overwrite: true);
                 }
@@ -186,15 +193,15 @@ public class QuickMediaService
                 return;
             }
         }
-        if (formMode == EditPlayableItemFormMode.Add)
+        if (formModel.FormMode == EditPlayableItemFormMode.Add)
         {
             _operationProgress.ReportProgress(opId, "Adding button to collection");
-            _buttons[itemIndex] = button;
+            _buttons[formModel.ItemIndex] = button;
         }
         else
         {
             _operationProgress.ReportProgress(opId, "Updating item metadata");
-            originalItem.UpdateFromClone(updatedItem);
+            formModel.OriginalItem.UpdateFromClone(formModel.UpdatedItem);
         }
         try
         {

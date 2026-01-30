@@ -78,6 +78,16 @@ namespace WearWare.Components.Pages.Playlist
             InvokeAsync(StateHasChanged);
         }
 
+        /// <summary>
+        /// Unlocks the scrollbar if it was locked
+        /// </summary>
+        private async Task UnlockScrollbar(){
+            if (_addFormRef is not null)
+                await _addFormRef.UnlockScrollAsync();
+            if (_editFormRef is not null)
+                await _editFormRef.UnlockScrollAsync();
+        }
+
         public void Dispose()
         {
             PlaylistService.StateChanged -= OnStateChanged;
@@ -125,27 +135,26 @@ namespace WearWare.Components.Pages.Playlist
         {
             _addFormModel = null;
             await InvokeAsync(StateHasChanged);
-            if (_addFormRef is not null)
-                await _addFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
         }
 
         /// <summary>
         /// Called after we click "Add" and a playable item is picked from the list
         /// </summary>
         /// <param name="args"></param> Tuple of (insertIndex, libItem)
-        async Task OnAddDialogItemChosen((int insertIndex, PlayableItem libItem) args)
+        async Task OnAddDialogItemChosen(EditPlayableItemFormModel editFormModel)
         {
-            if (_addFormModel is null || _playlist is null) return;
-            _editFormModel = _addFormModel;
+            if (_addFormModel is null || _playlist is null){
+                Logger.LogError($"{_logTag}: OnAddDialogItemChosen called but _addFormModel or _playlist is null");
+                await UnlockScrollbar();
+                return;
+            }
             _addFormModel = null;
-            _editFormModel.OriginalItem = args.libItem;
-            _editFormModel.UpdatedItem = args.libItem.Clone();
-            _editFormModel.UpdatedItem.PlayMode = PlayMode.Loop;
-            _editFormModel.UpdatedItem.PlayModeValue = 1;
-            _editFormModel.ImageUrl = BuildEditingImageURL(_editFormModel);
+            editFormModel.UpdatedItem.PlayMode = PlayMode.Loop;
+            editFormModel.UpdatedItem.PlayModeValue = 1;
+            editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
+            _editFormModel = editFormModel;
             await InvokeAsync(StateHasChanged);
-            if (_addFormRef is not null)
-                await _addFormRef.UnlockScrollAsync();
             // await OnEditPlaylistItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
         }
 
@@ -154,49 +163,47 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         /// <param name="item"></param> The PlayableItem to edit
         /// <param name="itemIndex"></param> The index of the PlayableItem to edit
-        async Task OnEditPlaylistItem(PlayableItem item, int itemIndex, EditPlayableItemFormMode mode)
+        async Task OnEditPlaylistItem(PlayableItem item, int itemIndex)
         {
             if (_playlist is null){
                 Logger.LogError($"{_logTag}: OnEditPlaylistItem called but _playlist is null");
+                await UnlockScrollbar();
                 return;
             }
             if (_editFormModel is not null && _editFormModel.FormMode != EditPlayableItemFormMode.Add){
                 // It looks like this method was called from Add, but the _editFormModel is not set to Add mode
                 Logger.LogError($"{_logTag}: OnEditPlaylistItem called but _editFormModel.FormMode is not Add");
+                await UnlockScrollbar();
                 return;
             }
-            else if (_editFormModel is null){
-                // Edit was clicked from the Playlist page
-                // Do not set _editFormModel until everything is ready, because form will show as soon as it's set
-                var editFormModel = new EditPlayableItemFormModel() {
-                    FormMode = EditPlayableItemFormMode.Edit,
-                    FormPage = EditPlayableItemFormPage.Playlist,
-                    ItemIndex = itemIndex,
-                    OriginalItem = item,
-                    UpdatedItem = item.Clone(),
-                };
-                editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
-                _editFormModel = editFormModel;
-            }
-            else
-            {
-                // Should never happen
-                Logger.LogError($"{_logTag}: Unexpected state in OnEditPlaylistItem");
-                return;
-            }
+            // Edit was clicked from the Playlist page
+            // Do not set _editFormModel until everything is ready, because form will show as soon as it's set
+            var editFormModel = new EditPlayableItemFormModel() {
+                FormMode = EditPlayableItemFormMode.Edit,
+                FormPage = EditPlayableItemFormPage.Playlist,
+                ItemIndex = itemIndex,
+                OriginalItem = item,
+                UpdatedItem = item.Clone(),
+            };
+            editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
+            _editFormModel = editFormModel;
 
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 
         // ToDo: Update PlaylistService.OnEditFormSubmit to accept EditPlayableItemFormModel
         async Task OnNewSavePlaylistItem(EditPlayableItemFormModel formModel)
         {
-            if (_playlist is null) return;
+            if (_playlist is null){
+                Logger.LogError($"{_logTag}: OnNewSavePlaylistItem called but _playlist is null");
+                await UnlockScrollbar();
+                return;
+            }
             _editFormModel = null;
             await PlaylistService.OnEditFormSubmit(_playlist, formModel);
             await InvokeAsync(StateHasChanged);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
         }
 
         /// <summary>
@@ -211,8 +218,7 @@ namespace WearWare.Components.Pages.Playlist
             // _originalItem = null;
             // Wait for the UI to update and the dialog to be removed
             await InvokeAsync(StateHasChanged);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
         }
 
         // ================================================= Delete Item ==================================================
@@ -436,15 +442,14 @@ namespace WearWare.Components.Pages.Playlist
         {
             _editFormModel = null;
             await PlaylistService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
+            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 
         private string BuildEditingImageURL(EditPlayableItemFormModel formModel){
             if (formModel.FormMode == EditPlayableItemFormMode.Edit){
                 if (_playlist is null){
-                    Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
+                    Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null (We are not editing a Playlist)");
                     return string.Empty;
                 }
                 return $"/playlist-images/{_playlist.Name}/{formModel.OriginalItem.SourceFileName}";

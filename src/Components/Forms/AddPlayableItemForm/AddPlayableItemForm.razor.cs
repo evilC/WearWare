@@ -8,7 +8,9 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
     public partial class AddPlayableItemForm
     {
         [Inject] private IJSRuntime JS { get; set; } = null!;
-        
+        [Inject] private ILogger<AddPlayableItemForm> _logger { get; set; } = null!;
+        private string _logTag = "AddPlayableItemForm";
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
@@ -25,8 +27,7 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         [Parameter] public EditPlayableItemFormModel? FormModel { get; set; }
         [Parameter] public IReadOnlyList<PlayableItem>? LibraryItems { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
-        [Parameter] public EventCallback<(int insertIndex, PlayableItem libItem)> OnAdd { get; set; }
-        [Parameter] public int InsertIndex { get; set; }
+        [Parameter] public EventCallback<EditPlayableItemFormModel> OnAdd { get; set; }
         // ToDo: Remove
         [Parameter] public string PageTitle { get; set; } = "Playlist";
 
@@ -34,9 +35,13 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         private void ItemSelected(PlayableItem libItem)
         {
             if (FormModel == null)
+            {
+                _logger.LogError($"{_logTag}: ItemSelected called but FormModel is null");
                 return;
+            }
             FormModel.OriginalItem = libItem;
-            OnAdd.InvokeAsync((InsertIndex, libItem));
+            FormModel.UpdatedItem = libItem.Clone();
+            OnAdd.InvokeAsync(FormModel);
         }
 
         public async Task UnlockScrollAsync()
