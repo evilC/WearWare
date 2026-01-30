@@ -23,11 +23,7 @@ namespace WearWare.Components.Pages.Import
         
         EditPlayableItemFormModel? _editFormModel = null;
         private List<string>? importFiles;
-        // private string? selectedFileName;
-        // private bool showEditDialog = false;
-        // private string? pendingNewFileName;
 
-        private PlayableItem? _editingItem;
         private EditPlayableItemForm? editFormRef;
         private string inputId = "fileInput_" + Guid.NewGuid().ToString("N");
 
@@ -73,7 +69,7 @@ namespace WearWare.Components.Pages.Import
             );
             _editFormModel = new EditPlayableItemFormModel
             {
-                OriginalFileName = sanitized,
+                OriginalFileName = fileName,
                 NewName = sanitized,
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Import,

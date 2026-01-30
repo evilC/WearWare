@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using WearWare.Common;
 using WearWare.Common.Media;
@@ -60,15 +59,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
         
         // === Form edited values ===
-        private string nameInput = string.Empty;
-        private ImportNameModel importNameModel = new();
-
-        public class ImportNameModel
-        {
-            [Required]
-            [RegularExpression($"^[{FilenameValidator.AllowedPattern}]+$", ErrorMessage = "Name must only contain letters, numbers, dashes, or underscores.")]
-            public string Name { get; set; } = string.Empty;
-        }
 
         // === Form readouts ===
         // What the brightness WOULD BE if we reprocessed now with current matrix options and selected relative brightness

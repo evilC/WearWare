@@ -24,12 +24,12 @@
             @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
             {
                 <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
-                    <EditForm Model="importNameModel">
+                    <EditForm Model="FormModel">
                         <DataAnnotationsValidator />
                         <label class="add-dialog-label">Name
-                            <InputText class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="importNameModel.Name" />
+                            <InputText class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.NewName" />
                         </label>
-                        <ValidationMessage For="@(() => importNameModel.Name)" />
+                        <ValidationMessage For="@(() => FormModel.NewName)" />
                     </EditForm>
                 </div>
             }
