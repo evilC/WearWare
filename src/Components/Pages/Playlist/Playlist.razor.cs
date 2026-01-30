@@ -206,8 +206,8 @@ namespace WearWare.Components.Pages.Playlist
         async Task OnNewSavePlaylistItem(EditPlayableItemFormModel formModel)
         {
             if (_playlist is null) return;
-            await PlaylistService.OnEditFormSubmit(_playlist, formModel.InsertIindex, formModel.OriginalItem, formModel.UpdatedItem, formModel.FormMode);
             _editFormModel = null;
+            await PlaylistService.OnEditFormSubmit(_playlist, formModel.InsertIindex, formModel.OriginalItem, formModel.UpdatedItem, formModel.FormMode);
             await InvokeAsync(StateHasChanged);
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
