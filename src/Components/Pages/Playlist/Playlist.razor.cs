@@ -169,13 +169,15 @@ namespace WearWare.Components.Pages.Playlist
             }
             else if (_editFormModel is null){
                 // Edit was clicked from the Playlist page
-                _editFormModel = new EditPlayableItemFormModel() {
+                // Do not set _editFormModel until everything is ready, because form will show as soon as it's set
+                var editFormModel = new EditPlayableItemFormModel() {
                     FormMode = EditPlayableItemFormMode.Edit,
                     FormPage = EditPlayableItemFormPage.Playlist,
                     InsertIindex = itemIndex,
                     OriginalItem = item,
                 };
-                _editFormModel.ImageUrl = BuildEditingImageURL(_editFormModel);
+                editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
+                _editFormModel = editFormModel;
             }
             else
             {
@@ -456,18 +458,14 @@ namespace WearWare.Components.Pages.Playlist
         // }
 
         private string BuildEditingImageURL(EditPlayableItemFormModel formModel){
-            if (formModel.UpdatedItem is null){
-                Logger.LogError($"{_logTag}: BuildEditingImageURL called but formModel.UpdatedItem is null");
-                return string.Empty;
-            }
             if (formModel.FormMode == EditPlayableItemFormMode.Edit){
                 if (_playlist is null){
                     Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
                     return string.Empty;
                 }
-                return $"/playlist-images/{_playlist.Name}/{formModel.UpdatedItem.SourceFileName}";
+                return $"/playlist-images/{_playlist.Name}/{formModel.OriginalItem.SourceFileName}";
             }
-            return $"/library-image/{formModel.UpdatedItem.SourceFileName}";        
+            return $"/library-image/{formModel.OriginalItem.SourceFileName}";        
         }
     }
 }

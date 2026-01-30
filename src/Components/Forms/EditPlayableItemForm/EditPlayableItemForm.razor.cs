@@ -89,10 +89,10 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             {
                 if (FormModel.FormMode == EditPlayableItemFormMode.Add)
                 {
-                    FormModel.UpdatedItem = FormModel.OriginalItem.Clone();
                     FormModel.UpdatedItem.PlayMode = PlayMode.Loop;
                     FormModel.UpdatedItem.PlayModeValue = 1;
                 }
+                FormModel.UpdatedItem = FormModel.OriginalItem.Clone();
                 CalculateBrightness();
             }
         }
@@ -184,17 +184,9 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         // Recalculates adjusted brightness based on current matrix options and selected relative brightness
         private void CalculateBrightness()
         {
-            int baseBrightness;
-            if (FormModel.UpdatedItem.MatrixOptions == null)
-            {
-                _logger.LogWarning($"{_logTag}: selectedMatrixOptions is null in EditPlayableItemForm; using default brightness of 100");
-                baseBrightness = 100;
-            }
-            else
-            {
-                baseBrightness = FormModel.UpdatedItem.MatrixOptions.Brightness ?? 100;
-            }
-            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, FormModel.UpdatedItem.RelativeBrightness);
+            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(
+                FormModel.UpdatedItem.MatrixOptions.Brightness ?? 100, FormModel.UpdatedItem.RelativeBrightness
+            );
         }
 
         /// <summary>
@@ -291,17 +283,17 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <returns>The page title</returns>
         private string BuildPageTitle()
         {
-            if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
+            if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
-                return $"ReConvert {FormPage} (Matrix Options)";
+                return $"ReConvert {FormModel.FormPage} (Matrix Options)";
             }
-            else if (FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+            else if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                return $"ReConvert {FormPage} (Brightness)";
+                return $"ReConvert {FormModel.FormPage} (Brightness)";
             }
-            var title = FormPage == EditPlayableItemFormPage.Import ? "" : $"{FormMode.ToString()} ";
-            title += FormPage.ToString();
-            if (FormPage == EditPlayableItemFormPage.QuickMedia)
+            var title = FormModel.FormPage == EditPlayableItemFormPage.Import ? "" : $"{FormModel.FormMode} ";
+            title += FormModel.FormPage.ToString();
+            if (FormModel.FormPage == EditPlayableItemFormPage.QuickMedia)
             {
                 title += $" B{EditingIndex + 1}";
             }
@@ -318,7 +310,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <returns>The title for the matrix options form</returns>
         private string BuildMatrixOptionsTitle()
         {
-            return FormPage switch
+            return FormModel.FormPage switch
             {
                 EditPlayableItemFormPage.Library => "Library Item Matrix Options",
                 EditPlayableItemFormPage.Playlist => "Playlist Item Matrix Options",
