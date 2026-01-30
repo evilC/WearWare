@@ -13,9 +13,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         // In Add mode, the index to insert the new item at
         // Or, in Add or Edit mode for QuickMedia items, the button number
         public int ItemIndex { get; set; } = default;
-        // In Add mode, the library item
-        // ToDo: Do we need both SelectedLibraryItem and OriginalItem?
-        // public PlayableItem SelectedLibraryItem { get; set; } = default!;
         // The original item being edited
         public string ImageUrl { get; set; } = default!;
         public PlayableItem OriginalItem { get; set; } = default!;
