@@ -35,7 +35,7 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         {
             if (FormModel == null)
                 return;
-            FormModel.SelectedLibraryItem = libItem;
+            FormModel.OriginalItem = libItem;
             OnAdd.InvokeAsync((InsertIndex, libItem));
         }
 

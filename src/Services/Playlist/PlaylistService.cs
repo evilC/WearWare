@@ -254,6 +254,7 @@ namespace WearWare.Services.Playlist
         /// <param name="updatedItem"></param> The updated item from the form
         /// <param name="formMode"></param> The mode of the form (ADD or EDIT)
         /// </summary>
+        // ToDo: Refactor this method to use EditPlayableItemFormModel
         public async Task OnEditFormSubmit(PlaylistItems playlist, int itemIndex, PlayableItem originalItem, PlayableItem updatedItem, EditPlayableItemFormMode formMode)
         {
             // ToDo: Try / catch needed in here

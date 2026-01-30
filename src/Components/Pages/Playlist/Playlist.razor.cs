@@ -134,7 +134,7 @@ namespace WearWare.Components.Pages.Playlist
             {
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Playlist,
-                InsertIindex = insertIndex
+                InsertIindex = insertIndex,
             };
         }
 
@@ -158,10 +158,15 @@ namespace WearWare.Components.Pages.Playlist
             if (_addFormModel is null || _playlist is null) return;
             _editFormModel = _addFormModel;
             _addFormModel = null;
+            _editFormModel.OriginalItem = args.libItem;
+            _editFormModel.UpdatedItem = args.libItem.Clone();
+            _editFormModel.UpdatedItem.PlayMode = PlayMode.Loop;
+            _editFormModel.UpdatedItem.PlayModeValue = 1;
+            _editFormModel.ImageUrl = BuildEditingImageURL(_editFormModel);
             await InvokeAsync(StateHasChanged);
             if (_addFormRef is not null)
                 await _addFormRef.UnlockScrollAsync();
-            await OnEditPlaylistItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
+            // await OnEditPlaylistItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
         }
 
         /// <summary>
@@ -175,21 +180,44 @@ namespace WearWare.Components.Pages.Playlist
                 Logger.LogError($"{_logTag}: OnEditPlaylistItem called but _playlist is null");
                 return;
             }
-            _originalItem = item;   // Store the original item for comparison later
-            _editingItem = item.Clone();
-            if (mode == EditPlayableItemFormMode.Add)
-            {
-                // In Add mode, the item being passed in is from the library, so we need to modify some properties.
-                // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
-                // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
-                // Set PlayMode to Loop and PlayModeValue to 1 by default...
-                // ... because library items have FOREVER mode by default
-                _editingItem.PlayMode = PlayMode.Loop;
-                _editingItem.PlayModeValue = 1;
+            if (_editFormModel is not null && _editFormModel.FormMode != EditPlayableItemFormMode.Add){
+                // It looks like this method was called from Add, but the _editFormModel is not set to Add mode
+                Logger.LogError($"{_logTag}: OnEditPlaylistItem called but _editFormModel.FormMode is not Add");
+                return;
             }
-            _editingIndex = itemIndex;
-            _formMode = mode;
-            _showEditDialog = true;
+            else if (_editFormModel is null){
+                // Edit was clicked from the Playlist page
+                _editFormModel = new EditPlayableItemFormModel() {
+                    FormMode = EditPlayableItemFormMode.Edit,
+                    FormPage = EditPlayableItemFormPage.Playlist,
+                    InsertIindex = itemIndex,
+                    OriginalItem = item,
+                    UpdatedItem = item.Clone()
+                };
+                _editFormModel.ImageUrl = BuildEditingImageURL(_editFormModel);
+            }
+            else
+            {
+                // Should never happen
+                Logger.LogError($"{_logTag}: Unexpected state in OnEditPlaylistItem");
+                return;
+            }
+
+            // _originalItem = item;   // Store the original item for comparison later
+            // _editingItem = item.Clone();
+            // if (mode == EditPlayableItemFormMode.Add)
+            // {
+            //     // In Add mode, the item being passed in is from the library, so we need to modify some properties.
+            //     // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
+            //     // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
+            //     // Set PlayMode to Loop and PlayModeValue to 1 by default...
+            //     // ... because library items have FOREVER mode by default
+            //     _editingItem.PlayMode = PlayMode.Loop;
+            //     _editingItem.PlayModeValue = 1;
+            // }
+            // _editingIndex = itemIndex;
+            // _formMode = mode;
+            // _showEditDialog = true;
             await InvokeAsync(StateHasChanged);
         }
 
@@ -205,6 +233,17 @@ namespace WearWare.Components.Pages.Playlist
             _showEditDialog = false;
             _editingItem = null;
             _originalItem = null;
+            await InvokeAsync(StateHasChanged);
+            if (_editFormRef is not null)
+                await _editFormRef.UnlockScrollAsync();
+        }
+
+        // ToDo: Update PlaylistService.OnEditFormSubmit to accept EditPlayableItemFormModel
+        async Task OnNewSavePlaylistItem(EditPlayableItemFormModel formModel)
+        {
+            if (_playlist is null) return;
+            await PlaylistService.OnEditFormSubmit(_playlist, formModel.InsertIindex, formModel.OriginalItem, formModel.UpdatedItem, formModel.FormMode);
+            _editFormModel = null;
             await InvokeAsync(StateHasChanged);
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
@@ -436,19 +475,34 @@ namespace WearWare.Components.Pages.Playlist
         /// Images on the Edit form in ADD mode come from the library, in EDIT mode come from the folder of the playlist
         /// </summary>
         /// <returns>The path to the URL for the editing image</returns>
-        private string BuildEditingImageURL(){
-            if (_editingItem is null){
-                Logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
+        // private string BuildEditingImageURL(){
+        //     if (_editingItem is null){
+        //         Logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
+        //         return string.Empty;
+        //     }
+        //     if (_formMode == EditPlayableItemFormMode.Edit){
+        //         if (_playlist is null){
+        //             Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
+        //             return string.Empty;
+        //         }
+        //         return $"/playlist-images/{_playlist.Name}/{_editingItem.SourceFileName}";
+        //     }
+        //     return $"/library-image/{_editingItem.SourceFileName}";        
+        // }
+
+        private string BuildEditingImageURL(EditPlayableItemFormModel formModel){
+            if (formModel.UpdatedItem is null){
+                Logger.LogError($"{_logTag}: BuildEditingImageURL called but formModel.UpdatedItem is null");
                 return string.Empty;
             }
-            if (_formMode == EditPlayableItemFormMode.Edit){
+            if (formModel.FormMode == EditPlayableItemFormMode.Edit){
                 if (_playlist is null){
                     Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
                     return string.Empty;
                 }
-                return $"/playlist-images/{_playlist.Name}/{_editingItem.SourceFileName}";
+                return $"/playlist-images/{_playlist.Name}/{formModel.UpdatedItem.SourceFileName}";
             }
-            return $"/library-image/{_editingItem.SourceFileName}";        
+            return $"/library-image/{formModel.UpdatedItem.SourceFileName}";        
         }
     }
 }

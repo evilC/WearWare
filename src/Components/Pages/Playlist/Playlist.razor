@@ -97,25 +97,29 @@
 }
 
 @* Edit Dialog:*@
-@if (_showEditDialog && _editingItem is not null)
+@if (_editFormModel is not null)
 {
     <EditPlayableItemForm
         @ref="_editFormRef"
+        FormModel="_editFormModel"
+        OnNewSave="OnNewSavePlaylistItem"
+        OnCancel="OnEditFormCancel"
+
         EditingItem="_editingItem"
         EditingIndex="_editingIndex"
-        ImageUrl="@($"{BuildEditingImageURL()}")"
-        OnCancel="OnEditFormCancel"
         OnSave="OnSavePlaylistItem"
         FormPage="EditPlayableItemFormPage.Playlist"
         FormMode="_formMode"
     />
 }
 
+@* ToDo: should be able to get rid of this. In ReConvert all mode, we will still be using _editFormModel *@
 @if (_showReConvertAllDialog)
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
             <EditPlayableItemForm @ref="_editFormRef"
+                FormModel="_editFormModel"
                 FormPage="EditPlayableItemFormPage.Playlist"
                 FormMode="@_reconvertAllMode"
                 OnReconvertAllOk="OnReconvertAll"

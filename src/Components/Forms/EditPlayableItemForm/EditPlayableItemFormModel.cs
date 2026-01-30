@@ -15,8 +15,9 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         public int InsertIindex { get; set; } = default;
         // In Add mode, the library item
         // ToDo: Do we need both SelectedLibraryItem and OriginalItem?
-        public PlayableItem SelectedLibraryItem { get; set; } = default!;
+        // public PlayableItem SelectedLibraryItem { get; set; } = default!;
         // The original item being edited
+        public string ImageUrl { get; set; } = default!;
         public PlayableItem OriginalItem { get; set; } = default!;
         // The new or updated item
         public PlayableItem UpdatedItem { get; set; } = default!;

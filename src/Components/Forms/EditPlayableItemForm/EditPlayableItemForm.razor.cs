@@ -18,6 +18,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         [Inject] private IJSRuntime JS { get; set; } = null!;
         [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
 
+        [Parameter] public EditPlayableItemFormModel FormModel { get; set; } = default!;
         private readonly string _logTag = "EditPlayableItemForm";
         /// <summary>
         /// The PlayableItem being edited.
@@ -44,6 +45,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// Callback for clicking OK in regular Add / Edit mode
         /// </summary>
         [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode)> OnSave { get; set; }
+        [Parameter] public EventCallback<EditPlayableItemFormModel> OnNewSave { get; set; }
         /// <summary>
         /// Callback for clicking OK in ReConvert All mode
         /// </summary>
@@ -225,13 +227,19 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// </summary>
         private void SaveEdit()
         {
-            // If we're in a ReConvertAll mode, call the dedicated callback instead
-            if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+            if (FormModel is null)
             {
-                OnReconvertAllOk.InvokeAsync((FormMode, selectedRelativeBrightness, selectedMatrixOptions));
+                _logger.LogError($"{_logTag}: Cannot save PlayableItem; FormModel is null");
                 return;
             }
-
+            // If we're in a ReConvertAll mode, call the dedicated callback instead
+            if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+            {
+                OnReconvertAllOk.InvokeAsync((FormModel.FormMode, selectedRelativeBrightness, selectedMatrixOptions));
+                return;
+            }
+            OnNewSave.InvokeAsync(FormModel);
+            /*
             if (EditingItem == null)
             {
                 _logger.LogError($"{_logTag}: Cannot save PlayableItem; EditingItem is null");
@@ -269,6 +277,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             EditingItem.CurrentBrightness = adjustedBrightness;
             EditingItem.MatrixOptions = selectedMatrixOptions;
             OnSave.InvokeAsync((EditingIndex, EditingItem, FormMode));
+            */
         }
 
         /// <summary>
