@@ -149,23 +149,23 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <summary>
         /// Called when the user changes the Play Mode radio buttons
         /// </summary>
-        private void OnSelectPlayMode(int value)
-        {
-            selectedPlayMode = value;
-            if (selectedPlayMode == (int)PlayMode.Forever)
-            {
-                selectedPlayModeValue = 1;
-            }
-        }
+        // private void OnSelectPlayMode(int value)
+        // {
+        //     selectedPlayMode = value;
+        //     if (selectedPlayMode == (int)PlayMode.Forever)
+        //     {
+        //         selectedPlayModeValue = 1;
+        //     }
+        // }
 
         /// <summary>
         /// Called when the user changes the Play Mode Value input
         /// </summary>
-        private void OnSelectPlayModeValue(ChangeEventArgs e)
-        {
-            if (int.TryParse(e.Value?.ToString(), out var v))
-                selectedPlayModeValue = v;
-        }
+        // private void OnSelectPlayModeValue(ChangeEventArgs e)
+        // {
+        //     if (int.TryParse(e.Value?.ToString(), out var v))
+        //         selectedPlayModeValue = v;
+        // }
 
         /// <summary>
         /// Setter is called when the Relative Brightness input is changed
@@ -235,7 +235,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             // If we're in a ReConvertAll mode, call the dedicated callback instead
             if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                OnReconvertAllOk.InvokeAsync((FormModel.FormMode, selectedRelativeBrightness, selectedMatrixOptions));
+                OnReconvertAllOk.InvokeAsync((FormModel.FormMode, FormModel.UpdatedItem.RelativeBrightness, selectedMatrixOptions));
                 return;
             }
             OnNewSave.InvokeAsync(FormModel);

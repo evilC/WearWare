@@ -43,14 +43,18 @@
                             {
                                 <label class="add-dialog-radio-label">
                                     <span class="add-dialog-mode-text">@playMode.ToString()</span>
-                                    <input type="radio" name="editPlayMode" value="@((int)playMode)" @onchange="() => OnSelectPlayMode((int)playMode)" checked="@(selectedPlayMode == (int)playMode)" class="add-dialog-radio" />
+                                    <input type="radio" name="editPlayMode" value="@((int)playMode)" @onchange="() => FormModel.UpdatedItem.PlayMode = playMode" checked="@(selectedPlayMode == (int)playMode)" class="add-dialog-radio" />
                                 </label>
                             }
                         </div>
                     </div>
                     <div class="add-dialog-section">
                         <label class="add-dialog-label">Value</label>
-                        <input type="number" class="add-dialog-number" value="@selectedPlayModeValue" min="1" max="100" disabled="@(selectedPlayMode == (int)PlayMode.Forever)" @onchange="OnSelectPlayModeValue" />
+                        <input type="number" class="add-dialog-number"
+                            value="@FormModel.UpdatedItem.PlayModeValue" min="1" max="100"
+                            disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)"
+                            @onchange="e => FormModel.UpdatedItem.PlayModeValue = int.TryParse(Convert.ToString(e.Value), out var v) ? v : 1"
+                        />
                     </div>
                 </div>
             }

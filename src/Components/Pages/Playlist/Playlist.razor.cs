@@ -254,10 +254,11 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         async Task OnEditFormCancel()
         {
-            _showEditDialog = false;
-            _editingItem = null;
-            _showReConvertAllDialog = false;
-            _originalItem = null;
+            _editFormModel = null;
+            // _showEditDialog = false;
+            // _editingItem = null;
+            // _showReConvertAllDialog = false;
+            // _originalItem = null;
             // Wait for the UI to update and the dialog to be removed
             await InvokeAsync(StateHasChanged);
             if (_editFormRef is not null)
