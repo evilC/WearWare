@@ -45,6 +45,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <summary>
         /// Callback for clicking OK in regular Add / Edit mode
         /// </summary>
+        // ToDo: Delete once Import and QuickMedia uses OnNewSave
         [Parameter] public EventCallback<(int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode)> OnSave { get; set; }
         [Parameter] public EventCallback<EditPlayableItemFormModel> OnNewSave { get; set; }
         /// <summary>

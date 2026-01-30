@@ -41,26 +41,8 @@ namespace WearWare.Components.Pages.Playlist
 
         private string? activePlaylist;
 
-        /// <summary> Whether to show the Edit Item dialog </summary>
-        private bool _showEditDialog = false;
-
-        /// <summary> The PlayableItem being edited in the Edit dialog </summary>
-        private PlayableItem? _editingItem;
-
-        /// <summary> A copy of the original PlayableItem (pre-editing) </summary>
-        private PlayableItem? _originalItem;
-
         /// <summary> Reference to the EditPlayableItemForm component </summary>
         private EditPlayableItemForm? _editFormRef;
-
-        /// <summary> The index of the PlayableItem being edited in the Edit dialog </summary>
-        private int _editingIndex;
-
-        /// <summary>
-        /// The mode of the EditPlayableItemForm
-        /// Not used by the form itself, but when it returns we can know if we were adding or editing
-        /// </summary>
-        private EditPlayableItemFormMode _formMode;
 
         private bool _showReConvertAllDialog = false;
         private EditPlayableItemFormMode _reconvertAllMode;
@@ -218,23 +200,6 @@ namespace WearWare.Components.Pages.Playlist
             // _formMode = mode;
             // _showEditDialog = true;
             await InvokeAsync(StateHasChanged);
-        }
-
-        /// <summary>
-        /// Called when Save is clicked in the EditPlayableItemForm
-        /// </summary>
-        /// <param name="args"></param> Tuple of (editingIndex, updatedItem, formMode)
-        async Task OnSavePlaylistItem((int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode) args)
-        {
-            if (_playlist is null || _editingItem is null || _originalItem is null || _editingIndex < 0) return; // ToDo: Error handling
-            await PlaylistService.OnEditFormSubmit(_playlist, args.editingIndex, _originalItem, args.updatedItem, args.formMode);
-
-            _showEditDialog = false;
-            _editingItem = null;
-            _originalItem = null;
-            await InvokeAsync(StateHasChanged);
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
         }
 
         // ToDo: Update PlaylistService.OnEditFormSubmit to accept EditPlayableItemFormModel
