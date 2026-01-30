@@ -98,7 +98,7 @@ namespace WearWare.Services.Import
                 _operationProgress.CompleteOperation(opId, false, "Import failed - unknown media type.");
                 return;
             }
-            formModel.UpdatedItem.Name = FilenameValidator.Sanitize(formModel.NewName);
+            formModel.UpdatedItem.Name = FilenameValidator.Sanitize(formModel.UpdatedItem.Name);
             _operationProgress.ReportProgress(opId, "Converting stream...");
             var result = await _streamConverterService.ConvertToStream(
                 PathConfig.IncomingPath, 

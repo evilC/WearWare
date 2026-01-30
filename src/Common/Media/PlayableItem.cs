@@ -1,11 +1,14 @@
-using Iot.Device.ExplorerHat;
+using System.ComponentModel.DataAnnotations;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
+using WearWare.Utils;
 
 namespace WearWare.Common.Media
 {
     public class PlayableItem
     {
+        [Required]
+        [RegularExpression($"^[{FilenameValidator.AllowedPattern}]+$", ErrorMessage = "Name must only contain letters, numbers, dashes, or underscores.")]
         public string Name { get; set; }
         public MediaType MediaType { get; init; }
         public string SourceFileName { get; init; }

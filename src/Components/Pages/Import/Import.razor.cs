@@ -72,15 +72,16 @@ namespace WearWare.Components.Pages.Import
                 actual,
                 MatrixConfigService.CloneOptions()
             );
-            _editFormModel = new EditPlayableItemFormModel
+            var editFormModel = new EditPlayableItemFormModel
             {
                 OriginalFileName = fileName,
-                NewName = sanitized,
                 ImageUrl = $"/incoming-media/{fileName}",
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Import,
                 UpdatedItem = item,
             };
+            editFormModel.UpdatedItem.Name = sanitized;
+            _editFormModel = editFormModel;
             // pendingNewFileName = sanitized;
             // showEditDialog = true;
             // ToDo: Why is this called?

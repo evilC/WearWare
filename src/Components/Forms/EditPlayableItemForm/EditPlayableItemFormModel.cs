@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
 using WearWare.Common.Media;
-using WearWare.Utils;
 
 namespace WearWare.Components.Forms.EditPlayableItemForm
 {
@@ -8,10 +6,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
     {
         // When importing, this will be the original file name (Including extension)
         public string OriginalFileName { get; set; } = default!;
-        // When importing, this will be the new name (excluding extension)
-        [Required]
-        [RegularExpression($"^[{FilenameValidator.AllowedPattern}]+$", ErrorMessage = "Name must only contain letters, numbers, dashes, or underscores.")]
-        public string NewName { get; set; } = default!;
         // The mode of the EditPlayableItemForm
         public EditPlayableItemFormMode FormMode { get; set; } = default;
         // The page that launched the EditPlayableItemForm
