@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using WearWare.Common;
 using WearWare.Common.Media;
@@ -77,9 +78,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         }
 
         // === Form readouts ===
-        // Holds the current brightness that the stream was last converted with
-        private int streamCurrentBrightness;
-
         // What the brightness WOULD BE if we reprocessed now with current matrix options and selected relative brightness
         private int adjustedBrightness;
 
@@ -87,6 +85,27 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         // True when the Matrix Options form is visible
         private bool showMatrixOptionsForm = false;
 
+        /// <summary>
+        /// Called when the form opens
+        /// </summary>
+        // ToDo: Whould we be using the Async version of this?
+        protected override void OnParametersSet()
+        {
+            // Sync FormModel.UpdatedItem properties to local selected* variables
+            if (FormModel != null)
+            {
+                if (FormModel.FormMode == EditPlayableItemFormMode.Add)
+                {
+                    FormModel.UpdatedItem = FormModel.OriginalItem.Clone();
+                    FormModel.UpdatedItem.PlayMode = PlayMode.Loop;
+                    FormModel.UpdatedItem.PlayModeValue = 1;
+                }
+                CalculateBrightness();
+            }
+        }
+
+        // Old way of setting variables when form is opened
+        // Remove
         protected override void OnInitialized()
         {
             if (EditingItem == null)
@@ -102,7 +121,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                     selectedMatrixOptions = MatrixConfigService.CloneOptions();
                     nameInput = string.Empty;
                     importNameModel.Name = string.Empty;
-                    streamCurrentBrightness = selectedMatrixOptions?.Brightness ?? 100;
+                    // streamCurrentBrightness = selectedMatrixOptions?.Brightness ?? 100;
                     CalculateBrightness();
                     return;
                 }
@@ -115,7 +134,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             selectedMatrixOptions = EditingItem.MatrixOptions.Clone();
             nameInput = EditingItem.Name;
             importNameModel.Name = nameInput;
-            streamCurrentBrightness = EditingItem.CurrentBrightness;
+            // streamCurrentBrightness = EditingItem.CurrentBrightness;
             CalculateBrightness();
         }
 
@@ -188,16 +207,16 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         private void CalculateBrightness()
         {
             int baseBrightness;
-            if (selectedMatrixOptions == null)
+            if (FormModel.UpdatedItem.MatrixOptions == null)
             {
                 _logger.LogWarning($"{_logTag}: selectedMatrixOptions is null in EditPlayableItemForm; using default brightness of 100");
                 baseBrightness = 100;
             }
             else
             {
-                baseBrightness = selectedMatrixOptions.Brightness ?? 100;
+                baseBrightness = FormModel.UpdatedItem.MatrixOptions.Brightness ?? 100;
             }
-            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, selectedRelativeBrightness);
+            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, FormModel.UpdatedItem.RelativeBrightness);
         }
 
         /// <summary>

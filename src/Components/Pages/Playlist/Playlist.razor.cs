@@ -192,7 +192,6 @@ namespace WearWare.Components.Pages.Playlist
                     FormPage = EditPlayableItemFormPage.Playlist,
                     InsertIindex = itemIndex,
                     OriginalItem = item,
-                    UpdatedItem = item.Clone()
                 };
                 _editFormModel.ImageUrl = BuildEditingImageURL(_editFormModel);
             }
