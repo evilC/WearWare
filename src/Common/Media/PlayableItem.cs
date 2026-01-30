@@ -1,3 +1,4 @@
+using Iot.Device.ExplorerHat;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 
@@ -47,6 +48,9 @@ namespace WearWare.Common.Media
             return Path.Combine(PathConfig.Root, ParentFolder, SourceFileName);
         }
 
+        /// <summary>
+        /// Creates a deep clone of this PlayableItem.
+        /// </summary>
         public PlayableItem Clone()
         {
             return new PlayableItem(
@@ -59,6 +63,24 @@ namespace WearWare.Common.Media
                 RelativeBrightness,
                 CurrentBrightness,
                 MatrixOptions.Clone()
+            );
+        }
+
+        /// <summary>
+        /// Creates a dummy PlayableItem for use in ReConvertAll operations.
+        /// </summary>
+        public static PlayableItem CreateDummyItem(LedMatrixOptionsConfig options)
+        {
+            return new PlayableItem(
+                "dummy",
+                "",
+                MediaType.ANIMATION,
+                "",
+                PlayMode.Duration,
+                1,
+                100,
+                100,
+                options
             );
         }
 

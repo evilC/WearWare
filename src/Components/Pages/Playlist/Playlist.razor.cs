@@ -409,7 +409,7 @@ namespace WearWare.Components.Pages.Playlist
             {
                 FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
                 FormPage = EditPlayableItemFormPage.Playlist,
-                UpdatedItem = new PlayableItem("dummy", "", MediaType.ANIMATION, "", PlayMode.Duration, 1, 100, 100, _matrixConfigService.CloneOptions()),
+                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
             };
         }
 
@@ -424,7 +424,7 @@ namespace WearWare.Components.Pages.Playlist
             {
                 FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
                 FormPage = EditPlayableItemFormPage.Playlist,
-                UpdatedItem = new PlayableItem("dummy", "", MediaType.ANIMATION, "", PlayMode.Duration, 1, 100, 100, _matrixConfigService.CloneOptions()),
+                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
             };
         }
 

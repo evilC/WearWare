@@ -13,9 +13,13 @@ namespace WearWare.Components.Pages.Library
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         private EditPlayableItemFormModel? _editFormModel;
         private EditPlayableItemForm? _editFormRef;
-        private bool _showReConvertAllDialog = false;
-        private EditPlayableItemFormMode _reconvertAllMode;
         private IReadOnlyList<PlayableItem>? items;
+        private readonly MatrixConfigService _matrixConfigService;
+
+        public Library(MatrixConfigService matrixConfigService)
+        {
+            _matrixConfigService = matrixConfigService;
+        }
 
         protected override void OnInitialized()
         {
@@ -88,8 +92,12 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         private void ShowReConvertAllGlobal()
         {
-            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
-            _showReConvertAllDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
+                FormPage = EditPlayableItemFormPage.Library,
+                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
+            };
         }
 
         /// <summary>
@@ -97,8 +105,12 @@ namespace WearWare.Components.Pages.Library
         /// </summary>
         private void ShowReConvertAllEmbedded()
         {
-            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
-            _showReConvertAllDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
+                FormPage = EditPlayableItemFormPage.Library,
+                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
+            };
         }
 
         /// <summary>
@@ -107,7 +119,7 @@ namespace WearWare.Components.Pages.Library
         /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
         private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
         {
-            _showReConvertAllDialog = false;
+            _editFormModel = null;
             await LibraryService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
