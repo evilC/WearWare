@@ -92,7 +92,7 @@ namespace WearWare.Services.Import
         public async Task OnEditFormSubmit(EditPlayableItemFormModel formModel)
         {
             var opId = await _operationProgress.StartOperation("Importing Item");
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(formModel.OriginalFileName));
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(formModel.UpdatedItem.SourceFileName));
             if (mediaType == null)
             {
                 _operationProgress.CompleteOperation(opId, false, "Import failed - unknown media type.");
@@ -102,7 +102,7 @@ namespace WearWare.Services.Import
             _operationProgress.ReportProgress(opId, "Converting stream...");
             var result = await _streamConverterService.ConvertToStream(
                 PathConfig.IncomingPath, 
-                formModel.OriginalFileName, 
+                formModel.UpdatedItem.SourceFileName, 
                 PathConfig.LibraryPath, 
                 formModel.UpdatedItem.Name, 
                 formModel.UpdatedItem.RelativeBrightness, 
@@ -115,10 +115,10 @@ namespace WearWare.Services.Import
             }
             _operationProgress.ReportProgress(opId, "Copying original file...");
             // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
-            var ext = Path.GetExtension(formModel.OriginalFileName);
+            var ext = Path.GetExtension(formModel.UpdatedItem.SourceFileName);
             var destPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.UpdatedItem.Name}{ext}");
             try {
-                var sourcePath = Path.Combine(PathConfig.IncomingPath, formModel.OriginalFileName);
+                var sourcePath = Path.Combine(PathConfig.IncomingPath, formModel.UpdatedItem.SourceFileName);
                 if (File.Exists(destPath))
                 {
                     File.Delete(destPath);

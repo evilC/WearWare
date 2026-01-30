@@ -4,8 +4,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
 {
     public class EditPlayableItemFormModel
     {
-        // When importing, this will be the original file name (Including extension)
-        public string OriginalFileName { get; set; } = default!;
         // The mode of the EditPlayableItemForm
         public EditPlayableItemFormMode FormMode { get; set; } = default;
         // The page that launched the EditPlayableItemForm

@@ -74,7 +74,6 @@ namespace WearWare.Components.Pages.Import
             );
             var editFormModel = new EditPlayableItemFormModel
             {
-                OriginalFileName = fileName,
                 ImageUrl = $"/incoming-media/{fileName}",
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Import,
