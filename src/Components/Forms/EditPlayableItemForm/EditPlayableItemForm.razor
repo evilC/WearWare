@@ -78,7 +78,12 @@
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
                 <div class="add-dialog-row">
                     <label class="add-dialog-label">Relative Brightness (%)
-                        <InputNumber class="add-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" min="1" max="100" @onchange="e => CalculateBrightness()" />
+                        <InputNumberOnInput
+                            class="add-dialog-number" 
+                            @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" 
+                            min="1" max="100"
+                            @oninput="e => CalculateBrightness()"
+                        />
                     </label>
                 </div>
             }
