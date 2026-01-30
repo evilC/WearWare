@@ -43,7 +43,7 @@ else
             <EditPlayableItemForm @ref="_editFormRef"
                 EditingItem="_editingClone"
                 EditingIndex="0"
-                ItemType="PlayableItemType.Library"
+                FormPage="EditPlayableItemFormPage.Library"
                 FormMode="EditPlayableItemFormMode.Edit"
                 ImageUrl="@($"/library-image/{_originalItem.SourceFileName}")"
                 OnSave="OnSaveLibraryItem"
@@ -58,7 +58,7 @@ else
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
             <EditPlayableItemForm @ref="_editFormRef"
-                ItemType="PlayableItemType.Library"
+                FormPage="EditPlayableItemFormPage.Library"
                 FormMode="@_reconvertAllMode"
                 OnReconvertAllOk="OnReconvertAll"
                 OnCancel="OnEditFormCancel"

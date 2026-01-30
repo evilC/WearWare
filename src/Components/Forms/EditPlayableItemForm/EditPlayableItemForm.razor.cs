@@ -52,7 +52,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         // ToDo: Remove this and do convert on save instead of immediate convert on ReConvert
         // Needs to be left until QuickMedia page is updated to not use it
         [Parameter] public Func<LedMatrixOptionsConfig, int, Task<ReConvertTaskResult>>? OnReprocessAsync { get; set; }
-        [Parameter] public PlayableItemType ItemType { get; set; } = default!;
+        [Parameter] public EditPlayableItemFormPage FormPage { get; set; } = default!;
         [Parameter] public EditPlayableItemFormMode FormMode { get; set; } = EditPlayableItemFormMode.Edit;
         
         private Dictionary<string, int> playModeOptions = new()
@@ -251,7 +251,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             }
             // Copy mutable properties into the item to send back. For Import flows, Name is init-only,
             // so construct a new PlayableItem with the edited name.
-            if (ItemType == PlayableItemType.Import)
+            if (FormPage == EditPlayableItemFormPage.Import)
             {
                 // Validate name via importNameModel; sanitize before creating PlayableItem
                 var sanitized = FilenameValidator.Sanitize(importNameModel.Name ?? string.Empty);
@@ -294,15 +294,15 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         {
             if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
-                return $"ReConvert {ItemType} (Matrix Options)";
+                return $"ReConvert {FormPage} (Matrix Options)";
             }
             else if (FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                return $"ReConvert {ItemType} (Brightness)";
+                return $"ReConvert {FormPage} (Brightness)";
             }
-            var title = ItemType == PlayableItemType.Import ? "" : $"{FormMode.ToString()} ";
-            title += ItemType.ToString();
-            if (ItemType == PlayableItemType.QuickMedia)
+            var title = FormPage == EditPlayableItemFormPage.Import ? "" : $"{FormMode.ToString()} ";
+            title += FormPage.ToString();
+            if (FormPage == EditPlayableItemFormPage.QuickMedia)
             {
                 title += $" B{EditingIndex + 1}";
             }
@@ -319,11 +319,11 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <returns>The title for the matrix options form</returns>
         private string BuildMatrixOptionsTitle()
         {
-            return ItemType switch
+            return FormPage switch
             {
-                PlayableItemType.Library => "Library Item Matrix Options",
-                PlayableItemType.Playlist => "Playlist Item Matrix Options",
-                PlayableItemType.QuickMedia => $"Button {EditingIndex + 1} Matrix Options",
+                EditPlayableItemFormPage.Library => "Library Item Matrix Options",
+                EditPlayableItemFormPage.Playlist => "Playlist Item Matrix Options",
+                EditPlayableItemFormPage.QuickMedia => $"Button {EditingIndex + 1} Matrix Options",
                 _ => "Matrix Options"
             };
         }

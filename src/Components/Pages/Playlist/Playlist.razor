@@ -106,7 +106,7 @@
         ImageUrl="@($"{BuildEditingImageURL()}")"
         OnCancel="OnEditFormCancel"
         OnSave="OnSavePlaylistItem"
-        ItemType="PlayableItemType.Playlist"
+        FormPage="EditPlayableItemFormPage.Playlist"
         FormMode="_formMode"
     />
 }
@@ -116,7 +116,7 @@
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
             <EditPlayableItemForm @ref="_editFormRef"
-                ItemType="PlayableItemType.Playlist"
+                FormPage="EditPlayableItemFormPage.Playlist"
                 FormMode="@_reconvertAllMode"
                 OnReconvertAllOk="OnReconvertAll"
                 OnCancel="OnEditFormCancel"

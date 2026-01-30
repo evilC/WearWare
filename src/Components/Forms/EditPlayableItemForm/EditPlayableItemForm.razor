@@ -11,16 +11,16 @@
             @if(FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
                 <div style ="margin-bottom:1rem;">
-                    <span>ReConverts all @ItemType items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
+                    <span>ReConverts all @FormPage items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
                 </div>
             }
             else if(FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 <div style ="margin-bottom:1rem;">
-                    <span>ReConverts all @ItemType items with a new Relative Brightness and their embedded Matrix Options</span>
+                    <span>ReConverts all @FormPage items with a new Relative Brightness and their embedded Matrix Options</span>
                 </div>
             }
-            @if (ItemType == PlayableItemType.Import)
+            @if (FormPage == EditPlayableItemFormPage.Import)
             {
                 <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
                     <EditForm Model="importNameModel">
@@ -32,7 +32,7 @@
                     </EditForm>
                 </div>
             }
-            @if (ItemType != PlayableItemType.Library && ItemType != PlayableItemType.Import && 
+            @if (FormPage != EditPlayableItemFormPage.Library && FormPage != EditPlayableItemFormPage.Import && 
                 FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 <div class="add-dialog-row">

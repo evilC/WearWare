@@ -66,7 +66,7 @@ else
         OnCancel="OnEditFormCancel"
         OnSave="OnSaveQuickMediaItem"
         OnReprocessAsync="ReprocessQuickMediaButtonAsync"
-        ItemType="PlayableItemType.QuickMedia"
+		FormPage="EditPlayableItemFormPage.QuickMedia"
         FormMode="_formMode"
     />
 }
@@ -75,9 +75,9 @@ else
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
         <div style="width:80%;">
-            <EditPlayableItemForm @ref="_editFormRef"
-                ItemType="PlayableItemType.QuickMedia"
-                FormMode="@_reconvertAllMode"
+			<EditPlayableItemForm @ref="_editFormRef"
+				FormPage="EditPlayableItemFormPage.QuickMedia"
+				FormMode="@_reconvertAllMode"
                 OnReconvertAllOk="OnReconvertAll"
                 OnCancel="OnEditFormCancel"
             />

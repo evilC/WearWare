@@ -7,7 +7,7 @@
 
 @if (showEditDialog && _editingItem != null && selectedFileName != null)
 {
-    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" ItemType="PlayableItemType.Import" FormMode="EditPlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnEditFormCancel" />
+    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" FormPage="EditPlayableItemFormPage.Import" FormMode="EditPlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnEditFormCancel" />
 }
 else if (importFiles == null)
 {
