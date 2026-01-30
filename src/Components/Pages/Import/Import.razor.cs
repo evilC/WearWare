@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using WearWare.Common;
 using WearWare.Common.Media;
-using WearWare.Components.Forms;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Config;
 using WearWare.Services.Import;
@@ -22,10 +21,11 @@ namespace WearWare.Components.Pages.Import
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] private NavigationManager Navigation { get; set; } = null!;
         
+        EditPlayableItemFormModel? _editFormModel = null;
         private List<string>? importFiles;
-        private string? selectedFileName;
-        private bool showEditDialog = false;
-        private string? pendingNewFileName;
+        // private string? selectedFileName;
+        // private bool showEditDialog = false;
+        // private string? pendingNewFileName;
 
         private PlayableItem? _editingItem;
         private EditPlayableItemForm? editFormRef;
@@ -53,26 +53,35 @@ namespace WearWare.Components.Pages.Import
         /// </summary>
         private async Task ShowForm(string fileName)
         {
-            selectedFileName = fileName;
+            // selectedFileName = fileName;
             // Prepare an editing PlayableItem immediately (ImportForm UI moved into EditPlayableItemForm)
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(selectedFileName)) ?? MediaType.IMAGE;
-            var baseName = Path.GetFileNameWithoutExtension(selectedFileName);
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE;
+            var baseName = Path.GetFileNameWithoutExtension(fileName);
             var sanitized = FilenameValidator.Sanitize(baseName);
             var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
             var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, 100);
-            _editingItem = new PlayableItem(
+            var item = new PlayableItem(
                 sanitized,
                 PathConfig.LibraryFolder,
-                mediaType,
-                selectedFileName,
+                MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE,
+                fileName,
                 PlayMode.Forever,
                 1,
                 100,
                 actual,
                 MatrixConfigService.CloneOptions()
             );
-            pendingNewFileName = sanitized;
-            showEditDialog = true;
+            _editFormModel = new EditPlayableItemFormModel
+            {
+                OriginalFileName = sanitized,
+                NewName = sanitized,
+                FormMode = EditPlayableItemFormMode.Add,
+                FormPage = EditPlayableItemFormPage.Import,
+                UpdatedItem = item,
+            };
+            // pendingNewFileName = sanitized;
+            // showEditDialog = true;
+            // ToDo: Why is this called?
             await InvokeAsync(StateHasChanged);
         }
 
@@ -85,18 +94,14 @@ namespace WearWare.Components.Pages.Import
             }
         }
 
-
-        private async Task OnSaveImportItem((int editingIndex, PlayableItem updatedItem, EditPlayableItemFormMode formMode) args)
+        /// <summary>
+        /// Called when the edit form is submitted in the Import page.
+        /// </summary>
+        private async Task OnSaveImportItem(EditPlayableItemFormModel formModel)
         {
-            showEditDialog = false;
-            if (pendingNewFileName != null && selectedFileName != null)
-            {
-                await ImportService.OnEditFormSubmit(selectedFileName, args.updatedItem.Name, args.updatedItem.RelativeBrightness, args.updatedItem.MatrixOptions);
-            }
+            _editFormModel = null;
+            await ImportService.OnEditFormSubmit(formModel);
             // clear state
-            pendingNewFileName = null;
-            selectedFileName = null;
-            _editingItem = null;
             if (editFormRef is not null)
                 await editFormRef.UnlockScrollAsync();
             await InvokeAsync(StateHasChanged);
@@ -107,13 +112,10 @@ namespace WearWare.Components.Pages.Import
         /// </summary>
         private async Task OnEditFormCancel()
         {
-            // Close the edit form and return to the import list without importing
-            showEditDialog = false;
-            pendingNewFileName = null;
-            selectedFileName = null;
-            _editingItem = null;
+            _editFormModel = null;
             if (editFormRef is not null)
                 await editFormRef.UnlockScrollAsync();
+            await InvokeAsync(StateHasChanged);
         }
 
         /// <summary>

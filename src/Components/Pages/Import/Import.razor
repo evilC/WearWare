@@ -5,9 +5,14 @@
 
 <PageTitle>WareWare Import</PageTitle>
 
-@if (showEditDialog && _editingItem != null && selectedFileName != null)
+@if (_editFormModel != null)
 {
-    <EditPlayableItemForm @ref="editFormRef" EditingItem="_editingItem" EditingIndex="0" FormPage="EditPlayableItemFormPage.Import" FormMode="EditPlayableItemFormMode.Add" ImageUrl="@($"/incoming-media/{selectedFileName}")" OnSave="OnSaveImportItem" OnCancel="OnEditFormCancel" />
+    <EditPlayableItemForm @ref="editFormRef" 
+        ImageUrl="@($"/incoming-media/{_editFormModel.UpdatedItem.SourceFileName}")" 
+        FormModel="_editFormModel"
+        OnNewSave="OnSaveImportItem" 
+        OnCancel="OnEditFormCancel" 
+    />
 }
 else if (importFiles == null)
 {
