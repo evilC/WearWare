@@ -45,9 +45,6 @@ namespace WearWare.Components.Pages.Playlist
         /// <summary> Reference to the EditPlayableItemForm component </summary>
         private EditPlayableItemForm? _editFormRef;
 
-        private bool _showReConvertAllDialog = false;
-        private EditPlayableItemFormMode _reconvertAllMode;
-
         // Dropdown for selecting which playlist to edit
         private string? _editingPlaylist;
 
@@ -188,21 +185,6 @@ namespace WearWare.Components.Pages.Playlist
                 return;
             }
 
-            // _originalItem = item;   // Store the original item for comparison later
-            // _editingItem = item.Clone();
-            // if (mode == EditPlayableItemFormMode.Add)
-            // {
-            //     // In Add mode, the item being passed in is from the library, so we need to modify some properties.
-            //     // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
-            //     // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
-            //     // Set PlayMode to Loop and PlayModeValue to 1 by default...
-            //     // ... because library items have FOREVER mode by default
-            //     _editingItem.PlayMode = PlayMode.Loop;
-            //     _editingItem.PlayModeValue = 1;
-            // }
-            // _editingIndex = itemIndex;
-            // _formMode = mode;
-            // _showEditDialog = true;
             await InvokeAsync(StateHasChanged);
         }
 
@@ -452,32 +434,12 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
         private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
         {
-            _showReConvertAllDialog = false;
+            _editFormModel = null;
             await PlaylistService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
             if (_editFormRef is not null)
                 await _editFormRef.UnlockScrollAsync();
             await InvokeAsync(StateHasChanged);
         }
-
-        /// <summary>
-        /// Builds the image path for the editing item based on whether we are adding or editing
-        /// Images on the Edit form in ADD mode come from the library, in EDIT mode come from the folder of the playlist
-        /// </summary>
-        /// <returns>The path to the URL for the editing image</returns>
-        // private string BuildEditingImageURL(){
-        //     if (_editingItem is null){
-        //         Logger.LogError($"{_logTag}: BuildEditingImageURL called but editingItem is null");
-        //         return string.Empty;
-        //     }
-        //     if (_formMode == EditPlayableItemFormMode.Edit){
-        //         if (_playlist is null){
-        //             Logger.LogError($"{_logTag}: BuildEditingImageURL called in EDIT mode but _playlist is null");
-        //             return string.Empty;
-        //         }
-        //         return $"/playlist-images/{_playlist.Name}/{_editingItem.SourceFileName}";
-        //     }
-        //     return $"/library-image/{_editingItem.SourceFileName}";        
-        // }
 
         private string BuildEditingImageURL(EditPlayableItemFormModel formModel){
             if (formModel.FormMode == EditPlayableItemFormMode.Edit){
