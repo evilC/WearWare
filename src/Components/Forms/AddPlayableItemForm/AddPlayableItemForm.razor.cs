@@ -22,7 +22,7 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         {
             await JS.InvokeVoidAsync("modalScrollLock.unlock");
         }
-        [Parameter] public EditPlayableItemFormModel? FormDto { get; set; }
+        [Parameter] public EditPlayableItemFormModel? FormModel { get; set; }
         [Parameter] public IReadOnlyList<PlayableItem>? LibraryItems { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
         [Parameter] public EventCallback<(int insertIndex, PlayableItem libItem)> OnAdd { get; set; }
@@ -33,9 +33,9 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         // Called when an item is selected from the list
         private void ItemSelected(PlayableItem libItem)
         {
-            if (FormDto == null)
+            if (FormModel == null)
                 return;
-            FormDto.SelectedLibraryItem = libItem;
+            FormModel.SelectedLibraryItem = libItem;
             OnAdd.InvokeAsync((InsertIndex, libItem));
         }
 
