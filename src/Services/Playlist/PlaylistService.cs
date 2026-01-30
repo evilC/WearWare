@@ -314,7 +314,7 @@ namespace WearWare.Services.Playlist
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
                 // Add new item
-                playlist.AddItem(formModel.InsertIindex, formModel.UpdatedItem);
+                playlist.AddItem(formModel.ItemIndex, formModel.UpdatedItem);
             }
             else
             {

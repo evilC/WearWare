@@ -116,7 +116,7 @@ namespace WearWare.Components.Pages.Playlist
             {
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Playlist,
-                InsertIindex = insertIndex,
+                ItemIndex = insertIndex,
             };
         }
 
@@ -173,7 +173,7 @@ namespace WearWare.Components.Pages.Playlist
                 var editFormModel = new EditPlayableItemFormModel() {
                     FormMode = EditPlayableItemFormMode.Edit,
                     FormPage = EditPlayableItemFormPage.Playlist,
-                    InsertIindex = itemIndex,
+                    ItemIndex = itemIndex,
                     OriginalItem = item,
                     UpdatedItem = item.Clone(),
                 };
@@ -279,7 +279,7 @@ namespace WearWare.Components.Pages.Playlist
             {
                 FormMode = EditPlayableItemFormMode.Edit,
                 FormPage = EditPlayableItemFormPage.Playlist,
-                InsertIindex = itemIndex,
+                ItemIndex = itemIndex,
                 OriginalItem = originalItem,
                 UpdatedItem = item,
             };
