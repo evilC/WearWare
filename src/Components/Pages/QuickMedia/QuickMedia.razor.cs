@@ -1,14 +1,11 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Components.Forms.AddPlayableItemForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
-using WearWare.Config;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.QuickMedia;
-using WearWare.Services.StreamConverter;
 
 namespace WearWare.Components.Pages.QuickMedia
 {
@@ -16,18 +13,15 @@ namespace WearWare.Components.Pages.QuickMedia
     {
         [Inject] private QuickMediaService QuickMediaService { get; set; } = null!;
         [Inject] private LibraryService LibraryService { get; set; } = null!;
-        [Inject] private IStreamConverterService StreamConverterService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] private ILogger<QuickMedia> Logger { get; set; } = null!;
+        [Inject] private MatrixConfigService _matrixConfigService { get; set; } = null!;
 
         private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
         private IReadOnlyList<PlayableItem>? _libraryItems;
         private EditPlayableItemFormModel? _addFormModel = null;
         private EditPlayableItemFormModel? _editFormModel = null;
         private AddPlayableItemForm? _addFormRef;
-        private bool _showReConvertAllDialog = false;
-        private EditPlayableItemFormMode _reconvertAllMode;
-
         private EditPlayableItemForm? _editFormRef;
 
         protected override void OnInitialized()
@@ -144,7 +138,6 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         async Task OnEditFormCancel()
         {
-            _showReConvertAllDialog = false;
             _editFormModel = null;
             await InvokeAsync(StateHasChanged);
             await UnlockScrollbar();
@@ -173,8 +166,12 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         private void ShowReConvertAllGlobal()
         {
-            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
-            _showReConvertAllDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
+                FormPage = EditPlayableItemFormPage.QuickMedia,
+                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
+            };
         }
 
         /// <summary>
@@ -182,18 +179,23 @@ namespace WearWare.Components.Pages.QuickMedia
         /// </summary>
         private void ShowReConvertAllEmbedded()
         {
-            _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
-            _showReConvertAllDialog = true;
+            _editFormModel = new EditPlayableItemFormModel()
+            {
+                FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
+                FormPage = EditPlayableItemFormPage.QuickMedia,
+                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
+            };
+
         }
 
         /// <summary>
         /// Called when the Reconvert All form is submitted
         /// </summary>
-        /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
+        /// <param name="formModel"></param> The arguments containing the relative brightness, options and form mode
+        private async Task OnReconvertAll(EditPlayableItemFormModel formModel)
         {
-            _showReConvertAllDialog = false;
-            await QuickMediaService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
+            _editFormModel = null;
+            await QuickMediaService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
             await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }

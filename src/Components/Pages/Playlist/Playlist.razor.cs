@@ -437,11 +437,11 @@ namespace WearWare.Components.Pages.Playlist
         /// <summary>
         /// Called when the Reconvert All form is submitted
         /// </summary>
-        /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll((EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options) args)
+        /// <param name="formModel"></param> The arguments containing the relative brightness, options and form mode
+        private async Task OnReconvertAll(EditPlayableItemFormModel formModel)
         {
             _editFormModel = null;
-            await PlaylistService.ReConvertAllItems(args.formMode, args.relativeBrightness, args.options);
+            await PlaylistService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
             await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }

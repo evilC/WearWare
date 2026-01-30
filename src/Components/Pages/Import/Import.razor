@@ -8,7 +8,6 @@
 @if (_editFormModel != null)
 {
     <EditPlayableItemForm @ref="editFormRef" 
-        ImageUrl="@($"/incoming-media/{_editFormModel.UpdatedItem.SourceFileName}")" 
         FormModel="_editFormModel"
         OnNewSave="OnSaveImportItem" 
         OnCancel="OnEditFormCancel" 

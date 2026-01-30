@@ -76,6 +76,7 @@ namespace WearWare.Components.Pages.Import
             {
                 OriginalFileName = fileName,
                 NewName = sanitized,
+                ImageUrl = $"/incoming-media/{fileName}",
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Import,
                 UpdatedItem = item,

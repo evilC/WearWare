@@ -39,7 +39,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// In ADD mode, this will be the Library image URL.
         /// In EDIT mode, this will be the Playlist or QuickMedia image URL depending on where the item is from.
         /// </summary>
-        [Parameter] public string? ImageUrl { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
         /// <summary>
         /// Callback for clicking OK in regular Add / Edit mode
@@ -50,7 +49,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <summary>
         /// Callback for clicking OK in ReConvert All mode
         /// </summary>
-        [Parameter] public EventCallback<(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)> OnReconvertAllOk { get; set; }
+        [Parameter] public EventCallback<EditPlayableItemFormModel> OnReconvertAllOk { get; set; }
         
         // === Form edited values ===
 
@@ -207,7 +206,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             // If we're in a ReConvertAll mode, call the dedicated callback instead
             if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                OnReconvertAllOk.InvokeAsync((FormModel.FormMode, FormModel.UpdatedItem.RelativeBrightness, FormModel.UpdatedItem.MatrixOptions));
+                OnReconvertAllOk.InvokeAsync(FormModel);
                 return;
             }
             OnNewSave.InvokeAsync(FormModel);
