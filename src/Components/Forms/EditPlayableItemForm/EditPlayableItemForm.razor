@@ -38,23 +38,29 @@
             {
                 <div class="add-dialog-row">
                     <div class="add-dialog-section">
-                        <div class="add-dialog-options">
-                            @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
-                            {
-                                <label class="add-dialog-radio-label">
-                                    <span class="add-dialog-mode-text">@playMode.ToString()</span>
-                                    <input type="radio" name="editPlayMode" value="@((int)playMode)" @onchange="() => FormModel.UpdatedItem.PlayMode = playMode" checked="@(FormModel.UpdatedItem.PlayMode == playMode)" class="add-dialog-radio" />
-                                </label>
-                            }
-                        </div>
+                        @if (FormModel.UpdatedItem != null)
+                        {
+                            <EditForm Model="FormModel.UpdatedItem">
+                                <div class="add-dialog-options">
+                                    <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem.PlayMode">
+                                        @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
+                                        {
+                                            <label class="add-dialog-radio-label">
+                                                <span class="add-dialog-mode-text">@playMode.ToString()</span>
+                                                <InputRadio class="add-dialog-radio" TValue="PlayMode" Value="playMode" />
+                                            </label>
+                                        }
+                                    </InputRadioGroup>
+                                </div>
+                            </EditForm>
+                        }
                     </div>
                     <div class="add-dialog-section">
                         <label class="add-dialog-label">Value</label>
-                        <input type="number" class="add-dialog-number"
-                            value="@FormModel.UpdatedItem.PlayModeValue" min="1" max="100"
-                            disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)"
-                            @onchange="e => FormModel.UpdatedItem.PlayModeValue = int.TryParse(Convert.ToString(e.Value), out var v) ? v : 1"
-                        />
+                        @if (FormModel.UpdatedItem != null)
+                        {
+                            <InputNumber class="add-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue" min="1" max="100" disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" />
+                        }
                     </div>
                 </div>
             }

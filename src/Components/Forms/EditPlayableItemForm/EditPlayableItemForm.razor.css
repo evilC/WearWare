@@ -75,12 +75,14 @@ input[type=number] {
     height: auto;
     white-space: normal;
 }
-.add-dialog-radio {
+/* PlayMode Radios */
+.edit-dialog ::deep .add-dialog-radio {
     height: 1.6em;
     width: 1.6em;
     vertical-align: middle;
 }
-.add-dialog-number {
+/* PlayModeValue */
+.edit-dialog ::deep .add-dialog-number {
     padding: 0.5em;
     font-size: 1em;
     border-radius: 6px;
