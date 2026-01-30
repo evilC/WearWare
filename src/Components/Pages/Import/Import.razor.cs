@@ -65,7 +65,7 @@ namespace WearWare.Components.Pages.Import
                 PathConfig.LibraryFolder,
                 mediaType,
                 selectedFileName,
-                PlayMode.FOREVER,
+                PlayMode.Forever,
                 1,
                 100,
                 actual,

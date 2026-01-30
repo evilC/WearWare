@@ -10,7 +10,7 @@ namespace WearWare.Common.Media
         public string SourceFileName { get; init; }
         public int RelativeBrightness { get; set; } = 100;
         public int CurrentBrightness { get; set; } = 100;
-        public PlayMode PlayMode { get; set; } = PlayMode.LOOP;
+        public PlayMode PlayMode { get; set; } = PlayMode.Loop;
         public int PlayModeValue { get; set; } = 1;
         public string ParentFolder { get; set; }
         public bool Enabled { get; set; } = true;

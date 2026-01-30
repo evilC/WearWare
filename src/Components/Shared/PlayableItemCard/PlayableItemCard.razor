@@ -9,15 +9,15 @@
         <strong class="playlist-item-title">@Item?.Name</strong>
         @if (Item is not null)
         {
-            @if (Item.PlayMode == PlayMode.FOREVER)
+            @if (Item.PlayMode == PlayMode.Forever)
             {
                 <div class="playlist-item-mode">Forever</div>
             }
-            else if (Item.PlayMode == PlayMode.LOOP)
+            else if (Item.PlayMode == PlayMode.Loop)
             {
                 <div class="playlist-item-mode">Loop @($"{Item.PlayModeValue}x")</div>
             }
-            else if (Item.PlayMode == PlayMode.DURATION)
+            else if (Item.PlayMode == PlayMode.Duration)
             {
                 <div class="playlist-item-mode">Duration @($"{Item.PlayModeValue}s")</div>
             }

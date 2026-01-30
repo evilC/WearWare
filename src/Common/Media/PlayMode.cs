@@ -1,4 +1,4 @@
 namespace WearWare.Common.Media
 {
-    public enum PlayMode { LOOP, DURATION, FOREVER };
+    public enum PlayMode { Loop, Duration, Forever };
 }

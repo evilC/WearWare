@@ -85,13 +85,13 @@ namespace WearWare.Services.MediaController
                     }
                     var loopNum = 0u;
                     long endTime = 0;
-                    if (playableItem.PlayMode == PlayMode.DURATION)
+                    if (playableItem.PlayMode == PlayMode.Duration)
                     {
                         endTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + (playableItem.PlayModeValue * 1000);
                     }
                     while (!ct.IsCancellationRequested)
                     {
-                        if (playableItem.PlayMode == PlayMode.DURATION && DateTimeOffset.Now.ToUnixTimeMilliseconds() >= endTime)
+                        if (playableItem.PlayMode == PlayMode.Duration && DateTimeOffset.Now.ToUnixTimeMilliseconds() >= endTime)
                         {
                             break;
                         }
@@ -103,7 +103,7 @@ namespace WearWare.Services.MediaController
                             }
                             if (loopNum == uint.MaxValue) break;
                             loopNum++;
-                            if (playableItem.PlayMode == PlayMode.LOOP && loopNum >= playableItem.PlayModeValue)
+                            if (playableItem.PlayMode == PlayMode.Loop && loopNum >= playableItem.PlayModeValue)
                             {
                                 break;
                             }

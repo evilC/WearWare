@@ -126,7 +126,7 @@ namespace WearWare.Services.Import
                 PathConfig.LibraryFolder,
                 mediaType.Value,
                 Path.GetFileName(destPath),  
-                PlayMode.FOREVER,
+                PlayMode.Forever,
                 0,
                 relativeBrightness,
                 BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, relativeBrightness),

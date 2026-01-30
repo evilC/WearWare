@@ -203,7 +203,7 @@ namespace WearWare.Services.MediaController
         /// </summary>
         internal void PlayQuickMedia(PlayableItem item)
         {
-            if (item.PlayMode == PlayMode.FOREVER)
+            if (item.PlayMode == PlayMode.Forever)
             {
                 // Requested item to play in FOREVER mode
                 if (item == _currentItem)
@@ -220,7 +220,7 @@ namespace WearWare.Services.MediaController
             else
             {
                 // Requested play of item in LOOP or DURATION mode
-                if (_currentItemIsQuickMedia && _currentItem != null && _currentItem.PlayMode == PlayMode.FOREVER)
+                if (_currentItemIsQuickMedia && _currentItem != null && _currentItem.PlayMode == PlayMode.Forever)
                 {
                     // Currently playing a different quickmedia item in FOREVER mode.
                     // Push it to _interruptedQuickMediaForeverItem so we can resume it later.

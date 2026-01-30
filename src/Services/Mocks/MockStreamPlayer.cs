@@ -15,17 +15,17 @@ namespace WearWare.Services.Mocks
         {
             _logger.LogInformation("[PLAYSTREAM MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
             long endTime = 0;
-            if (playableItem.PlayMode == PlayMode.DURATION)
+            if (playableItem.PlayMode == PlayMode.Duration)
             {
                 endTime = DateTimeOffset.Now.ToUnixTimeMilliseconds() + (playableItem.PlayModeValue * 1000);
             }
             while (!ct.IsCancellationRequested)
             {
-                if (playableItem.PlayMode == PlayMode.DURATION && DateTimeOffset.Now.ToUnixTimeMilliseconds() >= endTime)
+                if (playableItem.PlayMode == PlayMode.Duration && DateTimeOffset.Now.ToUnixTimeMilliseconds() >= endTime)
                 {
                     break;
                 }
-                if (playableItem.PlayMode == PlayMode.LOOP)
+                if (playableItem.PlayMode == PlayMode.Loop)
                 {
                     Thread.Sleep(1000);
                     break;

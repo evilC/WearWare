@@ -113,9 +113,9 @@ namespace WearWare.Components.Pages.QuickMedia
                 // In Add mode, the item being passed in is from the library, so we need to modify some properties.
                 // We need to do this BEFORE opening the Edit form so that the form shows the correct values.
                 // DO NOT modify ParentFolder at this point - the Service will need this to get the source file from the library
-                // Set PlayMode to LOOP and PlayModeValue to 1 by default...
+                // Set PlayMode to Loop and PlayModeValue to 1 by default...
                 // ... because library items have FOREVER mode by default
-                _editingItem.PlayMode = PlayMode.LOOP;
+                _editingItem.PlayMode = PlayMode.Loop;
                 _editingItem.PlayModeValue = 1;
             }
             _formMode = mode;

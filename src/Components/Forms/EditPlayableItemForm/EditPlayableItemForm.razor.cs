@@ -94,7 +94,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                 // to select relative brightness and matrix options.
                 if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
                 {
-                    selectedPlayMode = (int)PlayMode.LOOP;
+                    selectedPlayMode = (int)PlayMode.Loop;
                     selectedPlayModeValue = 1;
                     selectedRelativeBrightness = 100;
                     selectedMatrixOptions = MatrixConfigService.CloneOptions();
@@ -150,7 +150,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         private void OnSelectPlayMode(int value)
         {
             selectedPlayMode = value;
-            if (selectedPlayMode == (int)PlayMode.FOREVER)
+            if (selectedPlayMode == (int)PlayMode.Forever)
             {
                 selectedPlayModeValue = 1;
             }
