@@ -26,10 +26,10 @@
                 <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
                     <EditForm Model="FormModel">
                         <DataAnnotationsValidator />
-                        <label class="add-dialog-label">Name
-                            <InputText class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.NewName" />
-                        </label>
                         <ValidationMessage For="@(() => FormModel.NewName)" />
+                        <label class="add-dialog-label">Name
+                            <InputTextOnInput class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.NewName" />
+                        </label>
                     </EditForm>
                 </div>
             }
