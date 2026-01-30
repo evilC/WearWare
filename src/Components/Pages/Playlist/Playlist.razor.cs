@@ -17,11 +17,6 @@ namespace WearWare.Components.Pages.Playlist
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
         [Inject] public MatrixConfigService _matrixConfigService { get; set; } = null!;
 
-        /// <summary> Whether to show the Add Item dialog </summary>
-        // private bool showAddDialog = false;
-        /// <summary> The index to insert the new item at when adding to the playlist </summary>
-        // private int addDialogInsertIndex = 0;
-
         private EditPlayableItemFormModel? _addFormModel = null;
         private EditPlayableItemFormModel? _editFormModel = null;
 
@@ -212,11 +207,6 @@ namespace WearWare.Components.Pages.Playlist
         async Task OnEditFormCancel()
         {
             _editFormModel = null;
-            // _showEditDialog = false;
-            // _editingItem = null;
-            // _showReConvertAllDialog = false;
-            // _originalItem = null;
-            // Wait for the UI to update and the dialog to be removed
             await InvokeAsync(StateHasChanged);
             await UnlockScrollbar();
         }

@@ -65,42 +65,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             }
         }
 
-        /*
-        // Old way of setting variables when form is opened
-        // Remove
-        protected override void OnInitialized()
-        {
-            if (EditingItem == null)
-            {
-                // If we're being used for ReConvertAll flows, EditingItem may be null.
-                // Initialize reasonable defaults so the dialog can render and be used
-                // to select relative brightness and matrix options.
-                if (FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-                {
-                    selectedPlayMode = (int)PlayMode.Loop;
-                    selectedPlayModeValue = 1;
-                    selectedRelativeBrightness = 100;
-                    selectedMatrixOptions = MatrixConfigService.CloneOptions();
-                    nameInput = string.Empty;
-                    importNameModel.Name = string.Empty;
-                    // streamCurrentBrightness = selectedMatrixOptions?.Brightness ?? 100;
-                    CalculateBrightness();
-                    return;
-                }
-                _logger.LogError($"{_logTag}: EditingItem is null in EditPlayableItemForm");
-                return;
-            }
-            selectedPlayMode = (int)EditingItem.PlayMode;
-            selectedPlayModeValue = EditingItem.PlayModeValue;
-            selectedRelativeBrightness = EditingItem.RelativeBrightness;
-            selectedMatrixOptions = EditingItem.MatrixOptions.Clone();
-            nameInput = EditingItem.Name;
-            importNameModel.Name = nameInput;
-            // streamCurrentBrightness = EditingItem.CurrentBrightness;
-            CalculateBrightness();
-        }
-        */
-
         /// <summary>
         /// Called after the component has been rendered.
         /// Note: IDE says 0 references, but it is called by Blazor framework.
@@ -127,27 +91,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         {
             await JS.InvokeVoidAsync("modalScrollLock.unlock");
         }
-
-        /// <summary>
-        /// Called when the user changes the Play Mode radio buttons
-        /// </summary>
-        // private void OnSelectPlayMode(int value)
-        // {
-        //     selectedPlayMode = value;
-        //     if (selectedPlayMode == (int)PlayMode.Forever)
-        //     {
-        //         selectedPlayModeValue = 1;
-        //     }
-        // }
-
-        /// <summary>
-        /// Called when the user changes the Play Mode Value input
-        /// </summary>
-        // private void OnSelectPlayModeValue(ChangeEventArgs e)
-        // {
-        //     if (int.TryParse(e.Value?.ToString(), out var v))
-        //         selectedPlayModeValue = v;
-        // }
 
         // Recalculates adjusted brightness based on current matrix options and selected relative brightness
         private void CalculateBrightness()
