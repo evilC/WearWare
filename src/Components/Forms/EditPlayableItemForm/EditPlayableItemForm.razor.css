@@ -12,17 +12,23 @@
 }
 .edit-dialog__content {
     background: #fff;
-    border-radius: 12px;
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
     box-shadow: 0 2px 24px rgba(0,0,0,0.25);
-    padding: 2em;
-    min-width: 320px;
-    max-width: 720px;
-    width: 92vw;
-    max-height: 90vh;
+    padding: 1rem 1rem 1.25rem 1rem;
+    padding-top: calc(env(safe-area-inset-top, 0.5rem) + 0.5rem);
     overflow: auto;
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+@supports (height: 100dvh) {
+    .edit-dialog__content {
+        height: 100dvh;
+    }
 }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
@@ -92,23 +98,6 @@ input[type=number] {
     -webkit-appearance: none;
     -moz-appearance: textfield;
     appearance: textfield;
-}
-/* Responsive styles for small screens */
-@media (max-width: 640px) {
-    .edit-dialog__content {
-        width: 100vw;
-        height: 100vh;
-        max-width: none;
-        max-height: none;
-        border-radius: 0;
-        padding: 1rem 1rem 1.25rem 1rem;
-        padding-top: calc(env(safe-area-inset-top, 0.5rem) + 0.5rem);
-    }
-    @supports (height: 100dvh) {
-        .edit-dialog__content {
-            height: 100dvh;
-        }
-    }
 }
 /* Stream Current / Relative / Adjusted Brightness Stack */
 .add-dialog__list {
