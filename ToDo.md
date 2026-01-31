@@ -9,34 +9,18 @@
   - More re-use of components.
     - Library and AddPlayableItemForm do not use PlayableItemCard (But would need PlayMode hidden)
   - Parameters of components can be made non-nullable by setting to `default!`;
-  - Dialog show / hide can be handled by the dialog.  
-    NOT WITH CURRENT IMPLEMENTATION.  
-    `if (firstRender)` is called if there is no conditional around the Component in `Playlist.razor`,  
-    causing the scrollbars to hide when the Playliist page loads
-    ~~eg we do not need `showAddDialog`in playlist.razor, it could be in `AddPlayableItemForm`~~  
-    Can use `OnParametersSet` to detect when parameter is set.  
-    May need to make the form use interactive render mode?
-  - PlayableItem list item (eg With arbitrary buttons to left) could be done as a component.  
-    Use `RenderFragment` to pass in the buttons
   - Components can be wrapped in an `<ErrorBoundary>`  
     If something goes wrong, alternate UI can be shown and error does not bubble up to parent
 - Enable Streaming Rendering  
   `@attribute [StreamRendering(true)]` to start of all pages.  
   - Generally, the stub seems to be there (eg `if (importFiles == null)` on Import page)  
     However, even in that example, it's after another check. Should always be first?
-- Some pages have insane amounts of fields, eg Playlist, QuickMedia, MatrixOptionsForm
-  - MatrixOptionsForm
-    - Check to see if all still needed. Did not see errors pop up when I cut some to move
-    - Large number mainly to do with nullability and enabled / disabled  
-    - Can we create a custom form component for each field type (TextInput, NumberInput etc) that encapsulates this?  
-      If doing this, bear in mind we may want Dynamic Form Validation on Brightness to facilitate Max Brightness option
 - Can we replace modalScrollLock with something else?  
   Used when showing a full screen overlay over a page which will have a scrollbar, to hide the scrollbar while the overlay is visible  
   Set overflow to none on parent page instead?
 - Headers and footers  
   On some pages it would be nice if we could have headers or footers that were always visible  
-  - MatrixOptionsForm  
-    OK / Cancel in footer
+  MatrixOptionsForm does this nicely, check how it does it.
   - Playlist  
     Playlist selection in header
 - More stuff in _Imports.razor?
