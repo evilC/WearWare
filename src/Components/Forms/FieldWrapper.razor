@@ -1,7 +1,6 @@
 @namespace WearWare.Components.Forms
 
-@using System.Linq.Expressions
-@using System.Reflection
+@using System
 
 <div class="mw-matrix-form-row">
     @if (ShowEnableToggle)
@@ -20,51 +19,17 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    [Parameter] public Expression<Func<bool?>>? VisibilityExpression { get; set; }
-
-    private Func<bool?>? _visibilityGetter;
-    private PropertyInfo? _visibilityProperty;
-    private object? _visibilityInstance;
-
-    protected override void OnParametersSet()
-    {
-        if (VisibilityExpression != null)
-        {
-            _visibilityGetter = VisibilityExpression.Compile();
-
-            // extract property info and instance for setter
-            Expression expr = VisibilityExpression.Body;
-            if (expr is UnaryExpression unary && unary.NodeType == ExpressionType.Convert)
-            {
-                expr = unary.Operand;
-            }
-            if (expr is MemberExpression memberExpr && memberExpr.Member is PropertyInfo prop)
-            {
-                _visibilityProperty = prop;
-                // compile expression for the instance (owner of the property)
-                var instanceLambda = Expression.Lambda(memberExpr.Expression!);
-                _visibilityInstance = instanceLambda.Compile().DynamicInvoke();
-            }
-        }
-        else
-        {
-            _visibilityGetter = null;
-            _visibilityProperty = null;
-            _visibilityInstance = null;
-        }
-    }
+    [Parameter] public Func<bool?>? VisibilityGetter { get; set; }
+    [Parameter] public Action<bool?>? VisibilitySetter { get; set; }
 
     private bool EnabledChecked
     {
-        get => _visibilityGetter == null ? true : (_visibilityGetter() ?? false);
+        get => VisibilityGetter == null ? true : (VisibilityGetter() ?? false);
         set
         {
-            if (_visibilityProperty != null && _visibilityInstance != null)
-            {
-                _visibilityProperty.SetValue(_visibilityInstance, value ? (bool?)true : null);
-                // request UI update
-                StateHasChanged();
-            }
+            VisibilitySetter?.Invoke(value ? (bool?)true : null);
+            // request UI update
+            StateHasChanged();
         }
     }
 }
