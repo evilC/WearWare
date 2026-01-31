@@ -1,6 +1,7 @@
 @using WearWare.Common.Media
 @using WearWare.Common
 @using WearWare.Components.Forms.MatrixOptionsForm
+@using WearWare.Components.Shared
 @rendermode InteractiveServer
 
 @* Main Razor Markup: *@
@@ -28,7 +29,7 @@
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
                 <div class="add-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
                     <label class="add-dialog-label">Name
-                        <InputTextOnInput class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" />
+                        <EditboxTextLiveUpdate class="add-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" />
                     </label>
                 </div>
             }
@@ -78,7 +79,7 @@
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
                 <div class="add-dialog-row">
                     <label class="add-dialog-label">Relative Brightness (%)
-                        <InputNumberOnInput
+                        <EditboxNumberLiveUpdate
                             class="add-dialog-number" 
                             @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" 
                             min="1" max="100"
