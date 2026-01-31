@@ -26,7 +26,7 @@
                 <InputCheckbox class="me-2" @bind-Value="BrightnessEnabledChecked" />
             }
             <label class="mw-matrix-label">Brightness %</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Brightness" placeholder="@($"(Default: {_defaults.Brightness})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Brightness" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Brightness})")" />
         </div>
     }
     @if (!HideRelativeBrightness)
@@ -52,7 +52,7 @@
                 <InputCheckbox class="me-2" @bind-Value="ChainLengthEnabledChecked" />
             }
             <label class="mw-matrix-label">Chain Length</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.ChainLength" placeholder="@($"(Default: {_defaults.ChainLength})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.ChainLength" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.ChainLength})")" />
         </div>
     }
 
@@ -67,7 +67,7 @@
                 <InputCheckbox class="me-2" @bind-Value="ColsEnabledChecked" />
             }
             <label class="mw-matrix-label">Cols</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Cols" placeholder="@($"(Default: {_defaults.Cols})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Cols" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Cols})")" />
         </div>
     }
 
@@ -160,7 +160,7 @@
                 <InputCheckbox class="me-2" @bind-Value="LimitRefreshRateHzEnabledChecked" />
             }
             <label class="mw-matrix-label">Limit Refresh Rate Hz</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
         </div>
     }
 
@@ -216,7 +216,7 @@
                 <InputCheckbox class="me-2" @bind-Value="ParallelEnabledChecked" />
             }
             <label class="mw-matrix-label">Parallel</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Parallel" placeholder="@($"(Default: {_defaults.Parallel})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Parallel" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Parallel})")" />
         </div>
     }
 
@@ -228,7 +228,7 @@
                 <InputCheckbox class="me-2" @bind-Value="PixelMapperConfigEnabledChecked" />
             }
             <label class="mw-matrix-label">Pixel Mapper Config</label>
-            <InputText class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
+            <InputTextOnInput class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
         </div>
     }
 
@@ -240,7 +240,7 @@
                 <InputCheckbox class="me-2" @bind-Value="PwmBitsEnabledChecked" />
             }
             <label class="mw-matrix-label">PWM Bits</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" placeholder="@($"(Default: {_defaults.PwmBits})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PwmBits})")" />
         </div>
     }
 
@@ -271,7 +271,7 @@
                 <InputCheckbox class="me-2" @bind-Value="PwmLsbNanosecondsEnabledChecked" />
             }
             <label class="mw-matrix-label">PWM LSB Nanoseconds</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
         </div>
     }
 
@@ -305,7 +305,7 @@
                 <InputCheckbox class="me-2" @bind-Value="RowsEnabledChecked" />
             }
             <label class="mw-matrix-label">Rows</label>
-            <InputNumber TValue="int?" class="form-control mw-matrix-input" @bind-Value="Options.Rows" placeholder="@($"(Default: {_defaults.Rows})")" />
+            <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Rows" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Rows})")" />
         </div>
     }
 

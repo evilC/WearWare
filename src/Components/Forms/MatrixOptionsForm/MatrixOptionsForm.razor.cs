@@ -235,6 +235,8 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
 
         private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
         {
+            // Validate on each field change so validation messages update while typing
+            _editContext?.Validate();
             UpdateArgsPreview();
         }
 

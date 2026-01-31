@@ -1,0 +1,53 @@
+@* Input number component that supports nullable ints and validates on input *@
+@using Microsoft.AspNetCore.Components.Forms
+@inherits InputBase<int?>
+
+<input @attributes="AdditionalAttributes"
+       class="@CssClass"
+       value="@(CurrentValueAsString ?? string.Empty)"
+       @oninput="HandleInput" />
+
+@code {
+    [Parameter]
+    public EventCallback<int?> OnInput { get; set; }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        CurrentValueAsString = e?.Value?.ToString() ?? string.Empty;
+
+        int? parsedValue = null;
+        if (!string.IsNullOrWhiteSpace(CurrentValueAsString) && int.TryParse(CurrentValueAsString, out var p))
+        {
+            parsedValue = p;
+        }
+
+        if (OnInput.HasDelegate)
+        {
+            await OnInput.InvokeAsync(parsedValue);
+        }
+        // Trigger validation immediately while typing
+        EditContext?.Validate();
+    }
+
+    #pragma warning disable CS8765
+    protected override bool TryParseValueFromString(string? value, out int? result, out string? validationErrorMessage)
+    {
+        validationErrorMessage = null;
+    #pragma warning restore CS8765
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            result = null;
+            return true;
+        }
+
+        if (int.TryParse(value, out var parsed))
+        {
+            result = parsed;
+            return true;
+        }
+
+        result = null;
+        validationErrorMessage = "The field must be a number.";
+        return false;
+    }
+}

@@ -17,14 +17,15 @@ namespace WearWare.Services.MatrixConfig
         [Range(1, 100, ErrorMessage = "Must be between 1 and 100.")]
         public int? Brightness { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Must be a positive integer.")]
+        [Range(1, 3, ErrorMessage = "Must be between 1 and 3.")]
         public int? ChainLength { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Must be a positive integer.")]
+        [Range(1, 128, ErrorMessage = "Must be between 1 and 128.")]
         public int? Cols { get; set; }
 
         public bool? DisableHardwarePulsing { get; set; }
 
+        // No validation needed, uses a DDL
         public int? GpioSlowdown { get; set; }
 
         public string? HardwareMapping { get; set; }
@@ -48,14 +49,16 @@ namespace WearWare.Services.MatrixConfig
         [Range(1, 11, ErrorMessage = "Must be between 1 and 11.")]
         public int? PwmBits { get; set; }
 
+        // No validation needed, uses a DDL
         public int? PwmDitherBits { get; set; }
 
         [Range(0, int.MaxValue, ErrorMessage = "Must be >= 0.")]
         public int? PwmLsbNanoseconds { get; set; }
 
+        // No validation needed, uses a DDL
         public int? RowAddressType { get; set; }
 
-        [Range(1, int.MaxValue, ErrorMessage = "Must be a positive integer.")]
+        [Range(1, 128, ErrorMessage = "Must be between 1 and 128.")]
         public int? Rows { get; set; }
 
         public string? ScanMode { get; set; }

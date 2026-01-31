@@ -25,9 +25,6 @@
   - Generally, the stub seems to be there (eg `if (importFiles == null)` on Import page)  
     However, even in that example, it's after another check. Should always be first?
 - Some pages have insane amounts of fields, eg Playlist, QuickMedia, MatrixOptionsForm
-  - Largely to do with passing values to forms
-    - Some could be moved into forms?
-    - Some could be consolidated into objects?
   - MatrixOptionsForm
     - Check to see if all still needed. Did not see errors pop up when I cut some to move
     - Large number mainly to do with nullability and enabled / disabled  
