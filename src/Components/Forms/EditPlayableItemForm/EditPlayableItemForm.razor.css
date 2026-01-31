@@ -81,6 +81,11 @@ input[type=number] {
     width: 1.6em;
     vertical-align: middle;
 }
+/* Hides validation outline on radio buttons */
+.edit-dialog ::deep .add-dialog-radio:focus-visible {
+    outline: none; box-shadow: none;
+}
+
 /* PlayModeValue */
 .edit-dialog ::deep .add-dialog-number {
     padding: 0.5em;
