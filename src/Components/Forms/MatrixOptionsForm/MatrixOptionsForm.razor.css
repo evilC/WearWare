@@ -26,7 +26,7 @@
     }
 }
 .mw-matrix-options-modal ::deep .mw-matrix-label, .mw-matrix-label {
-    width: 6em;
+    width: 8em;
     flex-shrink: 0;
     font-weight: 500;
     margin-bottom: 0;

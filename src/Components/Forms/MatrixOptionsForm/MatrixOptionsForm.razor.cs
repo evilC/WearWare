@@ -33,72 +33,7 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
 
         // Helper properties for rendering
         private int ActualBrightness => BrightnessCalculator.CalculateAbsoluteBrightness(Options?.Brightness ?? _defaults.Brightness, RelativeBrightness);
-        // Wrapper for PwmDitherBits select: 0 => null (use default)
-        private int PwmDitherBitsSelectValue
-        {
-            get => Options.PwmDitherBits ?? 0;
-            set => Options.PwmDitherBits = value == 0 ? null : value;
-        }
-        
-        // Wrapper for HardwareMapping select: empty => null (use default)
-        private string HardwareMappingSelectValue
-        {
-            get => Options.HardwareMapping ?? string.Empty;
-            set => Options.HardwareMapping = string.IsNullOrEmpty(value) ? null : value;
-        }
-        // Wrapper for LedRgbSequence select: empty => null (use default)
-        private string LedRgbSequenceSelectValue
-        {
-            get => Options.LedRgbSequence ?? string.Empty;
-            set => Options.LedRgbSequence = string.IsNullOrEmpty(value) ? null : value;
-        }
-        
-        // Wrapper for PanelType select: empty => null (use default)
-        private string PanelTypeSelectValue
-        {
-            get => Options.PanelType ?? string.Empty;
-            set => Options.PanelType = string.IsNullOrEmpty(value) ? null : value;
-        }
-        
-        // Wrapper for GpioSlowdown select: empty => null (use library default, typically 1)
-        private string GpioSlowdownSelectValue
-        {
-            get => Options.GpioSlowdown?.ToString() ?? string.Empty;
-            set => Options.GpioSlowdown = string.IsNullOrEmpty(value) ? null : int.Parse(value);
-        }
-        
-        // Wrapper for select UI: 0 represents 'default' and stores null in Options.RowAddressType
-        private int RowAddressTypeSelectValue
-        {
-            get => Options.RowAddressType ?? 0;
-            set => Options.RowAddressType = value == 0 ? null : value;
-        }
-        // Wrapper for Multiplexing select: store numeric string or null for default
-        private int MultiplexingSelectValue
-        {
-            get => int.TryParse(Options.Multiplexing, out var v) ? v : 0;
-            set => Options.Multiplexing = value == 0 ? null : value.ToString();
-        }
-        
-
-        // Wrapper for ScanMode select: 0 => default (null), otherwise store enum name
-        private int ScanModeSelectValue
-        {
-            get => (Options.ScanMode != null && Enum.TryParse<ScanModes>(Options.ScanMode, out var v)) ? (int)v : 0;
-            set => Options.ScanMode = value == 0 ? null : Enum.GetName(typeof(ScanModes), value);
-        }
-
-        private bool DisableHardwarePulsingChecked
-        {
-            get => Options.DisableHardwarePulsing ?? false;
-            set => Options.DisableHardwarePulsing = value ? true : null;
-        }
-
-        private bool InverseColorsChecked
-        {
-            get => Options.InverseColors ?? false;
-            set => Options.InverseColors = value ? true : null;
-        }
+        // (select/checkbox wrappers migrated to reusable components)
 
         protected override void OnParametersSet()
         {

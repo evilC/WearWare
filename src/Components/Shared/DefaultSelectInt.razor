@@ -1,0 +1,29 @@
+@* Facilitates an Integer selectbox with a default value and stores null when the default value is selected *@
+@using Microsoft.AspNetCore.Components
+
+<select class="form-control mw-matrix-input" @onchange="OnChange" value="@(Value.HasValue ? Value.Value.ToString() : DefaultValue.ToString())">
+    @ChildContent
+</select>
+
+@code {
+    [Parameter] public int? Value { get; set; }
+    [Parameter] public EventCallback<int?> ValueChanged { get; set; }
+    [Parameter] public int DefaultValue { get; set; } = 0;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var s = e?.Value?.ToString() ?? string.Empty;
+        if (string.IsNullOrEmpty(s) || s == DefaultValue.ToString())
+        {
+            await ValueChanged.InvokeAsync(null);
+            return;
+        }
+        if (int.TryParse(s, out var v))
+        {
+            await ValueChanged.InvokeAsync(v);
+            return;
+        }
+        await ValueChanged.InvokeAsync(null);
+    }
+}

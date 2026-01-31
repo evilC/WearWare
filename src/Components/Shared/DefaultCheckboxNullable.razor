@@ -1,0 +1,25 @@
+@* Facilitates a checkbox that stores null when false *@
+@using Microsoft.AspNetCore.Components
+
+<input type="checkbox" class="form-check-input" checked="@(Value ?? false)" @onchange="OnChange" />
+
+@code {
+    [Parameter] public bool? Value { get; set; }
+    [Parameter] public EventCallback<bool?> ValueChanged { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        if (e?.Value is bool b)
+        {
+            if (b)
+                await ValueChanged.InvokeAsync(true);
+            else
+                await ValueChanged.InvokeAsync(null);
+        }
+        else
+        {
+            // fallback
+            await ValueChanged.InvokeAsync(null);
+        }
+    }
+}

@@ -1,0 +1,24 @@
+@* Facilitates a String selectbox with a default value and stores null when the default value is selected *@
+@using Microsoft.AspNetCore.Components
+
+<select class="form-control mw-matrix-input" @onchange="OnChange" value="@(Value ?? DefaultValue)">
+    @ChildContent
+</select>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string DefaultValue { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var s = e?.Value?.ToString() ?? string.Empty;
+        if (string.IsNullOrEmpty(s) || s == DefaultValue)
+        {
+            await ValueChanged.InvokeAsync(null);
+            return;
+        }
+        await ValueChanged.InvokeAsync(s);
+    }
+}
