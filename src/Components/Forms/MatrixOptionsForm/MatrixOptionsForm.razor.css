@@ -63,11 +63,6 @@
     max-width: none;
 }
 
-/* Prevent modal width shifting when validation appears (kept as boxed value if needed) */
-.mw-matrix-options-modal .card {
-    /* width is currently set to 100% for mobile-first behavior; adjust here if desktop boxed width desired */
-}
-
 /* Validation message displayed above the row and spanning full width */
 .mw-field-validation {
     flex-basis: 100%;
