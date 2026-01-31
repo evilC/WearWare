@@ -38,7 +38,7 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=number] {
     appearance: textfield;
 }
-.add-dialog-row {
+.edit-dialog-row {
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -46,7 +46,7 @@ input[type=number] {
     align-items: stretch;
     margin-bottom: 1em;
 }
-.add-dialog-section {
+.edit-dialog-section {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -57,7 +57,7 @@ input[type=number] {
     padding: 0.2em 0.5em;
     background: #fafafa;
 }
-.add-dialog-label {
+.edit-dialog-label {
     font-weight: 500;
     text-align: center;
     width: 100%;
@@ -65,14 +65,14 @@ input[type=number] {
     line-height: 2em;
 }
 /* Lays PlayMode radios + labels out horizontally */
-.add-dialog-playmode-radios-block {
+.edit-dialog-playmode-radios-block {
     display: flex;
     gap: 1em;
     height: 100%;
     justify-content: center;
 }
 /* Stacks PlayMode radios + labels vertically */
-.add-dialog-playmode-radio-block {
+.edit-dialog-playmode-radio-block {
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
@@ -80,13 +80,13 @@ input[type=number] {
     white-space: normal;
 }
 /* Sizes PlayMode Radios */
-.edit-dialog ::deep .add-dialog-playmode-radio {
+.edit-dialog ::deep .edit-dialog-playmode-radio {
     transform: scale(2.1);
     outline: none; box-shadow: none;    /* Hides validation outline on radio buttons */
 }
 
 /* Sizes InputNumber fields - PlayModeValue, Relative Brightness etc */
-.edit-dialog ::deep .add-dialog-number {
+.edit-dialog ::deep .edit-dialog-number {
     padding: 0.5em;
     font-size: 1em;
     border-radius: 6px;
@@ -100,7 +100,7 @@ input[type=number] {
     appearance: textfield;
 }
 /* Stream Current / Relative / Adjusted Brightness Stack */
-.add-dialog__list {
+.edit-dialog__list {
     width: 100%;
     overflow-y: auto;
     border: 1px solid #eee;
@@ -109,7 +109,7 @@ input[type=number] {
     border-radius: 8px;
 }
 /* Image preview */
-.add-dialog__item-image {
+.edit-dialog__item-image {
     max-width: 64px;
     max-height: 64px;
     border-radius: 6px;
@@ -117,11 +117,11 @@ input[type=number] {
     background: #eee;
 }
 /* Media Type */
-.add-dialog__item-type {
+.edit-dialog__item-type {
     font-size: 0.9em;
     color: #666;
 }
-.add-dialog__button {
+.edit-dialog__button {
     margin-top: 0.5em;
     padding: 0.7em 2em;
     font-size: 1.1em;
