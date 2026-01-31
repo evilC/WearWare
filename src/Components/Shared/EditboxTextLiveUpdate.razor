@@ -2,13 +2,19 @@
 @inherits InputText
 
 <input @attributes="AdditionalAttributes"
-          class="@CssClass"
-          value="@(CurrentValueAsString ?? string.Empty)"
-          @oninput="HandleInput" />
+       class="@CssClass"
+       value="@(CurrentValueAsString ?? string.Empty)"
+       @oninput="HandleInput" />
+       @if (AddFocusGrabber){
+              @* Hides keyboard on mobile devices when you click Next on the virtual keyboard *@
+              <select style="width: 0px; height: 0px;"/>
+       }
 
 @code {
        [Parameter]
        public EventCallback<string> OnInput { get; set; }
+       [Parameter]
+       public bool AddFocusGrabber { get; set; } = false;
 
        private async Task HandleInput(ChangeEventArgs e)
        {

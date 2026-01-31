@@ -30,7 +30,7 @@
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
                 <div class="edit-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
                     <label class="edit-dialog-label">Name
-                        <EditboxTextLiveUpdate class="edit-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" />
+                        <EditboxTextLiveUpdate class="edit-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" AddFocusGrabber="true"/>
                     </label>
                 </div>
             }
@@ -56,7 +56,8 @@
                     @* -------------- PlayModeValue -------------- *@
                     <div class="edit-dialog-section">
                         <label class="edit-dialog-label">Value</label>
-                        <InputNumber class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue" min="1" max="100" disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" />
+                        <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
+                            disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" onfocus="this.select()" AddFocusGrabber=true/>
                     </div>
                 </div>
             }
@@ -82,12 +83,8 @@
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
                 <div class="edit-dialog-row">
                     <label class="edit-dialog-label">Relative Brightness (%)
-                        <EditboxNumberLiveUpdate
-                            class="edit-dialog-number" 
-                            @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" 
-                            min="1" max="100"
-                            @oninput="e => CalculateBrightness()"
-                            onfocus="this.select()"
+                        <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
+                            @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
                         />
                     </label>
                 </div>
@@ -96,7 +93,7 @@
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="edit-dialog-row">
                     <label class="edit-dialog-label">Adjusted Brightness (%)
-                        <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput" min="1" max="100" />
+                        <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput"/>
                     </label>
                 </div>
             }
