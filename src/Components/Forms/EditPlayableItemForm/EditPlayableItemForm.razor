@@ -24,6 +24,7 @@
                     <span>ReConverts all @FormModel.FormPage items with a new Relative Brightness and their embedded Matrix Options</span>
                 </div>
             }
+            @* -------------- Name (Only used in Import) -------------- *@
             @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
             {
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
@@ -37,28 +38,29 @@
                 FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
             {
                 <div class="add-dialog-row">
+                    @* -------------- PlayMode -------------- *@
                     <div class="add-dialog-section">
-                        <div class="add-dialog-options">
+                        <div class="add-dialog-playmode-radios-block">
                             <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem!.PlayMode">
                                 @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
                                 {
-                                    <label class="add-dialog-radio-label">
-                                        <span class="add-dialog-mode-text">@playMode.ToString()</span>
-                                        <InputRadio class="add-dialog-radio" TValue="PlayMode" Value="playMode" />
-                                    </label>
+                                    <div class="add-dialog-playmode-radio-block">
+                                        <label class="add-dialog-label">@playMode.ToString()</label>
+                                        @* <span class="add-dialog-mode-text">@playMode.ToString()</span> *@
+                                        <InputRadio class="add-dialog-playmode-radio" TValue="PlayMode" Value="playMode" />
+                                    </div>
                                 }
                             </InputRadioGroup>
                         </div>
                     </div>
+                    @* -------------- PlayModeValue -------------- *@
                     <div class="add-dialog-section">
                         <label class="add-dialog-label">Value</label>
-                        @if (FormModel.UpdatedItem != null)
-                        {
-                            <InputNumber class="add-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue" min="1" max="100" disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" />
-                        }
+                        <InputNumber class="add-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue" min="1" max="100" disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" />
                     </div>
                 </div>
             }
+            @* -------------- Stream Current Brightness -------------- *@
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog__list">
                     <div style="display:flex; align-items:center; gap:1rem;">
@@ -75,6 +77,7 @@
                     </label>
                 </div>
             }
+            @* -------------- Relative Brightness -------------- *@
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
                 <div class="add-dialog-row">
@@ -84,10 +87,12 @@
                             @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" 
                             min="1" max="100"
                             @oninput="e => CalculateBrightness()"
+                            onfocus="this.select()"
                         />
                     </label>
                 </div>
             }
+            @* -------------- Adjusted Brightness -------------- *@
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
                 <div class="add-dialog-row">
                     <label class="add-dialog-label">Adjusted Brightness (%)
@@ -97,12 +102,13 @@
             }
             @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                <button type="button" class="add-dialog__cancel-button" @onclick="ShowMatrixOptions">Matrix Options</button>
+                <button type="button" class="add-dialog__button" @onclick="ShowMatrixOptions">Matrix Options</button>
             }
+            @* -------------- Submit / Cancel -------------- *@
             <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
                 <div style="display:flex; gap:0.5rem;">
-                    <button type="button" class="add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
-                    <button type="submit" class="add-dialog__cancel-button">OK</button>
+                    <button type="button" class="add-dialog__button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
+                    <button type="submit" class="add-dialog__button">OK</button>
                 </div>
             </div>
         </div>

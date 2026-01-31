@@ -58,35 +58,28 @@ input[type=number] {
     height: 2em;
     line-height: 2em;
 }
-.add-dialog-label-spacer {
-    height: 2em;
-}
-.add-dialog-options {
+/* Lays PlayMode radios + labels out horizontally */
+.add-dialog-playmode-radios-block {
     display: flex;
     gap: 1em;
-    align-items: center;
     height: 100%;
+    justify-content: center;
 }
-.add-dialog-radio-label {
+/* Stacks PlayMode radios + labels vertically */
+.add-dialog-playmode-radio-block {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
+    gap: 0.55rem;
     height: auto;
     white-space: normal;
 }
-/* PlayMode Radios */
-.edit-dialog ::deep .add-dialog-radio {
-    height: 1.6em;
-    width: 1.6em;
-    vertical-align: middle;
-}
-/* Hides validation outline on radio buttons */
-.edit-dialog ::deep .add-dialog-radio:focus-visible {
-    outline: none; box-shadow: none;
+/* Sizes PlayMode Radios */
+.edit-dialog ::deep .add-dialog-playmode-radio {
+    transform: scale(2.1);
+    outline: none; box-shadow: none;    /* Hides validation outline on radio buttons */
 }
 
-/* PlayModeValue */
+/* Sizes InputNumber fields - PlayModeValue, Relative Brightness etc */
 .edit-dialog ::deep .add-dialog-number {
     padding: 0.5em;
     font-size: 1em;
@@ -100,6 +93,7 @@ input[type=number] {
     -moz-appearance: textfield;
     appearance: textfield;
 }
+/* Responsive styles for small screens */
 @media (max-width: 640px) {
     .edit-dialog__content {
         width: 100vw;
@@ -115,15 +109,8 @@ input[type=number] {
             height: 100dvh;
         }
     }
-    .edit-dialog__content h2 {
-        position: sticky;
-        top: calc(env(safe-area-inset-top, 0.5rem) + 0.25rem);
-        background: #fff;
-        z-index: 2;
-        margin-top: 0;
-        padding-top: 0.25rem;
-    }
 }
+/* Stream Current / Relative / Adjusted Brightness Stack */
 .add-dialog__list {
     width: 100%;
     overflow-y: auto;
@@ -132,6 +119,7 @@ input[type=number] {
     background: #fafafa;
     border-radius: 8px;
 }
+/* Image preview */
 .add-dialog__item-image {
     max-width: 64px;
     max-height: 64px;
@@ -139,11 +127,12 @@ input[type=number] {
     box-shadow: 0 1px 8px rgba(0,0,0,0.125);
     background: #eee;
 }
+/* Media Type */
 .add-dialog__item-type {
     font-size: 0.9em;
     color: #666;
 }
-.add-dialog__cancel-button {
+.add-dialog__button {
     margin-top: 0.5em;
     padding: 0.7em 2em;
     font-size: 1.1em;
