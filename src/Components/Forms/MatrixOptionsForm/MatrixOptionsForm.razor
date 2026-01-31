@@ -1,5 +1,7 @@
 @rendermode InteractiveServer
 
+@using WearWare.Components.Forms
+
 <div class="mw-matrix-options-modal">
     <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
@@ -15,19 +17,14 @@
         <div class="card-body">
                 @* Processing/result overlay is rendered as a full-window overlay below so it covers the entire form *@
                <div class="mw-matrix-form-fields">
-    @if (ShowBrightness || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.BrightnessEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Brightness)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="BrightnessEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Brightness %</label>
+        <FieldWrapper Label="Brightness %" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.BrightnessEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Brightness" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Brightness})")" />
-        </div>
+        </FieldWrapper>
     }
     @if (!HideRelativeBrightness)
     {
@@ -41,56 +38,36 @@
             <input type="number" class="form-control mw-matrix-input" value="@ActualBrightness" disabled />
         </div>
     }
-    @if (ShowChainLength || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.ChainLengthEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.ChainLength)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="ChainLengthEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Chain Length</label>
+        <FieldWrapper Label="Chain Length" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.ChainLengthEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.ChainLength" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.ChainLength})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowCols || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.ColsEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Cols)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="ColsEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Cols</label>
+        <FieldWrapper Label="Cols" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.ColsEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Cols" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Cols})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowDisableHardwarePulsing || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.DisableHardwarePulsingEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="DisableHardwarePulsingEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Disable Hardware Pulsing</label>
+        <FieldWrapper Label="Disable Hardware Pulsing" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.DisableHardwarePulsingEnabled)">
             <InputCheckbox class="form-check-input" @bind-Value="DisableHardwarePulsingChecked" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowGpioSlowdown || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.GpioSlowdownEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="GpioSlowdownEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Gpio Slowdown</label>
+        <FieldWrapper Label="Gpio Slowdown" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.GpioSlowdownEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="GpioSlowdownSelectValue">
                 <option value="0">0</option>
                 <option value="">(Default: 1)</option>
@@ -98,46 +75,31 @@
                 <option value="3">3</option>
                 <option value="4">4</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowHardwareMapping || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.HardwareMappingEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="HardwareMappingEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Hardware Mapping</label>
+        <FieldWrapper Label="Hardware Mapping" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.HardwareMappingEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="HardwareMappingSelectValue">
                 <option value="">(Default: regular)</option>
                 <option value="adafruit-hat">adafruit-hat</option>
                 <option value="adafruit-hat-pwm">adafruit-hat-pwm</option>
                 <option value="compute-module">compute-module</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowInverseColors || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.InverseColorsEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="InverseColorsEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Inverse Colors</label>
+        <FieldWrapper Label="Inverse Colors" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.InverseColorsEnabled)">
             <InputCheckbox class="form-check-input" @bind-Value="InverseColorsChecked" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowLedRgbSequence || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.LedRgbSequenceEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="LedRgbSequenceEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Led RGB Sequence</label>
+        <FieldWrapper Label="Led RGB Sequence" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.LedRgbSequenceEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="LedRgbSequenceSelectValue">
                 <option value="">(Default: RGB)</option>
                 <option value="RBG">RBG</option>
@@ -146,32 +108,22 @@
                 <option value="BRG">BRG</option>
                 <option value="BGR">BGR</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowLimitRefreshRateHz || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.LimitRefreshRateHzEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.LimitRefreshRateHz)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="LimitRefreshRateHzEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Limit Refresh Rate Hz</label>
+        <FieldWrapper Label="Limit Refresh Rate Hz" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.LimitRefreshRateHzEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowMultiplexing || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.MultiplexingEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="MultiplexingEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Multiplexing</label>
+        <FieldWrapper Label="Multiplexing" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.MultiplexingEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="MultiplexingSelectValue">
                 <option value="0">(Default: Direct)</option>
                 <option value="1">1 — Stripe</option>
@@ -186,103 +138,68 @@
                 <option value="10">10 — QiangLiQ8</option>
                 <option value="11">11 — InversedZStripe</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowPanelType || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.PanelTypeEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="PanelTypeEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Panel Type</label>
+        <FieldWrapper Label="Panel Type" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.PanelTypeEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="string" @bind-Value="PanelTypeSelectValue">
                 <option value="">(Default: HUB75)</option>
                 <option value="FM6126A">FM6126A</option>
                 <option value="FM6127">FM6127</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowParallel || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.ParallelEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Parallel)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="ParallelEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Parallel</label>
+        <FieldWrapper Label="Parallel" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.ParallelEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Parallel" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Parallel})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowPixelMapperConfig || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.PixelMapperConfigEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="PixelMapperConfigEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Pixel Mapper Config</label>
+        <FieldWrapper Label="Pixel Mapper Config" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.PixelMapperConfigEnabled)">
             <InputTextOnInput class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowPwmBits || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.PwmBitsEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="PwmBitsEnabledChecked" />
-            }
-            <label class="mw-matrix-label">PWM Bits</label>
+        <FieldWrapper Label="PWM Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.PwmBitsEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PwmBits})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowPwmDitherBits || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.PwmDitherBitsEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="PwmDitherBitsEnabledChecked" />
-            }
-            <label class="mw-matrix-label">PWM Dither Bits</label>
+        <FieldWrapper Label="PWM Dither Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.PwmDitherBitsEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="PwmDitherBitsSelectValue">
                 <option value="0">(Default: 0)</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowPwmLsbNanoseconds || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.PwmLsbNanosecondsEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.PwmLsbNanoseconds)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="PwmLsbNanosecondsEnabledChecked" />
-            }
-            <label class="mw-matrix-label">PWM LSB Nanoseconds</label>
+        <FieldWrapper Label="PWM LSB Nanoseconds" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.PwmLsbNanosecondsEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowRowAddressType || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.RowAddressTypeEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="RowAddressTypeEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Row Address Type</label>
+        <FieldWrapper Label="Row Address Type" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.RowAddressTypeEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="RowAddressTypeSelectValue">
                 <option value="0">(Default: 0)</option>
                 <option value="1">1 — AB</option>
@@ -291,37 +208,27 @@
                 <option value="4">4 — ABC Shift + DE direct</option>
                 <option value="5">5 — ABC Alternate</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowRows || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.RowsEnabled ?? false))
     {
         <div class="mw-field-validation">
             <ValidationMessage For="@(() => Options.Rows)" />
         </div>
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="RowsEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Rows</label>
+        <FieldWrapper Label="Rows" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.RowsEnabled)">
             <InputNumberOnInputNullable class="form-control mw-matrix-input" @bind-Value="Options.Rows" @bind-Value:event="oninput" placeholder="@($"(Default: {_defaults.Rows})")" />
-        </div>
+        </FieldWrapper>
     }
 
-    @if (ShowScanMode || OnGlobalOptionsForm)
+    @if (OnGlobalOptionsForm || (Visibility?.ScanModeEnabled ?? false))
     {
-        <div class="mw-matrix-form-row">
-            @if (OnGlobalOptionsForm)
-            {
-                <InputCheckbox class="me-2" @bind-Value="ScanModeEnabledChecked" />
-            }
-            <label class="mw-matrix-label">Scan Mode</label>
+        <FieldWrapper Label="Scan Mode" ShowEnableToggle="OnGlobalOptionsForm" VisibilityExpression="@(() => Visibility.ScanModeEnabled)">
             <InputSelect class="form-control mw-matrix-input" TValue="int" @bind-Value="ScanModeSelectValue">
                 <option value="0">(Default: Progressive)</option>
                 <option value="1">1 — Interlaced</option>
             </InputSelect>
-        </div>
+        </FieldWrapper>
     }
 
     @* led-image-viewer args preview *@
