@@ -237,5 +237,21 @@ namespace WearWare.Services.Playlist
         {
             return Path.Combine(PathConfig.PlaylistFolder, Name);
         }
+
+        /// <summary>
+        /// Creates a deep clone of this PlaylistItems with a new name
+        /// </summary>
+        /// <param name="newName"></param> The name for the new playlist
+        public PlaylistItems Clone(string newName)
+        {
+            var items = new List<PlayableItem>();
+            foreach (var originalItem in _items)
+            {
+                var item = originalItem.Clone();
+                item.ParentFolder = Path.Combine(PathConfig.PlaylistFolder, newName);
+                items.Add(item);
+            }
+            return new PlaylistItems(_logger, newName, _config.Clone(), items);
+        }
     }
 }

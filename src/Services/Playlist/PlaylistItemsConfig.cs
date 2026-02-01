@@ -41,5 +41,13 @@ namespace WearWare.Services.Playlist
             var configFile = Path.Combine(configPath, "playlistconfig.json");
             JsonUtils.ToJsonFile(configFile, this);
         }
+
+        public PlaylistItemsConfig Clone()
+        {
+            return new PlaylistItemsConfig
+            {
+                CurrentItem = this.CurrentItem
+            };
+        }
     }
 }

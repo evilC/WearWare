@@ -350,7 +350,7 @@ namespace WearWare.Components.Pages.Playlist
             }
             else if (model.Mode == AddCopyPlaylistMode.Copy)
             {
-                // PlaylistService.CopyPlaylist(model.OldName, model.NewName);
+                PlaylistService.CopyPlaylist(model.OldName, model.NewName);
             }
             else
             {

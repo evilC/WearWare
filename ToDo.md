@@ -2,7 +2,6 @@
 
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
-- Duplicate playlist
 
 ### Code overhaul
 - Components
@@ -31,6 +30,7 @@
   eg BEC will not handle 100% brightness for full white images  
   Would require dynamic form validation?
 - Implement nicer confirm dialog for delete
+- Public everywhere! Change to internal where possible
 
 ### Misc
 - Can originalItem be stored in the `EditPlayableItemForm`?  

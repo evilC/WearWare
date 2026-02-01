@@ -508,6 +508,48 @@ namespace WearWare.Services.Playlist
         }
 
         /// <summary>
+        /// Copies an existing playlist to a new playlist
+        /// </summary>
+        /// <param name="oldName"></param> The name of the existing playlist
+        /// <param name="newName"></param> The name of the new playlist
+        /// </summary>
+        internal async Task CopyPlaylist(string oldName, string newName)
+        {
+            if (string.IsNullOrEmpty(oldName) || string.IsNullOrEmpty(newName) || !_playlists.ContainsKey(oldName) || _playlists.ContainsKey(newName))
+                return;
+            try
+            {
+                var opId = await _operationProgress.StartOperation($"Copying Playlist {oldName} to {newName}");
+                var oldPlaylist = _playlists[oldName];
+                _operationProgress.ReportProgress(opId, "Cloning playlist...");
+                var newPlaylist = oldPlaylist.Clone(newName);
+                _operationProgress.ReportProgress(opId, "Copying playlist files...");
+                // Copy playlist folder
+                var oldPath = Path.Combine(PathConfig.PlaylistPath, oldName);
+                var newPath = Path.Combine(PathConfig.PlaylistPath, newName);
+                Directory.CreateDirectory(newPath);
+                foreach (var file in Directory.GetFiles(oldPath))
+                {
+                    var destFile = Path.Combine(newPath, Path.GetFileName(file));
+                    File.Copy(file, destFile, overwrite: true);
+                }
+                _playlists[newName] = newPlaylist;
+                _operationProgress.ReportProgress(opId, "Saving new playlist...");
+                newPlaylist.Serialize();
+                _operationProgress.CompleteOperation(opId, true, "Done");
+            }
+            catch (Exception ex)
+            {
+                if (_playlists.ContainsKey(newName))
+                {
+                    _playlists.Remove(newName);
+                }
+                _logger.LogError(ex, "{LogTag} Error copying playlist from {OldName} to {NewName}", _logTag, oldName, newName);
+                return;
+            }
+        }
+
+        /// <summary>
         /// Deletes the specified playlist
         /// </summary>
         /// <param name="playlistName"></param> The name of the playlist to delete
