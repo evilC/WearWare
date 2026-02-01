@@ -22,11 +22,6 @@ namespace WearWare.Components.Pages.Library
             items = LibraryService.Items;
         }
 
-        private async Task UnlockScrollbar(){
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
-        }
-
         private void OnItemsChanged()
         {
             items = LibraryService.Items;
@@ -69,7 +64,6 @@ namespace WearWare.Components.Pages.Library
         private async Task OnEditFormCancel()
         {
             _editFormModel = null;
-            await UnlockScrollbar();
         }
 
         /// <summary>
@@ -80,7 +74,6 @@ namespace WearWare.Components.Pages.Library
         {
             _editFormModel = null;
             await LibraryService.OnEditFormSubmit(formModel);
-            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 
@@ -118,7 +111,6 @@ namespace WearWare.Components.Pages.Library
         {
             _editFormModel = null;
             await LibraryService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
-            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
     }

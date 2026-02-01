@@ -15,14 +15,11 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
         {
             if (firstRender)
             {
-                await JS.InvokeVoidAsync("import", "/js/ScrollbarHider.js");
-                await JS.InvokeVoidAsync("modalScrollLock.lock");
             }
         }
 
         public async ValueTask DisposeAsync()
         {
-            await JS.InvokeVoidAsync("modalScrollLock.unlock");
         }
         [Parameter] public EditPlayableItemFormModel? FormModel { get; set; }
         [Parameter] public IReadOnlyList<PlayableItem>? LibraryItems { get; set; }
@@ -42,11 +39,6 @@ namespace WearWare.Components.Forms.AddPlayableItemForm
             FormModel.OriginalItem = libItem;
             FormModel.UpdatedItem = libItem.Clone();
             OnAdd.InvokeAsync(FormModel);
-        }
-
-        public async Task UnlockScrollAsync()
-        {
-            await JS.InvokeVoidAsync("modalScrollLock.unlock");
         }
     }
 }

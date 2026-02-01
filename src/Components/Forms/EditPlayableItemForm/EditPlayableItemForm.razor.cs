@@ -74,22 +74,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         {
             if (firstRender)
             {
-                await JS.InvokeVoidAsync("import", "/js/ScrollbarHider.js");
-                await JS.InvokeVoidAsync("modalScrollLock.lock");
             }
-        }
-
-        /// <summary>
-        /// Unlocks scroll when the form is disposed 
-        /// </summary>
-        public async Task UnlockScrollAsync()
-        {
-            await JS.InvokeVoidAsync("modalScrollLock.unlock");
-        }
-
-        public async ValueTask DisposeAsync()
-        {
-            await JS.InvokeVoidAsync("modalScrollLock.unlock");
         }
 
         // Recalculates adjusted brightness based on current matrix options and selected relative brightness

@@ -49,22 +49,11 @@ namespace WearWare.Components.Pages.QuickMedia
             InvokeAsync(StateHasChanged);
         }
 
-        /// <summary>
-        /// Unlocks the scrollbar if it was locked
-        /// </summary>
-        private async Task UnlockScrollbar(){
-            if (_addFormRef is not null)
-                await _addFormRef.UnlockScrollAsync();
-            if (_editFormRef is not null)
-                await _editFormRef.UnlockScrollAsync();
-        }
-
         public void Dispose()
         {
             if (QuickMediaService != null)
                 QuickMediaService.StateChanged -= OnStateChanged;
         }
-
 
         // ================================================== Add Dialog  ==================================================
         void OnAddDialogShow(int index)
@@ -81,7 +70,6 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             _addFormModel = null;
             StateHasChanged();
-            await UnlockScrollbar();
         }
 
         /// <summary>
@@ -96,7 +84,6 @@ namespace WearWare.Components.Pages.QuickMedia
             editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
             _editFormModel = editFormModel;
             await InvokeAsync(StateHasChanged);
-            await UnlockScrollbar();
         }
 
         // ================================================== Edit Dialog  ==================================================
@@ -130,7 +117,6 @@ namespace WearWare.Components.Pages.QuickMedia
             _editFormModel = null;
             await QuickMediaService.OnEditFormSubmit(formModel);
             await InvokeAsync(StateHasChanged);
-            await UnlockScrollbar();
         }
 
         /// <summary>
@@ -140,7 +126,6 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             _editFormModel = null;
             await InvokeAsync(StateHasChanged);
-            await UnlockScrollbar();
         }
 
         // ================================================= Delete Item ==================================================
@@ -196,7 +181,6 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             _editFormModel = null;
             await QuickMediaService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
-            await UnlockScrollbar();
             await InvokeAsync(StateHasChanged);
         }
 
