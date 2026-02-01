@@ -335,7 +335,7 @@ namespace WearWare.Components.Pages.Playlist
         }
 
         // Called when Submit is clicked in the Add/Copy Playlist form
-        private void OnAddCopyPlaylistFormSubmit(AddCopyPlaylistFormModel model)
+        private async Task OnAddCopyPlaylistFormSubmit(AddCopyPlaylistFormModel model)
         {
             _addCopyPlaylistModel = null!;
             var sanitized = FilenameValidator.Sanitize(model.NewName);
@@ -350,7 +350,7 @@ namespace WearWare.Components.Pages.Playlist
             }
             else if (model.Mode == AddCopyPlaylistMode.Copy)
             {
-                PlaylistService.CopyPlaylist(model.OldName, model.NewName);
+                await PlaylistService.CopyPlaylist(model.OldName, model.NewName);
             }
             else
             {
