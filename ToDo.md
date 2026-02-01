@@ -3,10 +3,6 @@
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Duplicate playlist
-- File + Folder name validation
-  - Empty string is not caught by `FilenameValidator.AllowedPattern` - check if it is possible to use an empty string anywhere
-  - Allow spaces, and convert?
-
 
 ### Code overhaul
 - Components

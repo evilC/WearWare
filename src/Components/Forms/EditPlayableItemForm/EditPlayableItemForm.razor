@@ -30,7 +30,8 @@
                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
                 <div class="edit-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
                     <label class="edit-dialog-label">Name
-                        <EditboxTextLiveUpdate class="edit-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" AddFocusGrabber="true"/>
+                        <EditboxTextLiveUpdate class="edit-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" 
+                            AddFocusGrabber="true" ReplaceSpaceWith="-" />
                     </label>
                 </div>
             }

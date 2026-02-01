@@ -321,6 +321,7 @@ namespace WearWare.Components.Pages.Playlist
             if (mode == AddCopyPlaylistMode.Copy)
             {
                 model.OldName = _editingPlaylist;
+                model.NewName = $"{_editingPlaylist}-";
             }
             _addCopyPlaylistModel = model;
             StateHasChanged();

@@ -13,12 +13,15 @@
 @code {
        [Parameter]
        public EventCallback<string> OnInput { get; set; }
-       [Parameter]
-       public bool AddFocusGrabber { get; set; } = false;
+       [Parameter] public bool AddFocusGrabber { get; set; } = false;
+       [Parameter] public string? ReplaceSpaceWith { get; set; }
 
        private async Task HandleInput(ChangeEventArgs e)
        {
-              CurrentValueAsString = e?.Value?.ToString() ?? string.Empty;
+              var raw = e?.Value?.ToString() ?? string.Empty;
+              // Replace spaces with the configured replacement as the user types
+              var normalized = string.IsNullOrEmpty(ReplaceSpaceWith) ? raw : raw.Replace(" ", ReplaceSpaceWith);
+              CurrentValueAsString = normalized;
               // Forward the current string value to the parent so @oninput handlers receive the bound value type expected by Razor.
               if (OnInput.HasDelegate)
               {
