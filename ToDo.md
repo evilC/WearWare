@@ -2,6 +2,9 @@
 
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
+- CSS overhaul  
+  - Move more stuff to Bootsrap
+  - Styles on Import page all embedded
 
 ### Code overhaul
 - Components
@@ -14,14 +17,6 @@
   `@attribute [StreamRendering(true)]` to start of all pages.  
   - Generally, the stub seems to be there (eg `if (importFiles == null)` on Import page)  
     However, even in that example, it's after another check. Should always be first?
-- Can we replace modalScrollLock with something else?  
-  Used when showing a full screen overlay over a page which will have a scrollbar, to hide the scrollbar while the overlay is visible  
-  Set overflow to none on parent page instead?
-- Headers and footers  
-  On some pages it would be nice if we could have headers or footers that were always visible  
-  MatrixOptionsForm does this nicely, check how it does it.
-  - Playlist  
-    Playlist selection in header
 - More stuff in _Imports.razor?
 
 ## Med Priority
@@ -31,19 +26,6 @@
   Would require dynamic form validation?
 - Implement nicer confirm dialog for delete
 - Public everywhere! Change to internal where possible
-
-### Misc
-- Can originalItem be stored in the `EditPlayableItemForm`?  
-  That way, we do not need to implement storing it on each of the pages
-
-### CSS / Layout overhaul
-- Work out why I cannot style Blazor form elements (CSS classes not taking effect)
-- Validation not fully rolled out  
-  - EditPlayableItemForm not a razor form, except for Name  
-    Dodgy form inside of form
-- Probably lots of redundant CSS around
-- Lots of CSS could probably be centralized
-- Styles on Import page all embedded. Move to CSS file
 
 ### Crash hardening.  
 - Various places where null-forgiving operators are used
