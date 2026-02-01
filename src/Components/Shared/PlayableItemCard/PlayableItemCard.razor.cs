@@ -8,6 +8,7 @@ namespace WearWare.Components.Shared.PlayableItemCard
         [Parameter] public PlayableItem? Item { get; set; }
         [Parameter] public string? ImageSrc { get; set; }
         [Parameter] public EventCallback<PlayableItem?> ImageClicked { get; set; }
+        [Parameter] public bool ShowPlayMode { get; set; } = true;
 
         private async Task HandleImageClick()
         {

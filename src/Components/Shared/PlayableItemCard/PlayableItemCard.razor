@@ -9,8 +9,10 @@
         <strong class="playlist-item-title">@Item?.Name</strong>
         @if (Item is not null)
         {
-            <div class="playlist-item-mode">@($"{Item.PlayMode.ToString()}" +
-                $"{(Item.PlayMode == PlayMode.Loop ? $" {Item.PlayModeValue}x" : (Item.PlayMode == PlayMode.Duration ? $" {Item.PlayModeValue}s" : ""))}")</div>
+            @if (ShowPlayMode){
+                <div class="playlist-item-mode">@($"{Item.PlayMode.ToString()}" +
+                    $"{(Item.PlayMode == PlayMode.Loop ? $" {Item.PlayModeValue}x" : (Item.PlayMode == PlayMode.Duration ? $" {Item.PlayModeValue}s" : ""))}")</div>
+            }
             <div class = "playlist-item-brightness">Brightness: @Item.CurrentBrightness%</div>
         }
     </div>

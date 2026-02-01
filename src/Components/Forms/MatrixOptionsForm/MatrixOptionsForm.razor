@@ -1,263 +1,263 @@
-@rendermode InteractiveServer
-
-@using WearWare.Components.Forms
-
 <div class="mw-matrix-options-modal">
     <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
-    <div class="card">
-        <div class="card-header">
-            <h2>@(!string.IsNullOrEmpty(Title) ? Title : $"Matrix Options for {Action}")</h2>
+    <div class="ww-modal">
+        <div class="ww-modal-header">
+            <div class="text-center">
+                <h2>@(!string.IsNullOrEmpty(Title) ? Title : $"Matrix Options for {Action}")</h2>
+            </div>
             @if (OnGlobalOptionsForm)
             {
                 <span>The checkbox at the start of each row controls whether the option shows on other pages (Import, Library etc)</span>
             }
         </div>
-        <div class="card-body">
-                @* Processing/result overlay is rendered as a full-window overlay below so it covers the entire form *@
-               <div class="mw-matrix-form-fields">
-    @* -------------- Brightness -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.BrightnessEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.Brightness)" />
-        </div>
-        <VisibilityWrapper Label="Brightness %" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.BrightnessEnabled)" VisibilitySetter="@((bool? v) => Visibility!.BrightnessEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Brightness" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.Brightness})")" AddFocusGrabber="true" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Relative Brightness -------------- *@
-    @if (!HideRelativeBrightness)
-    {
-        // Helper fields to show current relative and calculated brightness
-        <div class="mw-matrix-form-row">
-            <label class="mw-matrix-label">Relative Brightness %</label>
-            <input type="number" class="form-control mw-matrix-input" value="@RelativeBrightness" disabled />
-        </div>
-        <div class="mw-matrix-form-row">
-            <label class="mw-matrix-label">Actual Brightness %</label>
-            <input type="number" class="form-control mw-matrix-input" value="@ActualBrightness" disabled />
-        </div>
-    }
-    @* -------------- Chain Length -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.ChainLengthEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.ChainLength)" />
-        </div>
-        <VisibilityWrapper Label="Chain Length" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ChainLengthEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ChainLengthEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.ChainLength" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.ChainLength})")" AddFocusGrabber="true"/>
-        </VisibilityWrapper>
-    }
-    @* -------------- Cols -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.ColsEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.Cols)" />
-        </div>
-        <VisibilityWrapper Label="Cols" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ColsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ColsEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Cols" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.Cols})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Disable Hardware Pulsing -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.DisableHardwarePulsingEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Disable Hardware Pulsing" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.DisableHardwarePulsingEnabled)" VisibilitySetter="@((bool? v) => Visibility!.DisableHardwarePulsingEnabled = v)">
-            <CheckboxNullable @bind-Value="Options.DisableHardwarePulsing" />
-        </VisibilityWrapper>
-    }
-    @* -------------- GPIO Slowdown -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.GpioSlowdownEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Gpio Slowdown" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.GpioSlowdownEnabled)" VisibilitySetter="@((bool? v) => Visibility!.GpioSlowdownEnabled = v)">
-            <SelectboxNumberDefaultNullable @bind-Value="Options.GpioSlowdown" DefaultValue="1">
-                <option value="0">0</option>
-                <option value="1">(Default: 1)</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-            </SelectboxNumberDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Hardware Mapping -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.HardwareMappingEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Hardware Mapping" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.HardwareMappingEnabled)" VisibilitySetter="@((bool? v) => Visibility!.HardwareMappingEnabled = v)">
-            <SelectboxStringDefaultNullable @bind-Value="Options.HardwareMapping" DefaultValue="">
-                <option value="">(Default: regular)</option>
-                <option value="adafruit-hat">adafruit-hat</option>
-                <option value="adafruit-hat-pwm">adafruit-hat-pwm</option>
-                <option value="compute-module">compute-module</option>
-            </SelectboxStringDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Inverse Colors -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.InverseColorsEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Inverse Colors" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.InverseColorsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.InverseColorsEnabled = v)">
-            <CheckboxNullable @bind-Value="Options.InverseColors" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Led RGB Sequence -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.LedRgbSequenceEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Led RGB Sequence" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.LedRgbSequenceEnabled)" VisibilitySetter="@((bool? v) => Visibility!.LedRgbSequenceEnabled = v)">
-            <SelectboxStringDefaultNullable @bind-Value="Options.LedRgbSequence" DefaultValue="">
-                <option value="">(Default: RGB)</option>
-                <option value="RBG">RBG</option>
-                <option value="GRB">GRB</option>
-                <option value="GBR">GBR</option>
-                <option value="BRG">BRG</option>
-                <option value="BGR">BGR</option>
-            </SelectboxStringDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Limit Refresh Rate Hz -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.LimitRefreshRateHzEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.LimitRefreshRateHz)" />
-        </div>
-        <VisibilityWrapper Label="Limit Refresh Rate Hz" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.LimitRefreshRateHzEnabled)" VisibilitySetter="@((bool? v) => Visibility!.LimitRefreshRateHzEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Multiplexing -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.MultiplexingEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Multiplexing" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.MultiplexingEnabled)" VisibilitySetter="@((bool? v) => Visibility!.MultiplexingEnabled = v)">
-            <SelectboxStringDefaultNullable @bind-Value="Options.Multiplexing" DefaultValue="0">
-                <option value="0">(Default: Direct)</option>
-                <option value="1">1 — Stripe</option>
-                <option value="2">2 — Checkered</option>
-                <option value="3">3 — Spiral</option>
-                <option value="4">4 — ZStripe</option>
-                <option value="5">5 — ZnMirrorZStripe</option>
-                <option value="6">6 — coreman</option>
-                <option value="7">7 — Kaler2Scan</option>
-                <option value="8">8 — ZStripeUneven</option>
-                <option value="9">9 — P10-128x4-Z</option>
-                <option value="10">10 — QiangLiQ8</option>
-                <option value="11">11 — InversedZStripe</option>
-            </SelectboxStringDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Panel Type -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.PanelTypeEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Panel Type" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PanelTypeEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PanelTypeEnabled = v)">
-            <SelectboxStringDefaultNullable @bind-Value="Options.PanelType" DefaultValue="">
-                <option value="">(Default: HUB75)</option>
-                <option value="FM6126A">FM6126A</option>
-                <option value="FM6127">FM6127</option>
-            </SelectboxStringDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Parallel -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.ParallelEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.Parallel)" />
-        </div>
-        <VisibilityWrapper Label="Parallel" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ParallelEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ParallelEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Parallel" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.Parallel})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Pixel Mapper Config -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.PixelMapperConfigEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Pixel Mapper Config" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PixelMapperConfigEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PixelMapperConfigEnabled = v)">
-            <EditboxTextLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- PWM Bits -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.PwmBitsEnabled ?? false))
-    {
-        <VisibilityWrapper Label="PWM Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmBitsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmBitsEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" @bind-Value:event="oninput" onfocus="this.select()"
-            placeholder="@($"(Default: {_defaults.PwmBits})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- PWM Dither Bits -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.PwmDitherBitsEnabled ?? false))
-    {
-        <VisibilityWrapper Label="PWM Dither Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmDitherBitsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmDitherBitsEnabled = v)">
-            <SelectboxNumberDefaultNullable @bind-Value="Options.PwmDitherBits" DefaultValue="0">
-                <option value="0">(Default: 0)</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-            </SelectboxNumberDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- PWM LSB Nanoseconds -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.PwmLsbNanosecondsEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.PwmLsbNanoseconds)" />
-        </div>
-        <VisibilityWrapper Label="PWM LSB Nanoseconds" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmLsbNanosecondsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmLsbNanosecondsEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Row Address Type -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.RowAddressTypeEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Row Address Type" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.RowAddressTypeEnabled)" VisibilitySetter="@((bool? v) => Visibility!.RowAddressTypeEnabled = v)">
-            <SelectboxNumberDefaultNullable @bind-Value="Options.RowAddressType" DefaultValue="0">
-                <option value="0">(Default: 0)</option>
-                <option value="1">1 — AB</option>
-                <option value="2">2 — Direct row select</option>
-                <option value="3">3 — ABC</option>
-                <option value="4">4 — ABC Shift + DE direct</option>
-                <option value="5">5 — ABC Alternate</option>
-            </SelectboxNumberDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Rows -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.RowsEnabled ?? false))
-    {
-        <div class="mw-field-validation">
-            <ValidationMessage For="@(() => Options.Rows)" />
-        </div>
-        <VisibilityWrapper Label="Rows" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.RowsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.RowsEnabled = v)">
-            <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Rows" @bind-Value:event="oninput" onfocus="this.select()"
-                placeholder="@($"(Default: {_defaults.Rows})")" />
-        </VisibilityWrapper>
-    }
-    @* -------------- Scan Mode -------------- *@
-    @if (OnGlobalOptionsForm || (Visibility?.ScanModeEnabled ?? false))
-    {
-        <VisibilityWrapper Label="Scan Mode" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ScanModeEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ScanModeEnabled = v)">
-            <SelectboxStringDefaultNullable @bind-Value="Options.ScanMode" DefaultValue="">
-                <option value="">(Default: Progressive)</option>
-                <option value="Progressive">Progressive</option>
-                <option value="Interlaced">Interlaced</option>
-            </SelectboxStringDefaultNullable>
-        </VisibilityWrapper>
-    }
-    @* -------------- Arguments Preview -------------- *@
-    @* led-image-viewer args preview *@
-    </div>
+        <div class="ww-modal-body">
+            @* Processing/result overlay is rendered as a full-window overlay below so it covers the entire form *@
+            <div class="mw-matrix-form-fields">
+                @* -------------- Brightness -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.BrightnessEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.Brightness)" />
+                    </div>
+                    <VisibilityWrapper Label="Brightness %" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.BrightnessEnabled)" VisibilitySetter="@((bool? v) => Visibility!.BrightnessEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Brightness" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.Brightness})")" AddFocusGrabber="true" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Relative Brightness -------------- *@
+                @if (!HideRelativeBrightness)
+                {
+                    // Helper fields to show current relative and calculated brightness
+                    <div class="mw-matrix-form-row">
+                        <label class="mw-matrix-label">Relative Brightness %</label>
+                        <input type="number" class="form-control mw-matrix-input" value="@RelativeBrightness" disabled />
+                    </div>
+                    <div class="mw-matrix-form-row">
+                        <label class="mw-matrix-label">Actual Brightness %</label>
+                        <input type="number" class="form-control mw-matrix-input" value="@ActualBrightness" disabled />
+                    </div>
+        }
+                @* -------------- Chain Length -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.ChainLengthEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.ChainLength)" />
+                    </div>
+                    <VisibilityWrapper Label="Chain Length" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ChainLengthEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ChainLengthEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.ChainLength" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.ChainLength})")" AddFocusGrabber="true"/>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Cols -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.ColsEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.Cols)" />
+                    </div>
+                    <VisibilityWrapper Label="Cols" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ColsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ColsEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Cols" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.Cols})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Disable Hardware Pulsing -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.DisableHardwarePulsingEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Disable Hardware Pulsing" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.DisableHardwarePulsingEnabled)" VisibilitySetter="@((bool? v) => Visibility!.DisableHardwarePulsingEnabled = v)">
+                        <CheckboxNullable @bind-Value="Options.DisableHardwarePulsing" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- GPIO Slowdown -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.GpioSlowdownEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Gpio Slowdown" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.GpioSlowdownEnabled)" VisibilitySetter="@((bool? v) => Visibility!.GpioSlowdownEnabled = v)">
+                        <SelectboxNumberDefaultNullable @bind-Value="Options.GpioSlowdown" DefaultValue="1">
+                            <option value="0">0</option>
+                            <option value="1">(Default: 1)</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </SelectboxNumberDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Hardware Mapping -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.HardwareMappingEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Hardware Mapping" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.HardwareMappingEnabled)" VisibilitySetter="@((bool? v) => Visibility!.HardwareMappingEnabled = v)">
+                        <SelectboxStringDefaultNullable @bind-Value="Options.HardwareMapping" DefaultValue="">
+                            <option value="">(Default: regular)</option>
+                            <option value="adafruit-hat">adafruit-hat</option>
+                            <option value="adafruit-hat-pwm">adafruit-hat-pwm</option>
+                            <option value="compute-module">compute-module</option>
+                        </SelectboxStringDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Inverse Colors -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.InverseColorsEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Inverse Colors" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.InverseColorsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.InverseColorsEnabled = v)">
+                        <CheckboxNullable @bind-Value="Options.InverseColors" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Led RGB Sequence -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.LedRgbSequenceEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Led RGB Sequence" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.LedRgbSequenceEnabled)" VisibilitySetter="@((bool? v) => Visibility!.LedRgbSequenceEnabled = v)">
+                        <SelectboxStringDefaultNullable @bind-Value="Options.LedRgbSequence" DefaultValue="">
+                            <option value="">(Default: RGB)</option>
+                            <option value="RBG">RBG</option>
+                            <option value="GRB">GRB</option>
+                            <option value="GBR">GBR</option>
+                            <option value="BRG">BRG</option>
+                            <option value="BGR">BGR</option>
+                        </SelectboxStringDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Limit Refresh Rate Hz -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.LimitRefreshRateHzEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.LimitRefreshRateHz)" />
+                    </div>
+                    <VisibilityWrapper Label="Limit Refresh Rate Hz" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.LimitRefreshRateHzEnabled)" VisibilitySetter="@((bool? v) => Visibility!.LimitRefreshRateHzEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Multiplexing -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.MultiplexingEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Multiplexing" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.MultiplexingEnabled)" VisibilitySetter="@((bool? v) => Visibility!.MultiplexingEnabled = v)">
+                        <SelectboxStringDefaultNullable @bind-Value="Options.Multiplexing" DefaultValue="0">
+                            <option value="0">(Default: Direct)</option>
+                            <option value="1">1 — Stripe</option>
+                            <option value="2">2 — Checkered</option>
+                            <option value="3">3 — Spiral</option>
+                            <option value="4">4 — ZStripe</option>
+                            <option value="5">5 — ZnMirrorZStripe</option>
+                            <option value="6">6 — coreman</option>
+                            <option value="7">7 — Kaler2Scan</option>
+                            <option value="8">8 — ZStripeUneven</option>
+                            <option value="9">9 — P10-128x4-Z</option>
+                            <option value="10">10 — QiangLiQ8</option>
+                            <option value="11">11 — InversedZStripe</option>
+                        </SelectboxStringDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Panel Type -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.PanelTypeEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Panel Type" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PanelTypeEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PanelTypeEnabled = v)">
+                        <SelectboxStringDefaultNullable @bind-Value="Options.PanelType" DefaultValue="">
+                            <option value="">(Default: HUB75)</option>
+                            <option value="FM6126A">FM6126A</option>
+                            <option value="FM6127">FM6127</option>
+                        </SelectboxStringDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Parallel -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.ParallelEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.Parallel)" />
+                    </div>
+                    <VisibilityWrapper Label="Parallel" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ParallelEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ParallelEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Parallel" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.Parallel})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Pixel Mapper Config -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.PixelMapperConfigEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Pixel Mapper Config" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PixelMapperConfigEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PixelMapperConfigEnabled = v)">
+                        <EditboxTextLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- PWM Bits -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.PwmBitsEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="PWM Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmBitsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmBitsEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" @bind-Value:event="oninput" onfocus="this.select()"
+                        placeholder="@($"(Default: {_defaults.PwmBits})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- PWM Dither Bits -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.PwmDitherBitsEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="PWM Dither Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmDitherBitsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmDitherBitsEnabled = v)">
+                        <SelectboxNumberDefaultNullable @bind-Value="Options.PwmDitherBits" DefaultValue="0">
+                            <option value="0">(Default: 0)</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </SelectboxNumberDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- PWM LSB Nanoseconds -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.PwmLsbNanosecondsEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.PwmLsbNanoseconds)" />
+                    </div>
+                    <VisibilityWrapper Label="PWM LSB Nanoseconds" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmLsbNanosecondsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmLsbNanosecondsEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Row Address Type -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.RowAddressTypeEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Row Address Type" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.RowAddressTypeEnabled)" VisibilitySetter="@((bool? v) => Visibility!.RowAddressTypeEnabled = v)">
+                        <SelectboxNumberDefaultNullable @bind-Value="Options.RowAddressType" DefaultValue="0">
+                            <option value="0">(Default: 0)</option>
+                            <option value="1">1 — AB</option>
+                            <option value="2">2 — Direct row select</option>
+                            <option value="3">3 — ABC</option>
+                            <option value="4">4 — ABC Shift + DE direct</option>
+                            <option value="5">5 — ABC Alternate</option>
+                        </SelectboxNumberDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Rows -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.RowsEnabled ?? false))
+                {
+                    <div class="mw-field-validation">
+                        <ValidationMessage For="@(() => Options.Rows)" />
+                    </div>
+                    <VisibilityWrapper Label="Rows" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.RowsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.RowsEnabled = v)">
+                        <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Rows" @bind-Value:event="oninput" onfocus="this.select()"
+                            placeholder="@($"(Default: {_defaults.Rows})")" />
+                    </VisibilityWrapper>
+                }
+                @* -------------- Scan Mode -------------- *@
+                @if (OnGlobalOptionsForm || (Visibility?.ScanModeEnabled ?? false))
+                {
+                    <VisibilityWrapper Label="Scan Mode" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ScanModeEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ScanModeEnabled = v)">
+                        <SelectboxStringDefaultNullable @bind-Value="Options.ScanMode" DefaultValue="">
+                            <option value="">(Default: Progressive)</option>
+                            <option value="Progressive">Progressive</option>
+                            <option value="Interlaced">Interlaced</option>
+                        </SelectboxStringDefaultNullable>
+                    </VisibilityWrapper>
+                }
+                @* -------------- Arguments Preview -------------- *@
+                @* led-image-viewer args preview *@
+            </div>
         </div>
 
-        <div class="card-footer text-end">
+        <div class="ww-modal-footer">
             <div class="mw-args-preview-inline mb-2">
                 <label class="mw-matrix-label mw-args-inline-label">CLI Arguments Preview</label>
                 <textarea class="form-control mw-args-preview-textarea" rows="2" readonly>@ArgsPreview</textarea>
             </div>
-            <button type="button" class="btn btn-secondary me-2" @onclick="HandleOk">Cancel</button>
-            <button type="submit" class="btn btn-primary" disabled="@_hasValidationErrors">@Action</button>
+
+            <div class="row justify-content-center"
+                <button type="button" class="btn btn-secondary btn-lg me-4 col-5" @onclick="HandleOk">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-lg col-5" disabled="@_hasValidationErrors">@Action</button>
+            </div>
         </div>
     </div>
 
     </EditForm>
-
 </div>

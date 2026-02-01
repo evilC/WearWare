@@ -1,10 +1,11 @@
+@using WearWare.Components.Shared.PlayableItemCard
 @rendermode InteractiveServer
 
-@* <div class="modal-shell" @onclick="() => OnCancel.InvokeAsync(null)" @onclick:stopPropagation>
-    <div class="modal-header">
+<div class="ww-modal">
+    <div class ="ww-modal-header text-center">
         <h2>Choose an item</h2>
     </div>
-    <div class="modal-body container-fluid">
+        <div class="ww-modal-body">
         @if (LibraryItems is null || !LibraryItems.Any())
         {
             <div>No items found.</div>
@@ -13,79 +14,18 @@
         {
             @foreach (var libItem in LibraryItems)
             {
-                <div class="row">
-                    <div class="col-3" @onclick="() => ItemSelected(libItem)">
-                        <img class="add-dialog__item-image" src="/library-image/@libItem.SourceFileName" alt="@libItem.Name" />
-                    </div>
-                    <div class="col-9">
-                        <div class="add-dialog__item-desc">
-                            <strong class="add-dialog__item-desc-line">@libItem.Name</strong>
-                            <span class="add-dialog__item-desc-line">Brightness: @libItem.CurrentBrightness %</span>
-                        </div>
-                    </div>
+                <div class="row mb-3">
+                    <PlayableItemCard
+                        ImageSrc="@($"/library-image/{@libItem.SourceFileName}")"
+                        Item="libItem"
+                        ImageClicked="@(() =>ItemSelected(libItem))"
+                        ShowPlayMode="false"
+                    />
                 </div>
             }
         }
     </div>
-    <div class="modal-footer">
-        <button type="button" class="cancel add-dialog__cancel-button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
+    <div class="ww-modal-footer row justify-content-center">
+        <button class="btn btn-secondary btn-lg col-12" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
     </div>
-</div> *@
-
-<div class="ww-modal">
-    @* <div class="ww-modal-card"> *@
-        <div class ="ww-modal-header">
-            <h2>Select Playable Item</h2>
-        </div>
-        <div class="ww-modal-body">
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-            <h3>Content</h3>
-        </div>
-        <div class="ww-modal-footer">
-            <button class="btn btn-secondary" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
-        </div>
-    @* </div> *@
 </div>
