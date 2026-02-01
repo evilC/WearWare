@@ -9,16 +9,13 @@
     display: flex;
     gap: 0.5rem;
     align-items: center;
+    padding-right: 0 !important;
 }
 
 .config-controls label {
     width: 2.5rem;
     /* font-weight: bold; */
     margin-right: 0.5rem
-}
-
-.config-btn{
-    width: 4rem;
 }
 
 #activePlaylist, #editingPlaylist {

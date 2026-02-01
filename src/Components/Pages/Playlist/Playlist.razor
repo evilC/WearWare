@@ -7,36 +7,45 @@
 
 <PageTitle>WareWare Playlist</PageTitle>
 
-<div class="config-controls">
-    <div class="config-controls-row">
-        <label for="activePlaylist">Playing</label>
-        <select id="activePlaylist" value="@activePlaylist" @onchange="OnActivePlaylistChanged">
-            <option value="">(None)</option>
-            @if (availablePlaylists != null)
-            {
-                foreach (var name in availablePlaylists)
+<div>
+    <div class="config-controls-row container-fluid">
+        @* <label for="activePlaylist">Playing</label> *@
+        <div class="input-group input-group-sm row">
+            @* <div class="row"> *@
+            <span class="input-group-text col">Playing</span>
+            <select id="activePlaylist" class="form-select" value="@activePlaylist" @onchange="OnActivePlaylistChanged">
+                <option value="">(None)</option>
+                @if (availablePlaylists != null)
                 {
-                    <option value="@name">@name</option>
+                    foreach (var name in availablePlaylists)
+                    {
+                        <option value="@name">@name</option>
+                    }
                 }
-            }
-        </select>
-        <button class="config-btn" type="button" @onclick="StartActivePlaylist">Start</button>
-        <button class="config-btn" type="button" @onclick="StopActivePlaylist">Stop</button>
+            </select>
+            <button class="btn btn-outline-dark col" type="button" @onclick="StartActivePlaylist">Start</button>
+            <button class="btn btn-outline-dark col" type="button" @onclick="StopActivePlaylist">Stop</button>
+            @* </div> *@
+        </div>
     </div>
-    <div class="config-controls-row">
-        <label for="editingPlaylist">Editing</label>
-        <select id="editingPlaylist" value="@_editingPlaylist" @onchange="OnEditingPlaylistChanged">
-            <option value="">(None)</option>
-            @if (availablePlaylists != null)
-            {
-                foreach (var name in availablePlaylists)
+    <div class="config-controls-row container-fluid">
+        @* <label for="editingPlaylist">Editing</label> *@
+        <div class="input-group input-group-sm row">
+            <span class="input-group-text col" style="width: 4.5em;">Editing</span>
+            <select id="editingPlaylist" class="form-select" style="width: 8em;" value="@_editingPlaylist" @onchange="OnEditingPlaylistChanged">
+                <option value="">(None)</option>
+                @if (availablePlaylists != null)
                 {
-                    <option value="@name">@name</option>
+                    foreach (var name in availablePlaylists)
+                    {
+                        <option value="@name">@name</option>
+                    }
                 }
-            }
-        </select>
-        <button class="config-btn" type="button" @onclick="AddPlaylist">Add</button>
-        <button class="config-btn" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
+            </select>
+            <button class="btn btn-outline-dark col" type="button" @onclick="AddPlaylist">Add</button>
+            <button class="btn btn-outline-dark col" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
+            <button class="btn btn-outline-dark col" type="button" >Copy</button>
+        </div>
     </div>
 
     @if (showAddPlaylistModal)
