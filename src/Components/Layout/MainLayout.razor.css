@@ -47,7 +47,7 @@
     max-height: 100vh;
 } */
 
-.shell-body ::deep .ww-modal .ww-modal-card {
+.shell-body ::deep .ww-modal {
     position: fixed;
     inset: 0;
     z-index: 2000;
@@ -61,21 +61,21 @@
     border: 1px solid rgba(0, 0, 0, .125);
 }
 
-.shell-body ::deep .ww-modal .ww-modal-card-header {
+.shell-body ::deep .ww-modal .ww-modal-header {
     padding: .5rem 1rem;
     margin-bottom: 0;
     background-color: rgba(0, 0, 0, .03);
     border-bottom: 1px solid rgba(0, 0, 0, .125);
 }
 
-.shell-body ::deep .ww-modal .ww-modal-card-body {
+.shell-body ::deep .ww-modal .ww-modal-body {
     overflow: auto;
 
     flex: 1 1 auto;
     padding: 1rem;
 }
 
-.shell-body ::deep .ww-modal .ww-modal-card-footer {
+.shell-body ::deep .ww-modal .ww-modal-footer {
     padding: .5rem 1rem;
     background-color: rgba(0, 0, 0, .03);
     border-top: 1px solid rgba(0, 0, 0, .125);
