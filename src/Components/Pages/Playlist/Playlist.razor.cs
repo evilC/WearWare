@@ -313,14 +313,14 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         private void AddCopyPlaylistClicked(AddCopyPlaylistMode mode)
         {
-            if (_editingPlaylist is null || _editingPlaylist == "") return;
+            if (mode == AddCopyPlaylistMode.Copy && (_editingPlaylist is null || _editingPlaylist == "")) return;
             var model = new AddCopyPlaylistFormModel
             {
                 Mode = mode,
             };
             if (mode == AddCopyPlaylistMode.Copy)
             {
-                model.OldName = _editingPlaylist;
+                model.OldName = _editingPlaylist!;
                 model.NewName = $"{_editingPlaylist}-";
             }
             _addCopyPlaylistModel = model;

@@ -30,6 +30,7 @@
   Limits maximum brightness that could ever be set.  
   eg BEC will not handle 100% brightness for full white images  
   Would require dynamic form validation?
+- Implement nicer confirm dialog for delete
 
 ### Misc
 - Can originalItem be stored in the `EditPlayableItemForm`?  
