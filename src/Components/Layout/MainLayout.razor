@@ -1,22 +1,25 @@
 ﻿@using WearWare.Components.Shared.OperationProgressOverlay
 @inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<div class="page-shell">
+    <header class="site-header">
         <NavMenu />
-    </div>
+    </header>
 
-    <main style="display:flex; flex-direction:column; height:100vh;">
-        <article class="content px-2" style="flex:1 1 auto; overflow-y:auto; min-height:0;">
+    @* <main> *@
+    @* <div class="shell-body">"> *@
+        <article class="shell-body content px-2 py-1">
             @Body
         </article>
-    </main>
-</div>
+    @* </div> *@
+    @* </main> *@
 
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+
 </div>
 
 <OperationProgressOverlay />

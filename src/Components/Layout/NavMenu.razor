@@ -1,58 +1,40 @@
 ﻿@using WearWare.Services.Environment
 @inject EnvironmentService EnvironmentService
 
-<div class="nav-scrollable">
-    <nav class="flex-column">
-        <div class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                Home
-            </NavLink>
+<div class="ww-nav-scrollable overflow-auto" role="navigation" aria-label="Main navigation">
+    <nav class="ww-nav nav nav-pills flex-nowrap">
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
         </div>
 
-        <div class="nav-item">
-            <NavLink class="nav-link" href="playlist">
-                Playlist
-            </NavLink>
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="playlist">Playlist</NavLink>
         </div>
 
-        <div class="nav-item">
-            <NavLink class="nav-link" href="quickmedia">
-                Quick Media
-            </NavLink>
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="quickmedia">QuickMedia</NavLink>
         </div>
 
-        <div class="nav-item">
-            <NavLink class="nav-link" href="library">
-                Library
-            </NavLink>
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="library">Library</NavLink>
         </div>
 
-        <div class="nav-item">
-            <NavLink class="nav-link" href="import">
-                Import
-            </NavLink>
-        </div>
-        
-        <div class="nav-item">
-            <NavLink class="nav-link" href="log">
-                Log
-            </NavLink>
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="import">Import</NavLink>
         </div>
 
-        <div class="nav-item">
-            <NavLink class="nav-link" href="options">
-                Options
-            </NavLink>
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="log">Log</NavLink>
         </div>
 
+        <div class="ww-nav-item nav-item">
+            <NavLink class="ww-nav-link nav-link" href="options">Options</NavLink>
+        </div>
         @if (EnvironmentService.EnvironmentName == "Desktop")
         {
-            <div class="nav-item">
-                <NavLink class="nav-link" href="mocks">
-                    Mocks
-                </NavLink>
+            <div class="ww-nav-item nav-item">
+                <NavLink class="ww-nav-link nav-link" href="mocks">Mocks</NavLink>
             </div>
         }
     </nav>
 </div>
-
