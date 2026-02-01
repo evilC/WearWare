@@ -1,43 +1,43 @@
-.add-dialog {
+.modal-shell {
     position: fixed;
     inset: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-    pointer-events: auto;
-    overflow: hidden;
-}
-
-.add-dialog__content {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 24px rgba(0,0,0,0.25);
-    padding: 2em;
-    min-width: 320px;
-    max-width: 720px;
-    width: 92vw;
-    max-height: 90vh;
-    overflow: auto;
-    display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-.add-dialog__list {
+    justify-content: center;
+    z-index: 1000;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
     width: 100%;
-    overflow-y: auto;
-    border: 1px solid #eee;
-    padding: 0.5em;
-    background: #fafafa;
-    border-radius: 8px;
+    background: white;
+    min-width: 0; /* allow children to shrink below their content min-width */
 }
 
-.add-dialog__list ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.modal-header {
+    grid-row: 1;
+    position: relative;
+    z-index: 20;
+    background: var(--header-bg, #fff);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    min-width: 0;
+}
+
+.modal-body {
+    grid-row: 2;
+    overflow: auto;
+    min-width: 0;
+}
+
+.modal-footer {
+    grid-row: 3;
+    padding: 1rem;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+    text-align: right;
+    width: 100%;
+    justify-content: center;
 }
 
 .add-dialog__item {
@@ -51,6 +51,7 @@
 }
 
 .add-dialog__item-image {
+    margin: 0.5em;
     max-width: 64px;
     max-height: 64px;
     border-radius: 6px;
@@ -59,40 +60,30 @@
 }
 
 .add-dialog__item-desc {
+    margin: 1em;
     font-size: 0.9em;
     color: #666;
+    display: flex;
+    flex-direction: column;
+}
+
+.add-dialog__item-desc-line {
+    /* margin-bottom: 0.25em; */
+    display: block;
 }
 
 .add-dialog__cancel-button {
-    margin-top: 0.5em;
-    padding: 0.7em 2em;
+    margin: 1em;
+    padding: 1em;
     font-size: 1.1em;
     border-radius: 6px;
     background: #eee;
     border: 1px solid #ccc;
+    width:100%;
 }
 
-@media (max-width: 640px) {
+@supports (height: 100dvh) {
     .add-dialog__content {
-        width: 100vw;
-        height: 100vh;
-        max-width: none;
-        max-height: none;
-        border-radius: 0;
-        padding: 1rem;
-        padding-top: calc(env(safe-area-inset-top, 0.5rem) + 0.5rem);
-    }
-    @supports (height: 100dvh) {
-        .add-dialog__content {
-            height: 100dvh;
-        }
-    }
-    .add-dialog__content h2 {
-        position: sticky;
-        top: calc(env(safe-area-inset-top, 0.5rem) + 0.25rem);
-        background: #fff;
-        z-index: 2;
-        margin-top: 0;
-        padding-top: 0.25rem;
+        height: 100dvh;
     }
 }
