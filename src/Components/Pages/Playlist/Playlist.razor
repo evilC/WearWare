@@ -1,6 +1,7 @@
 @page "/playlist"
 @rendermode InteractiveServer
 @using WearWare.Common.Media
+@using WearWare.Components.Forms.AddCopyPlaylistForm
 @using WearWare.Components.Forms.AddPlayableItemForm
 @using WearWare.Components.Forms.EditPlayableItemForm
 @using WearWare.Components.Shared.PlayableItemCard
@@ -8,10 +9,9 @@
 <PageTitle>WareWare Playlist</PageTitle>
 
 <div>
+    @* Playing *@
     <div class="config-controls-row container-fluid">
-        @* <label for="activePlaylist">Playing</label> *@
         <div class="input-group input-group-sm row">
-            @* <div class="row"> *@
             <span class="input-group-text col">Playing</span>
             <select id="activePlaylist" class="form-select" value="@activePlaylist" @onchange="OnActivePlaylistChanged">
                 <option value="">(None)</option>
@@ -23,13 +23,12 @@
                     }
                 }
             </select>
-            <button class="btn btn-outline-dark col" type="button" @onclick="StartActivePlaylist">Start</button>
-            <button class="btn btn-outline-dark col" type="button" @onclick="StopActivePlaylist">Stop</button>
-            @* </div> *@
+            <button class="btn btn-outline-success col" type="button" @onclick="StartActivePlaylist">Start</button>
+            <button class="btn btn-outline-danger col" type="button" @onclick="StopActivePlaylist">Stop</button>
         </div>
     </div>
+    @* Editing *@
     <div class="config-controls-row container-fluid">
-        @* <label for="editingPlaylist">Editing</label> *@
         <div class="input-group input-group-sm row">
             <span class="input-group-text col" style="width: 4.5em;">Editing</span>
             <select id="editingPlaylist" class="form-select" style="width: 8em;" value="@_editingPlaylist" @onchange="OnEditingPlaylistChanged">
@@ -42,29 +41,11 @@
                     }
                 }
             </select>
-            <button class="btn btn-outline-dark col" type="button" @onclick="AddPlaylist">Add</button>
-            <button class="btn btn-outline-dark col" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
-            <button class="btn btn-outline-dark col" type="button" >Copy</button>
+            <button class="btn btn-outline-dark col" type="button" @onclick="() => AddCopyPlaylistClicked(AddCopyPlaylistMode.Add)">Add</button>
+            <button class="btn btn-outline-dark col" type="button" @onclick="() => AddCopyPlaylistClicked(AddCopyPlaylistMode.Copy)">Copy</button>
+            <button class="btn btn-outline-danger col" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
         </div>
     </div>
-
-    @if (showAddPlaylistModal)
-    {
-        <div class="modal-backdrop">
-            <div class="modal add-playlist-modal">
-                <h4>Add Playlist</h4>
-                <input type="text" class="form-control" @bind="newPlaylistName" placeholder="Playlist name" />
-                @if (!string.IsNullOrEmpty(addPlaylistError))
-                {
-                    <div class="text-danger">@addPlaylistError</div>
-                }
-                <div class="modal-actions">
-                    <button class="btn btn-primary" @onclick="ConfirmAddPlaylist">Add</button>
-                    <button class="btn btn-secondary" @onclick="CancelAddPlaylist">Cancel</button>
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
 @* Normal Playlist View: *@
@@ -94,7 +75,7 @@
     </div>
 }
 
-@* Add Dialog:*@
+@* Add PlayableItem dialog*@
 @if (_addFormModel != null){
     <AddPlayableItemForm @ref="_addFormRef"
         FormModel="_addFormModel"
@@ -105,7 +86,7 @@
     />
 }
 
-@* Edit Dialog:*@
+@* Edit PlayableItem dialog*@
 @if (_editFormModel is not null && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
 {
     <EditPlayableItemForm
@@ -116,7 +97,7 @@
     />
 }
 
-@* ToDo: should be able to get rid of this. In ReConvert all mode, we will still be using _editFormModel *@
+@* ReConvert All dialog *@
 @if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
@@ -129,3 +110,33 @@
         </div>
     </div>
 }
+
+@if (_addCopyPlaylistModel != null)
+{
+    @* @ref="addEditPlaylistFormRef" *@
+    <AddCopyPlaylistForm 
+        Model="_addCopyPlaylistModel"
+        OnCancel="CancelAddCopyPlaylist"
+        OnSubmit="OnAddCopyPlaylistFormSubmit"
+    />
+}
+@* Add Playlist dialog *@
+@* @if (showAddPlaylistModal)
+{
+    <div class="ww-modal">
+        <div class="ww-modal-header text-center">
+            <h4>Add Playlist</h4>
+        </div>
+        <div class="row">
+            <input type="text" class="form-control" @bind="newPlaylistName" placeholder="Playlist name" />
+            @if (!string.IsNullOrEmpty(addPlaylistError))
+            {
+                <div class="text-danger">@addPlaylistError</div>
+            }
+            <div class="modal-actions">
+                <button class="btn btn-primary" @onclick="ConfirmAddPlaylist">Add</button>
+                <button class="btn btn-secondary" @onclick="CancelAddPlaylist">Cancel</button>
+            </div>
+        </div>
+    </div>
+} *@

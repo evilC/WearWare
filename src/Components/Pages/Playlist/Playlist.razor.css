@@ -67,7 +67,7 @@
 }
 
 /* Modal styles for Add Playlist */
-.modal-backdrop {
+/* .modal-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -78,8 +78,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.add-playlist-modal {
+} */
+/* .add-playlist-modal {
     background: #fff;
     padding: 1rem;
     width: 100vw;
@@ -87,13 +87,9 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-}
-.modal-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-}
+} */
 
+/* ToDo: Replace with bootstrap */
 .reconvert-all-button {
     width: 100%;
     padding: .25rem .5rem;

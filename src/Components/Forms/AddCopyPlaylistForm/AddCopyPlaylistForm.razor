@@ -1,0 +1,27 @@
+@rendermode InteractiveServer
+
+<div class="ww-modal">
+    <div class="ww-modal-header text-center">
+        @if (Model.Mode == AddCopyPlaylistMode.Add)
+        {
+            <h4>Adding new Playlist</h4>
+        }
+        else if (Model.Mode == AddCopyPlaylistMode.Copy)
+        {
+            <h4>Copying Playlist @Model.OldName</h4>
+        }
+    </div>
+    <div class="ww-modal-body">
+        <div class="row">
+            <EditForm EditContext="_editContext" OnValidSubmit="OnSubmitClicked">
+                <DataAnnotationsValidator />
+                <EditboxTextLiveUpdate class="form-control" @bind-Value="Model.NewName" placeholder="New playlist name" />
+                <ValidationMessage For="() => Model.NewName" />
+                <div class="row justify-content-center mt-4">
+                    <button class="btn btn-secondary btn-lg me-4 col-5" @onclick="OnCancelClicked">Cancel</button>
+                    <button class="btn btn-primary btn-lg col-5" type="submit">OK</button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>

@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
+using WearWare.Components.Forms.AddCopyPlaylistForm;
 using WearWare.Components.Forms.AddPlayableItemForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.Playlist;
+using WearWare.Utils;
 
 namespace WearWare.Components.Pages.Playlist
 {
@@ -43,9 +45,11 @@ namespace WearWare.Components.Pages.Playlist
         // Dropdown for selecting which playlist to edit
         private string? _editingPlaylist;
 
-        private bool showAddPlaylistModal = false;
-        private string newPlaylistName = string.Empty;
-        private string? addPlaylistError = null;
+        private AddCopyPlaylistFormModel _addCopyPlaylistModel = default!;
+
+        // private bool showAddPlaylistModal = false;
+        // private string newPlaylistName = string.Empty;
+        // private string? addPlaylistError = null;
 
         protected override void OnInitialized()
         {
@@ -304,44 +308,57 @@ namespace WearWare.Components.Pages.Playlist
             }
         }
 
-        private void AddPlaylist()
+        /// <summary>
+        /// Called when Add or Copy Playlist is clicked
+        /// </summary>
+        private void AddCopyPlaylistClicked(AddCopyPlaylistMode mode)
         {
-            newPlaylistName = string.Empty;
-            addPlaylistError = null;
-            showAddPlaylistModal = true;
+            if (_editingPlaylist is null || _editingPlaylist == "") return;
+            var model = new AddCopyPlaylistFormModel
+            {
+                Mode = mode,
+            };
+            if (mode == AddCopyPlaylistMode.Copy)
+            {
+                model.OldName = _editingPlaylist;
+            }
+            _addCopyPlaylistModel = model;
+            StateHasChanged();
         }
 
-        private void CancelAddPlaylist()
+        // Called when Cancel is clicked in the Add/Copy Playlist form
+        private void CancelAddCopyPlaylist()
         {
-            showAddPlaylistModal = false;
-            newPlaylistName = string.Empty;
-            addPlaylistError = null;
+            _addCopyPlaylistModel = null!;
+            StateHasChanged();
         }
 
-        private void ConfirmAddPlaylist()
+        // Called when Submit is clicked in the Add/Copy Playlist form
+        private void OnAddCopyPlaylistFormSubmit(AddCopyPlaylistFormModel model)
         {
+            _addCopyPlaylistModel = null!;
+            var sanitized = FilenameValidator.Sanitize(model.NewName);
             // Replace spaces and invalid folder characters with '-'
-            if (string.IsNullOrWhiteSpace(newPlaylistName))
+            if (string.IsNullOrWhiteSpace(model.NewName))
             {
-                addPlaylistError = "Name cannot be empty.";
                 return;
             }
-            string sanitized = string.Concat(newPlaylistName.Select(c =>
-                char.IsLetterOrDigit(c) ? c : '-'));
-            sanitized = sanitized.Replace(' ', '-');
-            sanitized = sanitized.Trim('-');
-            if (string.IsNullOrWhiteSpace(sanitized))
+            if (model.Mode == AddCopyPlaylistMode.Add)
             {
-                addPlaylistError = "Name must contain at least one valid character.";
+                PlaylistService.AddPlaylist(model.NewName);
+            }
+            else if (model.Mode == AddCopyPlaylistMode.Copy)
+            {
+                // PlaylistService.CopyPlaylist(model.OldName, model.NewName);
+            }
+            else
+            {
+                Logger.LogError($"{_logTag}: OnAddCopyPlaylistFormSubmit called with unknown mode {model.Mode}");
                 return;
             }
-            PlaylistService.AddPlaylist(sanitized);
             availablePlaylists = PlaylistService.GetPlaylistNames();
             // Automatically select the new playlist in the Editing DDL by firing the change event only
             OnEditingPlaylistChanged(new ChangeEventArgs { Value = sanitized });
-            showAddPlaylistModal = false;
-            newPlaylistName = string.Empty;
-            addPlaylistError = null;
             StateHasChanged();
         }
 
