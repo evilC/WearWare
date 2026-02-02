@@ -2,24 +2,3 @@
 	display: flex;
 	align-items: center;
 }
-
-.playlist-item-info {
-	flex: 1 1 auto;
-	min-width: 0;
-	margin-left: 0.5em;
-}
-
-/* .playlist-item-title {
-	font-size: 1.1rem;
-	color: #222;
-	display: block;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-} */
-
-/* .playlist-item-mode {
-	font-size: 0.95em;
-	color: #444;
-	display: inline-block;
-} */
