@@ -38,7 +38,7 @@ namespace WearWare.Services.Import
             
         }
 
-        public List<string>? GetImportFiles()
+        public List<PlayableItem>? GetImportItems()
         {
             if (!Directory.Exists(PathConfig.IncomingPath))
                 return [];
@@ -49,7 +49,27 @@ namespace WearWare.Services.Import
                 .Where(f => FilenameValidator.Validate(Path.GetFileNameWithoutExtension(f)))
                 .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            return files;
+            List<PlayableItem> importItems = [];
+            foreach (var fileName in files)
+            {
+                var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE;
+                var baseName = Path.GetFileNameWithoutExtension(fileName);
+                var sanitized = FilenameValidator.Sanitize(baseName);
+                var baseBrightness = _matrixConfigService.CloneOptions().Brightness ?? 100;
+                var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, 100);
+                importItems.Add(new PlayableItem(
+                    sanitized,
+                    PathConfig.LibraryFolder,
+                    MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE,
+                    fileName,
+                    PlayMode.Forever,
+                    1,
+                    100,
+                    actual,
+                    _matrixConfigService.CloneOptions()
+                ));
+            }
+            return importItems;
         }
 
         /// <summary>

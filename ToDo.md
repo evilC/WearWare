@@ -5,6 +5,7 @@
 - CSS overhaul  
   - Move more stuff to Bootsrap
   - Styles on Import page all embedded
+- Cann addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
 
 ### Code overhaul
 - Components

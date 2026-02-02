@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using WearWare.Common.Media;
+using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Components.Shared.PlayableItemCard
 {
@@ -8,7 +9,7 @@ namespace WearWare.Components.Shared.PlayableItemCard
         [Parameter] public PlayableItem? Item { get; set; }
         [Parameter] public string? ImageSrc { get; set; }
         [Parameter] public EventCallback<PlayableItem?> ImageClicked { get; set; }
-        [Parameter] public bool ShowPlayMode { get; set; } = true;
+        [Parameter] public EditPlayableItemFormPage FormPage { get; set; }
 
         private async Task HandleImageClick()
         {

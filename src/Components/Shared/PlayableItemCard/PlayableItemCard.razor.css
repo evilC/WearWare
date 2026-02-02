@@ -1,16 +1,6 @@
-.playlist-item-image-and-info {
+.playlist-item-card {
 	display: flex;
-	/* gap: 1rem; */
 	align-items: center;
-}
-
-.playlist-item-image {
-	max-width: 64px !important;
-	max-height: 64px !important;
-	border-radius: 8px;
-	box-shadow: 0 1px 8px rgba(0,0,0,0.12);
-	background: #eee;
-	flex-shrink: 0;
 }
 
 .playlist-item-info {
@@ -29,7 +19,6 @@
 }
 
 .playlist-item-mode {
-	margin-top: 0.25rem;
 	font-size: 0.95em;
 	color: #444;
 	display: inline-block;

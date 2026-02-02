@@ -1,19 +1,37 @@
 @using WearWare.Common.Media
+@using WearWare.Components.Forms.EditPlayableItemForm
 
-<div class="playlist-item-image-and-info">
+<div class="playlist-item-card playable-item-image-height">
     @if (!string.IsNullOrEmpty(ImageSrc))
     {
-        <img class="playlist-item-image" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
+        @* Image *@
+        <img class="playlist-item-image rounded playable-item-image-width" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
     }
     <div class="playlist-item-info">
-        <strong class="playlist-item-title">@Item?.Name</strong>
+        @* Name / Filename *@
+        <strong class="playlist-item-title">@(FormPage == EditPlayableItemFormPage.Import ? Item?.SourceFileName : Item?.Name)</strong>
         @if (Item is not null)
         {
-            @if (ShowPlayMode){
-                <div class="playlist-item-mode">@($"{Item.PlayMode.ToString()}" +
-                    $"{(Item.PlayMode == PlayMode.Loop ? $" {Item.PlayModeValue}x" : (Item.PlayMode == PlayMode.Duration ? $" {Item.PlayModeValue}s" : ""))}")</div>
+            @* PlayMode *@
+            @if (FormPage != EditPlayableItemFormPage.Library && FormPage != EditPlayableItemFormPage.Import){
+                <div class="playlist-item-mode">
+                    @(
+                        @* PlayMode *@
+                        $"{Item.PlayMode.ToString()}: " +
+                        @* PlayModeValue *@
+                        $"{(Item.PlayMode == PlayMode.Loop ? $" {Item.PlayModeValue}x" : (Item.PlayMode == PlayMode.Duration ? $" {Item.PlayModeValue}s" : ""))}"
+                    )
+                </div>
             }
-            <div class = "playlist-item-brightness">Brightness: @Item.CurrentBrightness%</div>
+            @if (FormPage == EditPlayableItemFormPage.Import){
+                @* Type (Animation / Image) *@
+                <div class = "text-muted fs-6">@(MediaTypeMappings.GetMediaType(Path.GetExtension(Item.SourceFileName)) ?? MediaType.IMAGE)</div>
+            }
+            else
+            {
+                @* Brightness *@
+                <div class = "fs-6">Brightness: @Item.CurrentBrightness%</div>
+            }
         }
     </div>
 </div>

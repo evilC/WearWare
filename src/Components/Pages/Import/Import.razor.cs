@@ -22,20 +22,20 @@ namespace WearWare.Components.Pages.Import
         [Inject] private NavigationManager Navigation { get; set; } = null!;
         
         EditPlayableItemFormModel? _editFormModel = null;
-        private List<string>? importFiles;
+        private List<PlayableItem>? importItems;
 
         private EditPlayableItemForm? editFormRef;
         private string inputId = "fileInput_" + Guid.NewGuid().ToString("N");
 
         protected override void OnInitialized()
         {
-            importFiles = ImportService.GetImportFiles();
+            importItems = ImportService.GetImportItems();
             ImportService.StateChanged += OnStateChanged;
         }
 
         private void OnStateChanged()
         {
-            importFiles = ImportService.GetImportFiles();
+            importItems = ImportService.GetImportItems();
             InvokeAsync(StateHasChanged);
         }
 
@@ -47,47 +47,27 @@ namespace WearWare.Components.Pages.Import
         /// <summary>
         /// Show the edit form for the selected incoming file.
         /// </summary>
-        private async Task ShowForm(string fileName)
+        private async Task ShowForm(PlayableItem item)
         {
-            // selectedFileName = fileName;
-            // Prepare an editing PlayableItem immediately (ImportForm UI moved into EditPlayableItemForm)
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE;
-            var baseName = Path.GetFileNameWithoutExtension(fileName);
-            var sanitized = FilenameValidator.Sanitize(baseName);
-            var baseBrightness = MatrixConfigService.CloneOptions().Brightness ?? 100;
-            var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, 100);
-            var item = new PlayableItem(
-                sanitized,
-                PathConfig.LibraryFolder,
-                MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE,
-                fileName,
-                PlayMode.Forever,
-                1,
-                100,
-                actual,
-                MatrixConfigService.CloneOptions()
-            );
+
             var editFormModel = new EditPlayableItemFormModel
             {
-                ImageUrl = $"/incoming-media/{fileName}",
+                ImageUrl = $"/incoming-media/{item.SourceFileName}",
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Import,
                 UpdatedItem = item,
             };
-            editFormModel.UpdatedItem.Name = sanitized;
             _editFormModel = editFormModel;
-            // pendingNewFileName = sanitized;
-            // showEditDialog = true;
             // ToDo: Why is this called?
             await InvokeAsync(StateHasChanged);
         }
 
-        private async Task ConfirmDelete(string fileName)
+        private async Task ConfirmDelete(PlayableItem item)
         {
-            var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete incoming file '{fileName}'?");
+            var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete incoming file '{item.SourceFileName}'?");
             if (ok)
             {
-                ImportService.DeleteIncomingFile(fileName);
+                ImportService.DeleteIncomingFile(item.SourceFileName);
             }
         }
 
@@ -138,7 +118,7 @@ namespace WearWare.Components.Pages.Import
                 else
                 {
                     // Refresh local list (endpoint will also notify ImportService)
-                    importFiles = ImportService.GetImportFiles();
+                    importItems = ImportService.GetImportItems();
                     await InvokeAsync(StateHasChanged);
                 }
             }

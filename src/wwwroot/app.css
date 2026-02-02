@@ -1,3 +1,13 @@
+/* WearWare custom CSS */
+.playable-item-image-height {
+    height: 64px !important;
+}
+
+.playable-item-image-width {
+    width: 64px !important;
+}
+
+/* Default styles */
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }

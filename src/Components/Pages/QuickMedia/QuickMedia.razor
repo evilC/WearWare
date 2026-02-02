@@ -38,7 +38,11 @@ else
 				</div>
 				@if (btn?.Item is not null)
 				{
-					<PlayableItemCard ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")" Item="btn.Item" />
+					<PlayableItemCard
+						ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")"
+						FormPage="EditPlayableItemFormPage.QuickMedia"
+						Item="btn.Item"
+					/>
 				}
 			</div>
 		}

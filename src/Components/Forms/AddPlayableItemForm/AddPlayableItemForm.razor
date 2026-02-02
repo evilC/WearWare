@@ -1,3 +1,4 @@
+@using WearWare.Components.Forms.EditPlayableItemForm
 @using WearWare.Components.Shared.PlayableItemCard
 @rendermode InteractiveServer
 
@@ -19,7 +20,7 @@
                         ImageSrc="@($"/library-image/{@libItem.SourceFileName}")"
                         Item="libItem"
                         ImageClicked="@(() =>ItemSelected(libItem))"
-                        ShowPlayMode="false"
+                        FormPage="EditPlayableItemFormPage.Library"
                     />
                 </div>
             }
