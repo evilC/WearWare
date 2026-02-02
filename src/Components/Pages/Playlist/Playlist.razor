@@ -8,90 +8,9 @@
 
 <PageTitle>WareWare Playlist</PageTitle>
 
-@* Playlist controls *@
-<div>
-    @* Playing *@
-    <div class="d-flex flex-column mb-2">
-        <div class="input-group input-group-sm">
-            <span class="input-group-text">Playing</span>
-            <select id="activePlaylist" class="form-select" value="@activePlaylist" @onchange="OnActivePlaylistChanged">
-                <option value="">(None)</option>
-                @if (availablePlaylists != null)
-                {
-                    foreach (var name in availablePlaylists)
-                    {
-                        <option value="@name">@name</option>
-                    }
-                }
-            </select>
-            <button class="btn btn-outline-success col-3" type="button" @onclick="StartActivePlaylist">Start</button>
-            <button class="btn btn-outline-danger col-3" type="button" @onclick="StopActivePlaylist">Stop</button>
-        </div>
-    </div>
-    @* Editing *@
-    <div class="d-flex flex-column mb-2">
-        <div class="input-group input-group-sm">
-            <span class="input-group-text" style="width: 4.5em;">Editing</span>
-            <select id="editingPlaylist" class="form-select" style="width: 8em;" value="@_editingPlaylist" @onchange="OnEditingPlaylistChanged">
-                <option value="">(None)</option>
-                @if (availablePlaylists != null)
-                {
-                    foreach (var name in availablePlaylists)
-                    {
-                        <option value="@name">@name</option>
-                    }
-                }
-            </select>
-            <button class="btn btn-outline-dark col-2" type="button" @onclick="() => AddCopyPlaylistClicked(AddCopyPlaylistMode.Add)">Add</button>
-            <button class="btn btn-outline-dark col-2" type="button" @onclick="() => AddCopyPlaylistClicked(AddCopyPlaylistMode.Copy)">Copy</button>
-            <button class="btn btn-outline-danger col-2" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
-        </div>
-    </div>
-</div>
-
-@* Playlist Items *@
-@if (_playlist is not null && _items is not null)
+@if (_addFormModel != null)
 {
-    @* ReConvert buttons *@
-    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllMatrix()">ReConvert all with new Matrix Options</button>
-    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllBrightness()">ReConvert all with new Brightness</button>
-    <div class="d-flex flex-column">
-        @* Add at start *@
-        <button class="btn-sm mb-4 rounded rounded-3" @onclick="() => OnAddDialogShow(0)">Add new item at start</button>
-        @for (int i = 0; i < _items.Count; i++)
-        {
-            var item = _items[i];
-            var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
-            <div class="d-flex gap-2 mb-3">
-                @* Edit / Delete buttons *@
-                <div class="d-flex flex-column justify-content-between">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index)">Edit</button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeletePlaylistItem(index)">Delete</button>
-                </div>
-                <div class="d-flex flex-column justify-content-center">
-                    @* Enabled / Disabled *@
-                    <span>On</span>
-                    <div>
-                        <input type="checkbox" class="ww-large-checkbox" checked="@item.Enabled"
-                        @onchange="(e) => ItemEnableToggled(item, index, ((ChangeEventArgs)e).Value is bool b && b)" />
-                    </div>
-                </div>
-                @* Item info *@
-                <PlayableItemCard
-                    ImageSrc="@($"/playlist-images/{_playlist.Name}/{item.SourceFileName}")"
-                    FormPage="EditPlayableItemFormPage.Playlist"
-                    Item="item"
-                    ImageClicked="@(() => OnPlaylistItemImageClicked(item, index))"
-                />
-            </div>
-            @* Add button between items *@
-            <button class="btn-sm mb-4 rounded rounded-3" @onclick="() => OnAddDialogShow(index+1)">@((index == _items.Count - 1) ? "Add new item at end" : "Add new item here")</button>
-        }
-    </div>
-}
-
-@* Add PlayableItem dialog*@
-@if (_addFormModel != null){
+    @* Add PlayableItem dialog*@
     <AddPlayableItemForm @ref="_addFormRef"
         FormModel="_addFormModel"
         LibraryItems="libraryItems"
@@ -100,34 +19,121 @@
         PageTitle="Playlist item"
     />
 }
-
-@* Edit PlayableItem dialog*@
-@if (_editFormModel is not null && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
+else if (_editFormModel is not null)
 {
-    <EditPlayableItemForm
-        @ref="_editFormRef"
-        FormModel="_editFormModel"
-        OnSave="OnSavePlaylistItem"
-        OnCancel="OnEditFormCancel"
-    />
+    @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+    {
+        @* ReConvert All dialog *@
+        <EditPlayableItemForm @ref="_editFormRef"
+            FormModel="_editFormModel"
+            OnReconvertAllOk="OnReconvertAll"
+            OnCancel="OnEditFormCancel"
+        />
+    }
+    else
+    {
+        @* Edit PlayableItem dialog*@
+        <EditPlayableItemForm
+            @ref="_editFormRef"
+            FormModel="_editFormModel"
+            OnSave="OnSavePlaylistItem"
+            OnCancel="OnEditFormCancel"
+        />
+    }
 }
-
-@* ReConvert All dialog *@
-@if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
+else if (_addCopyPlaylistModel != null)
 {
-    <EditPlayableItemForm @ref="_editFormRef"
-        FormModel="_editFormModel"
-        OnReconvertAllOk="OnReconvertAll"
-        OnCancel="OnEditFormCancel"
-    />
-}
-
-@if (_addCopyPlaylistModel != null)
-{
+    @* Add / Copy Playlist dialog*@
     @* @ref="addEditPlaylistFormRef" *@
     <AddCopyPlaylistForm 
         Model="_addCopyPlaylistModel"
         OnCancel="CancelAddCopyPlaylist"
         OnSubmit="OnAddCopyPlaylistFormSubmit"
     />
+}
+else
+{
+    @* Regular Playlist view *@
+    @* Playlist controls *@
+    <div>
+        @* Playing *@
+        <div class="d-flex flex-column mb-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">Playing</span>
+                <select id="activePlaylist" class="form-select" value="@activePlaylist" @onchange="OnActivePlaylistChanged">
+                    <option value="">(None)</option>
+                    @if (availablePlaylists != null)
+                    {
+                        foreach (var name in availablePlaylists)
+                        {
+                            <option value="@name">@name</option>
+                        }
+                    }
+                </select>
+                <button class="btn btn-outline-success col-3" type="button" @onclick="StartActivePlaylist">Start</button>
+                <button class="btn btn-outline-danger col-3" type="button" @onclick="StopActivePlaylist">Stop</button>
+            </div>
+        </div>
+        @* Editing *@
+        <div class="d-flex flex-column mb-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text" style="width: 4.5em;">Editing</span>
+                <select id="editingPlaylist" class="form-select" style="width: 8em;" value="@_editingPlaylist" @onchange="OnEditingPlaylistChanged">
+                    <option value="">(None)</option>
+                    @if (availablePlaylists != null)
+                    {
+                        foreach (var name in availablePlaylists)
+                        {
+                            <option value="@name">@name</option>
+                        }
+                    }
+                </select>
+                <button class="btn btn-outline-dark col-2" type="button" @onclick="() => AddCopyPlaylistClicked(AddCopyPlaylistMode.Add)">Add</button>
+                <button class="btn btn-outline-dark col-2" type="button" @onclick="() => AddCopyPlaylistClicked(AddCopyPlaylistMode.Copy)">Copy</button>
+                <button class="btn btn-outline-danger col-2" type="button" @onclick="ConfirmDeletePlaylist">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    @* Playlist Items *@
+    @if (_playlist is not null && _items is not null)
+    {
+        @* ReConvert buttons *@
+        <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllMatrix()">ReConvert all with new Matrix Options</button>
+        <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllBrightness()">ReConvert all with new Brightness</button>
+        <div class="d-flex flex-column">
+            @* Add at start *@
+            <button class="btn-sm mb-4 rounded rounded-3" @onclick="() => OnAddDialogShow(0)">Add new item at start</button>
+            @for (int i = 0; i < _items.Count; i++)
+            {
+                var item = _items[i];
+                var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
+                <div class="d-flex gap-2 mb-3">
+                    @* Edit / Delete buttons *@
+                    <div class="d-flex flex-column justify-content-between">
+                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditPlaylistItem(item, index)">Edit</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeletePlaylistItem(index)">Delete</button>
+                    </div>
+                    <div class="d-flex flex-column justify-content-center">
+                        @* Enabled / Disabled *@
+                        <span>On</span>
+                        <div>
+                            <input type="checkbox" class="ww-large-checkbox" checked="@item.Enabled"
+                            @onchange="(e) => ItemEnableToggled(item, index, ((ChangeEventArgs)e).Value is bool b && b)" />
+                        </div>
+                    </div>
+                    @* Item info *@
+                    <PlayableItemCard
+                        ImageSrc="@($"/playlist-images/{_playlist.Name}/{item.SourceFileName}")"
+                        FormPage="EditPlayableItemFormPage.Playlist"
+                        Item="item"
+                        ImageClicked="@(() => OnPlaylistItemImageClicked(item, index))"
+                    />
+                </div>
+                @* Add button between items *@
+                <button class="btn-sm mb-4 rounded rounded-3" @onclick="() => OnAddDialogShow(index+1)">@((index == _items.Count - 1) ? "Add new item at end" : "Add new item here")</button>
+            }
+        </div>
+    }
+
 }

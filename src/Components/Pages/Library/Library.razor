@@ -6,55 +6,62 @@
 
 <PageTitle>WareWare - Library</PageTitle>
 
-<span style="display:block; margin-bottom:1em;">Click on an image to play a preview as a QuickMedia item in FOREVER mode. Click the item again to stop the preview.</span>
-@if (items == null)
+@* Edit *@
+@if (_editFormModel != null)
 {
-    <p>Loading...</p>
-}
-else if (!items.Any())
-{
-    <p>No items found in the library.</p>
+    @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+    {
+        @* ReConvert All dialog *@
+        <EditPlayableItemForm @ref="_editFormRef"
+            FormModel="_editFormModel"
+            OnReconvertAllOk="OnReconvertAll"
+            OnCancel="OnEditFormCancel"
+        />
+    }
+    else
+    {
+        @* Edit PlayableItem dialog*@
+        <EditPlayableItemForm
+            @ref="_editFormRef"
+            FormModel="_editFormModel"
+            OnSave="OnSaveLibraryItem"
+            OnCancel="OnEditFormCancel"
+        />
+    }
 }
 else
 {
-    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
-    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
-    <div class="d-flex flex-column">
-        @foreach (var item in items)
-        {
-            <div class="d-flex gap-2 mb-3">
-                @* Edit / Delete buttons *@
-                <div class="d-flex flex-column justify-content-between">
-                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowReconvert(item)">Edit</button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)">Delete</button>
+    @* Regular Library view *@
+    <span style="display:block; margin-bottom:1em;">Click on an image to play a preview as a QuickMedia item in FOREVER mode. Click the item again to stop the preview.</span>
+    @if (items == null)
+    {
+        <p>Loading...</p>
+    }
+    else if (!items.Any())
+    {
+        <p>No items found in the library.</p>
+    }
+    else
+    {
+        <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
+        <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
+        <div class="d-flex flex-column">
+            @foreach (var item in items)
+            {
+                <div class="d-flex gap-2 mb-3">
+                    @* Edit / Delete buttons *@
+                    <div class="d-flex flex-column justify-content-between">
+                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowReconvert(item)">Edit</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)">Delete</button>
+                    </div>
+                    @* Item info *@
+                    <PlayableItemCard
+                        ImageSrc="@($"/library-image/{item.SourceFileName}")"
+                        FormPage="EditPlayableItemFormPage.Library"
+                        Item="item"
+                    />
                 </div>
-                @* Item info *@
-                <PlayableItemCard
-                    ImageSrc="@($"/library-image/{item.SourceFileName}")"
-                    FormPage="EditPlayableItemFormPage.Library"
-                    Item="item"
-                />
-            </div>
-        }
-    </div>
-}
-
-@* Edit *@
-@if (_editFormModel != null && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
-{
-    <EditPlayableItemForm @ref="_editFormRef"
-        FormModel="_editFormModel"
-        OnSave="OnSaveLibraryItem"
-        OnCancel="OnEditFormCancel"
-    />
-}
-
-@* ReConvert All *@
-@if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
-{
-    <EditPlayableItemForm @ref="_editFormRef"
-        FormModel="_editFormModel"
-        OnReconvertAllOk="OnReconvertAll"
-        OnCancel="OnEditFormCancel"
-    />
+            }
+        </div>
+    }
 }

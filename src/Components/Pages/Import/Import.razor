@@ -8,6 +8,7 @@
 
 @if (_editFormModel != null)
 {
+    @* Import dialog *@
     <EditPlayableItemForm @ref="editFormRef" 
         FormModel="_editFormModel"
         OnSave="OnSaveImportItem" 
@@ -24,6 +25,7 @@ else if (!importItems.Any())
 }
 else
 {
+    @* Regular view *@
     <div class="mb-3">
         <button type="button" class="btn btn-primary" @onclick="TriggerFileInput">Upload new file</button>
         <InputFile id="@inputId" style="display:none;" OnChange="HandleFileSelected" />
@@ -43,10 +45,6 @@ else
                     ImageClicked="@(() => ShowForm(item))"
                     FormPage="EditPlayableItemFormPage.Import"
                 />
-                @* <img src="/incoming-media/@item" alt="@item" style="max-width: 64px; max-height: 64px; display: block;" /> *@
-                @* <div>
-                    <strong style="font-size:1em; color:#222;">@item.SourceFileName</strong><br />
-                </div> *@
             </li>
         }
     </ul>

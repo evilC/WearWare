@@ -7,54 +7,9 @@
 
 <PageTitle>WareWare QuickMedia</PageTitle>
 
-@if (quickButtons is null || quickButtons.Count == 0)
-{
-	<p>No quick-media buttons available.</p>
-}
-else
-{
-    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
-    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
-	<div class="d-flex flex-column">
-		@for (int i = 0; i < quickButtons.Count; i++)
-		{
-			var btn = quickButtons[i];
-			var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
-			<div class="d-flex gap-2 mb-3">
-				@* Button Title *@
-				<div class="d-flex align-items-center">
-					<span class="text-7">B@(i + 1)</span>
-				</div>
-				<div class="d-flex flex-column justify-content-between">
-					@if (btn is null)
-					{
-						@* Add Button *@
-						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnAddDialogShow(index)">Add</button>
-					}
-					else
-					{	@* Edit Button *@
-						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index)">Edit</button>
-					}
-                    @if (btn?.Item is not null)
-                    {
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteQuickMediaButton(index)">Delete</button>
-                    }
-				</div>
-				@if (btn?.Item is not null)
-				{
-					<PlayableItemCard
-						ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")"
-						FormPage="EditPlayableItemFormPage.QuickMedia"
-						Item="btn.Item"
-					/>
-				}
-			</div>
-		}
-	</div>
-}
-
 @if (_addFormModel is not null)
 {
+	@* Add QuickMedia item dialog*@
 	<AddPlayableItemForm 
 		@ref="_addFormRef"
 		LibraryItems="_libraryItems"
@@ -64,22 +19,74 @@ else
 		OnAdd="OnAddDialogItemChosen"
 	/>
 }
-
-@if (_editFormModel is not null && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
+else if(_editFormModel is not null)
 {
-    <EditPlayableItemForm
-        @ref="_editFormRef"
-		FormModel="_editFormModel"
-        OnCancel="OnEditFormCancel"
-        OnSave="OnSaveQuickMediaItem"
-    />
+	@if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+	{
+		@* ReConvert All dialog *@
+		<EditPlayableItemForm @ref="_editFormRef"
+			FormModel="_editFormModel"
+			OnReconvertAllOk="OnReconvertAll"
+			OnCancel="OnEditFormCancel"
+		/>
+	}
+	else
+	{
+		@* Edit PlayableItem dialog*@
+		<EditPlayableItemForm
+			@ref="_editFormRef"
+			FormModel="_editFormModel"
+			OnSave="OnSaveQuickMediaItem"
+			OnCancel="OnEditFormCancel"
+		/>
+	}
 }
-
-@if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
+else
 {
-	<EditPlayableItemForm @ref="_editFormRef"
-		FormModel="_editFormModel"
-		OnReconvertAllOk="OnReconvertAll"
-		OnCancel="OnEditFormCancel"
-	/>
+	@* Regular QuickMedia view *@
+	@if (quickButtons is null || quickButtons.Count == 0)
+	{
+		<p>No quick-media buttons available.</p>
+	}
+	else
+	{
+		<button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
+		<button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
+		<div class="d-flex flex-column">
+			@for (int i = 0; i < quickButtons.Count; i++)
+			{
+				var btn = quickButtons[i];
+				var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
+				<div class="d-flex gap-2 mb-3">
+					@* Button Title *@
+					<div class="d-flex align-items-center">
+						<span class="text-7">B@(i + 1)</span>
+					</div>
+					<div class="d-flex flex-column justify-content-between">
+						@if (btn is null)
+						{
+							@* Add Button *@
+							<button class="btn btn-sm btn-outline-primary" @onclick="() => OnAddDialogShow(index)">Add</button>
+						}
+						else
+						{	@* Edit Button *@
+							<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index)">Edit</button>
+						}
+						@if (btn?.Item is not null)
+						{
+							<button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteQuickMediaButton(index)">Delete</button>
+						}
+					</div>
+					@if (btn?.Item is not null)
+					{
+						<PlayableItemCard
+							ImageSrc="@($"/quickmedia-images/{index}/{btn.Item.SourceFileName}")"
+							FormPage="EditPlayableItemFormPage.QuickMedia"
+							Item="btn.Item"
+						/>
+					}
+				</div>
+			}
+		</div>
+	}
 }

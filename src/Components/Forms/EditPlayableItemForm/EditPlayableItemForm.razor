@@ -7,129 +7,132 @@
 @* Main Razor Markup: *@
 @if (FormModel is not null)
 {
-    <div class = "ww-modal">
-        <div class="ww-modal-header text-center">
-            <h2>@BuildPageTitle()</h2>
-        </div>
-        <div class="ww-modal-body">
-            <EditForm Model="@(FormModel.UpdatedItem ?? (object)FormModel)" OnValidSubmit="SaveEdit">
-                <DataAnnotationsValidator />
-                @if(FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
-                {
-                    <div style ="margin-bottom:1rem;">
-                        <span>ReConverts all @FormModel.FormPage items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
-                    </div>
-                }
-                else if(FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-                {
-                    <div style ="margin-bottom:1rem;">
-                        <span>ReConverts all @FormModel.FormPage items with a new Relative Brightness and their embedded Matrix Options</span>
-                    </div>
-                }
-                @* -------------- Name (Only used in Import) -------------- *@
-                @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
-                {
-                    <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
-                    <div class="edit-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
-                        <label class="edit-dialog-label">Name
-                            <EditboxTextLiveUpdate class="edit-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" 
-                                AddFocusGrabber="true" ReplaceSpaceWith="-" />
-                        </label>
-                    </div>
-                }
-                @if (FormModel.FormPage != EditPlayableItemFormPage.Library && FormModel.FormPage != EditPlayableItemFormPage.Import && 
-                    FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
-                {
-                    <div class="edit-dialog-row">
-                        @* -------------- PlayMode -------------- *@
-                        <div class="edit-dialog-section">
-                            <div class="edit-dialog-playmode-radios-block">
-                                <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem!.PlayMode">
-                                    @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
-                                    {
-                                        <div class="edit-dialog-playmode-radio-block">
-                                            <label class="edit-dialog-label">@playMode.ToString()</label>
-                                            @* <span class="edit-dialog-mode-text">@playMode.ToString()</span> *@
-                                            <InputRadio class="edit-dialog-playmode-radio" TValue="PlayMode" Value="playMode" />
-                                        </div>
-                                    }
-                                </InputRadioGroup>
+    @if (showMatrixOptionsForm && FormModel.UpdatedItem != null)
+    {
+        @* Matrix Options form *@
+        <MatrixOptionsForm
+            Options="FormModel.UpdatedItem.MatrixOptions"
+            Visibility="MatrixConfigService.Visibility"
+            RelativeBrightness="FormModel.UpdatedItem.RelativeBrightness"
+            HideRelativeBrightness="FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix"
+            OnValidSubmit="OnMatrixOptionsOk"
+            OnCancel="OnMatrixOptionsCancel"
+            Action="OK"
+            Title="@BuildMatrixOptionsTitle()"
+        />
+    }
+    else
+    {
+        @* Regular view *@
+        <div class = "ww-modal">
+            <div class="ww-modal-header text-center">
+                <h2>@BuildPageTitle()</h2>
+            </div>
+            <div class="ww-modal-body">
+                <EditForm Model="@(FormModel.UpdatedItem ?? (object)FormModel)" OnValidSubmit="SaveEdit">
+                    <DataAnnotationsValidator />
+                    @if(FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
+                    {
+                        <div style ="margin-bottom:1rem;">
+                            <span>ReConverts all @FormModel.FormPage items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
+                        </div>
+                    }
+                    else if(FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+                    {
+                        <div style ="margin-bottom:1rem;">
+                            <span>ReConverts all @FormModel.FormPage items with a new Relative Brightness and their embedded Matrix Options</span>
+                        </div>
+                    }
+                    @* -------------- Name (Only used in Import) -------------- *@
+                    @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
+                    {
+                        <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
+                        <div class="edit-dialog-row" style="margin-top:0.5rem; margin-bottom:1rem;">
+                            <label class="edit-dialog-label">Name
+                                <EditboxTextLiveUpdate class="edit-dialog-number" style="width: 20rem; border-radius: 6px;" @bind-Value="FormModel.UpdatedItem!.Name" 
+                                    AddFocusGrabber="true" ReplaceSpaceWith="-" />
+                            </label>
+                        </div>
+                    }
+                    @if (FormModel.FormPage != EditPlayableItemFormPage.Library && FormModel.FormPage != EditPlayableItemFormPage.Import && 
+                        FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
+                    {
+                        <div class="edit-dialog-row">
+                            @* -------------- PlayMode -------------- *@
+                            <div class="edit-dialog-section">
+                                <div class="edit-dialog-playmode-radios-block">
+                                    <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem!.PlayMode">
+                                        @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
+                                        {
+                                            <div class="edit-dialog-playmode-radio-block">
+                                                <label class="edit-dialog-label">@playMode.ToString()</label>
+                                                @* <span class="edit-dialog-mode-text">@playMode.ToString()</span> *@
+                                                <InputRadio class="edit-dialog-playmode-radio" TValue="PlayMode" Value="playMode" />
+                                            </div>
+                                        }
+                                    </InputRadioGroup>
+                                </div>
+                            </div>
+                            @* -------------- PlayModeValue -------------- *@
+                            <div class="edit-dialog-section">
+                                <label class="edit-dialog-label">Value</label>
+                                <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
+                                    disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" onfocus="this.select()" AddFocusGrabber=true/>
                             </div>
                         </div>
-                        @* -------------- PlayModeValue -------------- *@
-                        <div class="edit-dialog-section">
-                            <label class="edit-dialog-label">Value</label>
-                            <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
-                                disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" onfocus="this.select()" AddFocusGrabber=true/>
-                        </div>
-                    </div>
-                }
-                @* -------------- Stream Current Brightness -------------- *@
-                @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
-                    <div class="edit-dialog__list">
-                        <div style="display:flex; align-items:center; gap:1rem;">
-                            <img class="edit-dialog__item-image" src="@FormModel.ImageUrl" alt="@FormModel.UpdatedItem!.Name" />
-                            <div>
-                                <strong>@FormModel.UpdatedItem!.Name</strong><br />
-                                <span class="edit-dialog__item-type">@FormModel.UpdatedItem!.MediaType</span>
+                    }
+                    @* -------------- Stream Current Brightness -------------- *@
+                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
+                        <div class="edit-dialog__list">
+                            <div style="display:flex; align-items:center; gap:1rem;">
+                                <img class="edit-dialog__item-image" src="@FormModel.ImageUrl" alt="@FormModel.UpdatedItem!.Name" />
+                                <div>
+                                    <strong>@FormModel.UpdatedItem!.Name</strong><br />
+                                    <span class="edit-dialog__item-type">@FormModel.UpdatedItem!.MediaType</span>
+                                </div>
                             </div>
                         </div>
+                        <div class="edit-dialog-row" style="margin-top: 1em;">
+                            <label class="edit-dialog-label">Stream Current Brightness (%)
+                                <input type="number" disabled class="edit-dialog-number" @bind="FormModel.UpdatedItem!.CurrentBrightness"/>
+                            </label>
+                        </div>
+                    }
+                    @* -------------- Relative Brightness -------------- *@
+                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
+                        <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
+                        <div class="edit-dialog-row">
+                            <label class="edit-dialog-label">Relative Brightness (%)
+                                <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
+                                    @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
+                                />
+                            </label>
+                        </div>
+                    }
+                    @* -------------- Adjusted Brightness -------------- *@
+                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
+                        <div class="edit-dialog-row">
+                            <label class="edit-dialog-label">Adjusted Brightness (%)
+                                <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput"/>
+                            </label>
+                        </div>
+                    }
+                    @* -------------- Matrix Options ----------------*@
+                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
+                    {
+                        <div class="d-flex justify-content-center">
+                            <button type="button" class="edit-dialog__button" @onclick="ShowMatrixOptions">Matrix Options</button>
+                        </div>
+                    }
+                    @* -------------- Submit / Cancel -------------- *@
+                    <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
+                        <div style="display:flex; gap:0.5rem;">
+                            <button type="button" class="edit-dialog__button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
+                            <button type="submit" class="edit-dialog__button">OK</button>
+                        </div>
                     </div>
-                    <div class="edit-dialog-row" style="margin-top: 1em;">
-                        <label class="edit-dialog-label">Stream Current Brightness (%)
-                            <input type="number" disabled class="edit-dialog-number" @bind="FormModel.UpdatedItem!.CurrentBrightness"/>
-                        </label>
-                    </div>
-                }
-                @* -------------- Relative Brightness -------------- *@
-                @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
-                    <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
-                    <div class="edit-dialog-row">
-                        <label class="edit-dialog-label">Relative Brightness (%)
-                            <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
-                                @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
-                            />
-                        </label>
-                    </div>
-                }
-                @* -------------- Adjusted Brightness -------------- *@
-                @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
-                    <div class="edit-dialog-row">
-                        <label class="edit-dialog-label">Adjusted Brightness (%)
-                            <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput"/>
-                        </label>
-                    </div>
-                }
-                @* -------------- Matrix Options ----------------*@
-                @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
-                {
-                    <div class="d-flex justify-content-center">
-                        <button type="button" class="edit-dialog__button" @onclick="ShowMatrixOptions">Matrix Options</button>
-                    </div>
-                }
-                @* -------------- Submit / Cancel -------------- *@
-                <div style="margin-top:0.75rem; display:flex; gap:0.5rem; justify-content:center; width:100%; flex-direction:column; align-items:center;">
-                    <div style="display:flex; gap:0.5rem;">
-                        <button type="button" class="edit-dialog__button" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
-                        <button type="submit" class="edit-dialog__button">OK</button>
-                    </div>
-                </div>
-            </EditForm>
+                </EditForm>
+            </div>
         </div>
-    </div>
-}
-
-@* Matrix Options form *@
-@if (FormModel is not null && showMatrixOptionsForm && FormModel.UpdatedItem != null)
-{
-    <MatrixOptionsForm
-        Options="FormModel.UpdatedItem.MatrixOptions"
-        Visibility="MatrixConfigService.Visibility"
-        RelativeBrightness="FormModel.UpdatedItem.RelativeBrightness"
-        HideRelativeBrightness="FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix"
-        OnValidSubmit="OnMatrixOptionsOk"
-        OnCancel="OnMatrixOptionsCancel"
-        Action="OK"
-        Title="@BuildMatrixOptionsTitle()"
-    />
+    }
 }
