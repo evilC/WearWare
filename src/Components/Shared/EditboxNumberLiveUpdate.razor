@@ -1,15 +1,16 @@
-@* Handles validation as you type in an InputNumber*@
+@* Handles validation as you type in an InputNumber *@
+@using Microsoft.AspNetCore.Components.Forms
 @typeparam TValue
 @inherits InputNumber<TValue>
 
 <input type="number" @attributes="AdditionalAttributes"
-       class="@CssClass"
-       value="@(CurrentValueAsString ?? string.Empty)"
-       @oninput="HandleInput" />
-       @if (AddFocusGrabber){
-              @* Hides keyboard on mobile devices when you click Next on the virtual keyboard *@
-              <select style="width: 0px; height: 0px;"/>
-       }
+          class="@CssClass"
+          value="@(CurrentValueAsString ?? string.Empty)"
+          @oninput="HandleInput" />
+@if (AddFocusGrabber){
+       @* Hides keyboard on mobile devices when you click Next on the virtual keyboard *@
+       <select style="width: 0px; height: 0px;"/>
+}
 
 
 @code {
@@ -21,10 +22,30 @@
        private async Task HandleInput(ChangeEventArgs e)
        {
               CurrentValueAsString = e?.Value?.ToString() ?? string.Empty;
+
               // Forward the event to parent component, so that if, in the form, we specify @oninput, it gets called.
               if (OnInput.HasDelegate)
               {
                      await OnInput.InvokeAsync(e);
               }
+
+              // Trigger validation immediately while typing
+              EditContext?.Validate();
        }
+
+       #pragma warning disable CS8765
+       protected override bool TryParseValueFromString(string? value, out TValue result, out string? validationErrorMessage)
+       {
+              // Let the base InputNumber implementation attempt parsing first.
+              if (base.TryParseValueFromString(value, out var parsedResult, out validationErrorMessage))
+              {
+                     result = parsedResult!;
+                     return true;
+              }
+
+              validationErrorMessage = "Now that's just silly :)";
+              result = default!;
+              return false;
+       }
+       #pragma warning restore CS8765
 }
