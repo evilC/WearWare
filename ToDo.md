@@ -7,7 +7,6 @@
   - Styles on Import page all embedded
 - Can addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
 - Import page uses '<ul>'
-- Matrix Options `mw-matrix-options-modal` div is outside of `ww-modal` - Fix when CSS overhauled
 
 ### Code overhaul
 - Components
