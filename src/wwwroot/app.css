@@ -1,10 +1,23 @@
 /* WearWare custom CSS */
+.playable-item-card-height {
+    /* We need this for the time being, as the minimum text size (text-6) is a little too big
+    So the Edit / Delete buttons in Playlist have no gap between them
+    Once we add SCSS support and can make text-6 smaller, we can make this 64px
+     */
+    height: 68px !important;
+}
+
 .playable-item-image-height {
     height: 64px !important;
 }
 
 .playable-item-image-width {
     width: 64px !important;
+}
+
+.ww-large-checkbox {
+    width: 1.5rem;
+    height: 1.5rem;
 }
 
 /* Default styles */

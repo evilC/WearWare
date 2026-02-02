@@ -22,34 +22,6 @@
     width: 10rem;
 }
 
-/* Styles for playlist item list in the main view */
-.playlist-item {
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.playlist-item-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    flex: 0 0 auto;
-    align-items: center;
-}
-.playlist-item-controls .btn {
-    /* padding: 0.25rem 0.5rem;
-    font-size: 0.85rem; */
-    width: 100%;
-}
-.playlist-item-enabled {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.playlist-item-enabled .checkbox {
-    width: 1.5rem;
-    height: 1.5rem;
-}
 /* Container for playlist items — use divs instead of ul/li so there's no indent */
 .playlist-list {
     display: flex;
@@ -65,29 +37,6 @@
     border-radius: 0.5rem;
     margin-bottom: 1rem;
 }
-
-/* Modal styles for Add Playlist */
-/* .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.3);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-} */
-/* .add-playlist-modal {
-    background: #fff;
-    padding: 1rem;
-    width: 100vw;
-    z-index: 1001;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-} */
 
 /* ToDo: Replace with bootstrap */
 .reconvert-all-button {

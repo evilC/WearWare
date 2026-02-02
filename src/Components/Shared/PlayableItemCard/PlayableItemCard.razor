@@ -1,20 +1,20 @@
 @using WearWare.Common.Media
 @using WearWare.Components.Forms.EditPlayableItemForm
 
-<div class="playlist-item-card playable-item-image-height">
+<div class="playlist-item-card playable-item-card-height">
     @if (!string.IsNullOrEmpty(ImageSrc))
     {
         @* Image *@
-        <img class="playlist-item-image rounded playable-item-image-width" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
+        <img class="rounded playable-item-image-height playable-item-image-width" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
     }
     <div class="playlist-item-info">
         @* Name / Filename *@
-        <strong class="playlist-item-title">@(FormPage == EditPlayableItemFormPage.Import ? Item?.SourceFileName : Item?.Name)</strong>
+        <strong class="fs-6 fw-bold">@(FormPage == EditPlayableItemFormPage.Import ? Item?.SourceFileName : Item?.Name)</strong>
         @if (Item is not null)
         {
             @* PlayMode *@
             @if (FormPage != EditPlayableItemFormPage.Library && FormPage != EditPlayableItemFormPage.Import){
-                <div class="playlist-item-mode">
+                <div class="fs-6">
                     @(
                         @* PlayMode *@
                         $"{Item.PlayMode.ToString()}: " +
