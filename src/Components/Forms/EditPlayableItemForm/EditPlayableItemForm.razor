@@ -49,8 +49,10 @@
                     @* -------------- Name (Only used in Import) -------------- *@
                     @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
                     {
-                        <div class="d-flex justify-content-center mb-3">
-                            <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
+                        <div class="d-flex flex-column align-items-center mb-3">
+                            <div class="w-auto text-danger text-center mb-1">
+                                <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
+                            </div>
                             <div class="input-group input-group-sm rounded-3 w-50">
                                 <span class="input-group-text">Name</span>
                                 <EditboxTextLiveUpdate class="form-control" @bind-Value="FormModel.UpdatedItem!.Name" 
