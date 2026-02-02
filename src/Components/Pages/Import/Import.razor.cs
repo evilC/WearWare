@@ -55,7 +55,8 @@ namespace WearWare.Components.Pages.Import
                 ImageUrl = $"/incoming-media/{item.SourceFileName}",
                 FormMode = EditPlayableItemFormMode.Add,
                 FormPage = EditPlayableItemFormPage.Import,
-                UpdatedItem = item,
+                OriginalItem = item,
+                UpdatedItem = item.Clone(),
             };
             _editFormModel = editFormModel;
             // ToDo: Why is this called?
