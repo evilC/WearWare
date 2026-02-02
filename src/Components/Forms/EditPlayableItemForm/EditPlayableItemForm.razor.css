@@ -34,13 +34,6 @@ input[type=number] {
     height: 2em;
     line-height: 2em;
 }
-/* Lays PlayMode radios + labels out horizontally */
-.edit-dialog-playmode-radios-block {
-    display: flex;
-    gap: 1em;
-    height: 100%;
-    justify-content: center;
-}
 /* Stacks PlayMode radios + labels vertically */
 .edit-dialog-playmode-radio-block {
     display: flex;
