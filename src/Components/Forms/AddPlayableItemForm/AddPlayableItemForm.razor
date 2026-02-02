@@ -15,13 +15,21 @@
         {
             @foreach (var libItem in LibraryItems)
             {
-                <div class="row mb-3">
-                    <PlayableItemCard
-                        ImageSrc="@($"/library-image/{@libItem.SourceFileName}")"
-                        Item="libItem"
-                        ImageClicked="@(() =>ItemSelected(libItem))"
-                        FormPage="EditPlayableItemFormPage.Library"
-                    />
+                <div class="mb-3">
+                    <div class="card h-100 shadow-sm bg-light">
+                        <div class="card-body p-0">
+                            <div class="d-flex align-items-center gap-3 p-2" style="cursor:pointer;" @onclick="() => ItemSelected(libItem)">
+                                <div class="flex-grow-1">
+                                    <PlayableItemCard
+                                        ImageSrc="@($"/library-image/{@libItem.SourceFileName}")"
+                                        Item="libItem"
+                                        ImageClicked="@(() =>ItemSelected(libItem))"
+                                        FormPage="EditPlayableItemFormPage.Library"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             }
         }

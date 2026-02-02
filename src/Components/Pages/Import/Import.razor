@@ -30,22 +30,28 @@ else
         <button type="button" class="btn btn-primary" @onclick="TriggerFileInput">Upload new file</button>
         <InputFile id="@inputId" style="display:none;" OnChange="HandleFileSelected" />
     </div>
-    <ul class="import-list" style="list-style:none; padding:0; margin:0;">
-        @foreach (var item in importItems)
-        {
-            <li style="margin-bottom:2em; display:flex; align-items:center; gap:0.5em; cursor:pointer;"
-                @onclick="() => ShowForm(item)">
-                @* Delete *@
-                <div style="display:flex; flex-direction:column; gap:0.25em;">
-                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)" @onclick:stopPropagation="true">Delete</button>
+        <div class="d-flex flex-column">
+            @foreach (var item in importItems)
+            {
+                <div class="col-12 mb-3">
+                    <div class="card h-100 shadow-sm bg-light">
+                        <div class="card-body p-0">
+                            <div class="d-flex  align-items-center gap-3 p-2" style="cursor:pointer;" @onclick="() => ShowForm(item)">
+                                <div class="d-flex flex-column justify-content-between me-2 align-items-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)" @onclick:stopPropagation="true">Delete</button>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <PlayableItemCard
+                                        ImageSrc="@($"/incoming-media/{item.SourceFileName}")"
+                                        Item="item"
+                                        ImageClicked="@(() => ShowForm(item))"
+                                        FormPage="EditPlayableItemFormPage.Import"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <PlayableItemCard
-                    ImageSrc="@($"/incoming-media/{item.SourceFileName}")"
-                    Item="item"
-                    ImageClicked="@(() => ShowForm(item))"
-                    FormPage="EditPlayableItemFormPage.Import"
-                />
-            </li>
-        }
-    </ul>
+            }
+        </div>
 }

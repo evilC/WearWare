@@ -48,18 +48,25 @@ else
         <div class="d-flex flex-column">
             @foreach (var item in items)
             {
-                <div class="d-flex gap-2 mb-3">
-                    @* Edit / Delete buttons *@
-                    <div class="d-flex flex-column justify-content-between">
-                        <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowReconvert(item)">Edit</button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)">Delete</button>
+                    <div class="mb-3">
+                    <div class="card h-100 shadow-sm bg-light">
+                        <div class="card-body p-0">
+                            <div class="d-flex align-items-center gap-3 p-2" style="cursor:pointer;" @onclick="() => ShowReconvert(item)">
+                                <div class="d-flex flex-column justify-content-between me-2 gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => ShowReconvert(item)" @onclick:stopPropagation="true">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)" @onclick:stopPropagation="true">Delete</button>
+                                </div>
+
+                                <div class="flex-grow-1">
+                                    <PlayableItemCard
+                                        ImageSrc="@($"/library-image/{item.SourceFileName}")"
+                                        FormPage="EditPlayableItemFormPage.Library"
+                                        Item="item"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    @* Item info *@
-                    <PlayableItemCard
-                        ImageSrc="@($"/library-image/{item.SourceFileName}")"
-                        FormPage="EditPlayableItemFormPage.Library"
-                        Item="item"
-                    />
                 </div>
             }
         </div>
