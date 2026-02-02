@@ -55,7 +55,7 @@
     @* ReConvert buttons *@
     <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllMatrix()">ReConvert all with new Matrix Options</button>
     <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllBrightness()">ReConvert all with new Brightness</button>
-    <div class="playlist-list d-flex flex-column">
+    <div class="d-flex flex-column">
         @* Add at start *@
         <button class="btn-sm mb-4 rounded rounded-3" @onclick="() => OnAddDialogShow(0)">Add new item at start</button>
         @for (int i = 0; i < _items.Count; i++)
