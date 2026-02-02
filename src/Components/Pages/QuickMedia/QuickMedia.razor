@@ -13,22 +13,26 @@
 }
 else
 {
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
-    <button class="reconvert-all-button btn-outline-primary" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
-	<div class="qm-button-list">
+    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
+    <button class="btn-sm btn-outline-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
+	<div class="d-flex flex-column">
 		@for (int i = 0; i < quickButtons.Count; i++)
 		{
 			var btn = quickButtons[i];
 			var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
-			<div class="qm-button-item">
-				<span class="qm-button-title">B@(i + 1)</span>
-				<div class="qm-item-controls">
+			<div class="d-flex gap-2 mb-3">
+				@* Button Title *@
+				<div class="d-flex align-items-center">
+					<span class="text-7">B@(i + 1)</span>
+				</div>
+				<div class="d-flex flex-column justify-content-between">
 					@if (btn is null)
 					{
+						@* Add Button *@
 						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnAddDialogShow(index)">Add</button>
 					}
 					else
-					{
+					{	@* Edit Button *@
 						<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(btn.Item, index)">Edit</button>
 					}
                     @if (btn?.Item is not null)
