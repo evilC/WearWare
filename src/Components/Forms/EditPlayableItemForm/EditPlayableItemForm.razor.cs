@@ -139,21 +139,21 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// Called by 
         /// </summary>
         /// <returns>The page title</returns>
-        public static string BuildPageTitle(EditPlayableItemFormModel formModel)
+        public string BuildPageTitle()
         {
-            if (formModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
+            if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
-                return $"ReConvert {formModel.FormPage} (Matrix Options)";
+                return $"ReConvert {FormModel.FormPage} (Matrix Options)";
             }
-            else if (formModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+            else if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                return $"ReConvert {formModel.FormPage} (Brightness)";
+                return $"ReConvert {FormModel.FormPage} (Brightness)";
             }
-            var title = formModel.FormPage == EditPlayableItemFormPage.Import ? "" : $"{formModel.FormMode} ";
-            title += formModel.FormPage.ToString();
-            if (formModel.FormPage == EditPlayableItemFormPage.QuickMedia)
+            var title = FormModel.FormPage == EditPlayableItemFormPage.Import ? "" : $"{FormModel.FormMode} ";
+            title += FormModel.FormPage.ToString();
+            if (FormModel.FormPage == EditPlayableItemFormPage.QuickMedia)
             {
-                title += $" B{formModel.ItemIndex + 1}";
+                title += $" B{FormModel.ItemIndex + 1}";
             }
             else
             {

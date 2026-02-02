@@ -77,13 +77,9 @@ else
 
 @if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
 {
-    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
-        <div style="width:80%;">
-			<EditPlayableItemForm @ref="_editFormRef"
-				FormModel="_editFormModel"
-                OnReconvertAllOk="OnReconvertAll"
-                OnCancel="OnEditFormCancel"
-            />
-        </div>
-    </div>
+	<EditPlayableItemForm @ref="_editFormRef"
+		FormModel="_editFormModel"
+		OnReconvertAllOk="OnReconvertAll"
+		OnCancel="OnEditFormCancel"
+	/>
 }
