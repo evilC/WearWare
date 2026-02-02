@@ -2,12 +2,12 @@
 
 @using System
 
-<div class="mw-matrix-form-row">
+<div class="d-flex flex-row align-items-center">
     @if (ShowEnableToggle)
     {
-        <InputCheckbox class="me-2" @bind-Value="EnabledChecked" />
+        <InputCheckbox class="me-3 ww-large-checkbox" @bind-Value="EnabledChecked" />
     }
-    <label class="mw-matrix-label">@Label</label>
+    <label class="w-50">@Label</label>
     <CascadingValue Value="EnabledChecked">
         @ChildContent
     </CascadingValue>
