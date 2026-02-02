@@ -76,46 +76,67 @@
                             @* -------------- PlayModeValue -------------- *@
                             <div class="d-flex flex-column align-items-center justify-content-center card bg-light border-secondary rounded-4 p-2 gap-0 w-25">
                                 <label class="text-7 text-center">Value</label>
-                                <EditboxNumberLiveUpdate class="rounded-4 w-100 text-center" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
+                                <EditboxNumberLiveUpdate class="rounded-4 w-100 text-7 text-center" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
                                     disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" onfocus="this.select()" AddFocusGrabber=true/>
                             </div>
                         </div>
                     }
                     @* -------------- Preview Image -------------- *@
-                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
-                        <div class="d-flex justify-content-center mb-3">
-                            <div class="card bg-light align-items-center rounded-4 p-3 d-inline-flex flex-nowrap">
-                                <PlayableItemCard
-                                    ImageSrc="@FormModel.ImageUrl"
-                                    FormPage="FormModel.FormPage"
-                                    Item="FormModel.UpdatedItem"
-                                />
-                            </div>
-                        </div>
-                        @* -------------- Stream Current Brightness -------------- *@
-                        <div class="edit-dialog-row" style="margin-top: 1em;">
-                            <label class="edit-dialog-label">Stream Current Brightness (%)
-                                <input type="number" disabled class="edit-dialog-number" @bind="FormModel.UpdatedItem!.CurrentBrightness"/>
-                            </label>
-                        </div>
-                    }
-                    @* -------------- Relative Brightness -------------- *@
                     @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
-                        <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
-                        <div class="edit-dialog-row">
-                            <label class="edit-dialog-label">Relative Brightness (%)
-                                <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
-                                    @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
-                                />
-                            </label>
-                        </div>
-                    }
-                    @* -------------- Adjusted Brightness -------------- *@
-                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
-                        <div class="edit-dialog-row">
-                            <label class="edit-dialog-label">Adjusted Brightness (%)
-                                <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput"/>
-                            </label>
+                        @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
+                            <div class="d-flex justify-content-center mb-3">
+                                <div class="card bg-light align-items-center rounded-4 p-3 d-inline-flex flex-nowrap">
+                                    <PlayableItemCard
+                                        ImageSrc="@FormModel.ImageUrl"
+                                        FormPage="FormModel.FormPage"
+                                        Item="FormModel.UpdatedItem"
+                                    />
+                                </div>
+                            </div>
+                        }
+                        <div class="d-flex justify-content-center mb-3">
+                            <div class="card p-4">
+                                @* -------------- Stream Current Brightness -------------- *@
+                                <div class="input-group input-group-sm justify-content-center mb-3">
+                                    <span class="input-group-text w-50">Stream Current Brightness</span>
+                                    <input type="number" disabled class="text-7 text-center w-25" @bind="FormModel.UpdatedItem!.CurrentBrightness" @bind:event="oninput"/>
+                                    <span class="input-group-text text-7 text-center">%</span>
+                                </div>
+                                @* <div class="edit-dialog-row" style="margin-top: 1em;">
+                                    <label class="edit-dialog-label">Stream Current Brightness (%)
+                                        <input type="number" disabled class="edit-dialog-number" @bind="FormModel.UpdatedItem!.CurrentBrightness"/>
+                                    </label>
+                                </div> *@
+                                @* -------------- Relative Brightness -------------- *@
+                                <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
+                                <div class="input-group input-group-sm mb-3">
+                                    <span class="input-group-text w-50">Relative Brightness</span>
+                                    @* form-control *@
+                                    <EditboxNumberLiveUpdate class="text-7 text-center w-25" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
+                                        @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
+                                    />
+                                    <span class="input-group-text text-7 text-center">%</span>
+                                </div>
+                                @* <div class="edit-dialog-row">
+                                    <label class="edit-dialog-label">Relative Brightness (%) *@
+                                        @* rounded-4 w-25 text-7 text-center *@
+                                        @* <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
+                                            @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true" *@
+                                        @* /> *@
+                                    @* </label>
+                                </div> *@
+                                @* -------------- Adjusted Brightness -------------- *@
+                                <div class="input-group input-group-sm justify-content-center mb-3">
+                                    <span class="input-group-text w-50">Adjusted Brightness</span>
+                                    <input type="number" disabled class="text-7 text-center w-25" @bind="adjustedBrightness" @bind:event="oninput"/>
+                                    <span class="input-group-text text-7 text-center">%</span>
+                                </div>
+                                @* <div class="edit-dialog-row">
+                                    <label class="edit-dialog-label">Adjusted Brightness (%)
+                                        <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput"/>
+                                    </label>
+                                </div> *@
+                            </div
                         </div>
                     }
                     @* -------------- Matrix Options ----------------*@
