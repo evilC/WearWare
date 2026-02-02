@@ -1,11 +1,35 @@
 @* Facilitates an Integer selectbox with a default value and stores null when the default value is selected *@
 @using Microsoft.AspNetCore.Components
 
-<select class="form-control mw-matrix-input" @onchange="OnChange" value="@(Value.HasValue ? Value.Value.ToString() : DefaultValue.ToString())">
+@{
+    // Merge any incoming `class` from AdditionalAttributes with the default class
+    var incomingClass = string.Empty;
+    if (AdditionalAttributes != null && AdditionalAttributes.TryGetValue("class", out var c) && c is string cs)
+    {
+        incomingClass = cs?.Trim() ?? string.Empty;
+    }
+    var selectClass = string.IsNullOrEmpty(incomingClass) ? "form-control" : $"form-control {incomingClass}";
+
+    // Build attributes without the class so we don't duplicate it when rendering
+    Dictionary<string, object>? otherAttrs = null;
+    if (AdditionalAttributes != null)
+    {
+        otherAttrs = new Dictionary<string, object>(AdditionalAttributes);
+        otherAttrs.Remove("class");
+    }
+}
+
+<select class="@selectClass"
+        @attributes="otherAttrs"
+        @onchange="OnChange"
+        value="@(Value.HasValue ? Value.Value.ToString() : DefaultValue.ToString())">
     @ChildContent
 </select>
 
 @code {
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
     [Parameter] public int? Value { get; set; }
     [Parameter] public EventCallback<int?> ValueChanged { get; set; }
     [Parameter] public int DefaultValue { get; set; } = 0;

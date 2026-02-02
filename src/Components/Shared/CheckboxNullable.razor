@@ -1,9 +1,28 @@
-@* Facilitates a checkbox that stores null when false *@
+@* Facilitates a checkbox that stores null when false. Supports passthrough attributes via `AdditionalAttributes`. *@
 @using Microsoft.AspNetCore.Components
 
-<input type="checkbox" class="form-check-input" checked="@(Value ?? false)" @onchange="OnChange" />
+@{
+    var incomingClass = string.Empty;
+    if (AdditionalAttributes != null && AdditionalAttributes.TryGetValue("class", out var c) && c is string cs)
+    {
+        incomingClass = cs?.Trim() ?? string.Empty;
+    }
+    var inputClass = string.IsNullOrEmpty(incomingClass) ? "form-check-input" : $"form-check-input {incomingClass}";
+
+    Dictionary<string, object>? otherAttrs = null;
+    if (AdditionalAttributes != null)
+    {
+        otherAttrs = new Dictionary<string, object>(AdditionalAttributes);
+        otherAttrs.Remove("class");
+    }
+}
+
+<input type="checkbox" class="@inputClass" @attributes="otherAttrs" checked="@(Value ?? false)" @onchange="OnChange" />
 
 @code {
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
     [Parameter] public bool? Value { get; set; }
     [Parameter] public EventCallback<bool?> ValueChanged { get; set; }
 
@@ -18,8 +37,16 @@
         }
         else
         {
-            // fallback
-            await ValueChanged.InvokeAsync(null);
+            // fallback: try to parse truthy string
+            var s = e?.Value?.ToString();
+            if (!string.IsNullOrEmpty(s) && (s.Equals("true", StringComparison.OrdinalIgnoreCase) || s == "on"))
+            {
+                await ValueChanged.InvokeAsync(true);
+            }
+            else
+            {
+                await ValueChanged.InvokeAsync(null);
+            }
         }
     }
 }
