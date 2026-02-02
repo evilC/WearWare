@@ -1,35 +1,5 @@
 /* Styles for EditPlayableItemForm dialog overlay and content */
-.edit-dialog {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(0,0,0,0.5);
-    z-index: 1000;
-    pointer-events: auto;
-    overflow: hidden;
-}
-.edit-dialog__content {
-    background: #fff;
-    width: 100vw;
-    height: 100vh;
-    max-width: none;
-    max-height: none;
-    border-radius: 0;
-    box-shadow: 0 2px 24px rgba(0,0,0,0.25);
-    padding: 1rem 1rem 1.25rem 1rem;
-    padding-top: calc(env(safe-area-inset-top, 0.5rem) + 0.5rem);
-    overflow: auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-@supports (height: 100dvh) {
-    .edit-dialog__content {
-        height: 100dvh;
-    }
-}
+
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;

@@ -39,10 +39,14 @@ else
     </div>
 }
 
+@* Edit *@
 @if (_editFormModel != null && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
 {
-    <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">
-        <div style="width:80%;">
+    <div class="ww-modal">
+        <div class ="ww-modal-header text-center">
+            <h2>@EditPlayableItemForm.BuildPageTitle(_editFormModel)</h2>
+        </div>
+        <div class="ww-modal-body">
             <EditPlayableItemForm @ref="_editFormRef"
                 FormModel="_editFormModel"
                 OnSave="OnSaveLibraryItem"
@@ -52,6 +56,7 @@ else
     </div>
 }
 
+@* ReConvert All *@
 @if (_editFormModel is not null && (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness))
 {
     <div style="position:fixed; z-index:9999; inset:8% 10%; display:flex; align-items:flex-start; justify-content:center;">

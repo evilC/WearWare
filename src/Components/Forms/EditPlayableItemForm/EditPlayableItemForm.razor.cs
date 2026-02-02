@@ -135,24 +135,25 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         }
 
         /// <summary>
-        /// Builds the title for the form based on mode and item type
+        /// Builds the title for this form based on mode and item type
+        /// Called by 
         /// </summary>
         /// <returns>The page title</returns>
-        private string BuildPageTitle()
+        public static string BuildPageTitle(EditPlayableItemFormModel formModel)
         {
-            if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
+            if (formModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
             {
-                return $"ReConvert {FormModel.FormPage} (Matrix Options)";
+                return $"ReConvert {formModel.FormPage} (Matrix Options)";
             }
-            else if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+            else if (formModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
             {
-                return $"ReConvert {FormModel.FormPage} (Brightness)";
+                return $"ReConvert {formModel.FormPage} (Brightness)";
             }
-            var title = FormModel.FormPage == EditPlayableItemFormPage.Import ? "" : $"{FormModel.FormMode} ";
-            title += FormModel.FormPage.ToString();
-            if (FormModel.FormPage == EditPlayableItemFormPage.QuickMedia)
+            var title = formModel.FormPage == EditPlayableItemFormPage.Import ? "" : $"{formModel.FormMode} ";
+            title += formModel.FormPage.ToString();
+            if (formModel.FormPage == EditPlayableItemFormPage.QuickMedia)
             {
-                title += $" B{FormModel.ItemIndex + 1}";
+                title += $" B{formModel.ItemIndex + 1}";
             }
             else
             {
