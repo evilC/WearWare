@@ -15,7 +15,7 @@
         <div class="row">
             <EditForm EditContext="_editContext" OnValidSubmit="OnSubmitClicked">
                 <DataAnnotationsValidator />
-                <EditboxTextLiveUpdate class="form-control" @bind-Value="Model.NewName" placeholder="New playlist name" ReplaceSpaceWith="-" />
+                <EditboxTextLiveUpdate class="form-control" @bind-Value="Model.NewName" placeholder="New playlist name" ReplaceSpaceWith="-" AddFocusGrabber="true" />
                 <ValidationMessage For="() => Model.NewName"/>
                 <div class="row justify-content-center mt-4">
                     <button class="btn btn-secondary btn-lg me-4 col-5" @onclick="OnCancelClicked">Cancel</button>

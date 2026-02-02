@@ -55,7 +55,7 @@
                 </div>
                 <VisibilityWrapper Label="Cols" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ColsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ColsEnabled = v)">
                     <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Cols" @bind-Value:event="oninput" onfocus="this.select()"
-                        placeholder="@($"(Default: {_defaults.Cols})")" />
+                        placeholder="@($"(Default: {_defaults.Cols})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- Disable Hardware Pulsing -------------- *@
@@ -119,7 +119,7 @@
                 </div>
                 <VisibilityWrapper Label="Limit Refresh Rate Hz" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.LimitRefreshRateHzEnabled)" VisibilitySetter="@((bool? v) => Visibility!.LimitRefreshRateHzEnabled = v)">
                     <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.LimitRefreshRateHz" @bind-Value:event="oninput" onfocus="this.select()"
-                        placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" />
+                        placeholder="@($"(Default: {_defaults.LimitRefreshRateHz})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- Multiplexing -------------- *@
@@ -161,7 +161,7 @@
                 </div>
                 <VisibilityWrapper Label="Parallel" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.ParallelEnabled)" VisibilitySetter="@((bool? v) => Visibility!.ParallelEnabled = v)">
                     <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Parallel" @bind-Value:event="oninput" onfocus="this.select()"
-                        placeholder="@($"(Default: {_defaults.Parallel})")" />
+                        placeholder="@($"(Default: {_defaults.Parallel})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- Pixel Mapper Config -------------- *@
@@ -169,7 +169,7 @@
             {
                 <VisibilityWrapper Label="Pixel Mapper Config" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PixelMapperConfigEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PixelMapperConfigEnabled = v)">
                     <EditboxTextLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PixelMapperConfig" @bind-Value:event="oninput" onfocus="this.select()"
-                        placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" />
+                        placeholder="@($"(Default: {_defaults.PixelMapperConfig})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- PWM Bits -------------- *@
@@ -177,7 +177,7 @@
             {
                 <VisibilityWrapper Label="PWM Bits" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmBitsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmBitsEnabled = v)">
                     <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PwmBits" @bind-Value:event="oninput" onfocus="this.select()"
-                    placeholder="@($"(Default: {_defaults.PwmBits})")" />
+                    placeholder="@($"(Default: {_defaults.PwmBits})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- PWM Dither Bits -------------- *@
@@ -199,7 +199,7 @@
                 </div>
                 <VisibilityWrapper Label="PWM LSB Nanoseconds" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.PwmLsbNanosecondsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.PwmLsbNanosecondsEnabled = v)">
                     <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.PwmLsbNanoseconds" @bind-Value:event="oninput" onfocus="this.select()"
-                        placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" />
+                        placeholder="@($"(Default: {_defaults.PwmLsbNanoseconds})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- Row Address Type -------------- *@
@@ -224,7 +224,7 @@
                 </div>
                 <VisibilityWrapper Label="Rows" ShowEnableToggle="OnGlobalOptionsForm" VisibilityGetter="@(() => Visibility!.RowsEnabled)" VisibilitySetter="@((bool? v) => Visibility!.RowsEnabled = v)">
                     <EditboxNumberNullableLiveUpdate class="form-control mw-matrix-input" @bind-Value="Options.Rows" @bind-Value:event="oninput" onfocus="this.select()"
-                        placeholder="@($"(Default: {_defaults.Rows})")" />
+                        placeholder="@($"(Default: {_defaults.Rows})")" AddFocusGrabber="true" />
                 </VisibilityWrapper>
             }
             @* -------------- Scan Mode -------------- *@
