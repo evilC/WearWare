@@ -51,7 +51,7 @@
                     {
                         <div class="d-flex justify-content-center mb-3">
                             <ValidationMessage For="@(() => FormModel.UpdatedItem!.Name)" />
-                            <div class="input-group input-group-sm mb-3 rounded-3 w-50">
+                            <div class="input-group input-group-sm rounded-3 w-50">
                                 <span class="input-group-text">Name</span>
                                 <EditboxTextLiveUpdate class="form-control" @bind-Value="FormModel.UpdatedItem!.Name" 
                                     AddFocusGrabber="true" ReplaceSpaceWith="-" />
@@ -111,11 +111,6 @@
                                     <input type="number" disabled class="text-7 text-center w-25 form-control" @bind="FormModel.UpdatedItem!.CurrentBrightness" @bind:event="oninput"/>
                                     <span class="input-group-text text-7 text-center">%</span>
                                 </div>
-                                @* <div class="edit-dialog-row" style="margin-top: 1em;">
-                                    <label class="edit-dialog-label">Stream Current Brightness (%)
-                                        <input type="number" disabled class="edit-dialog-number" @bind="FormModel.UpdatedItem!.CurrentBrightness"/>
-                                    </label>
-                                </div> *@
                                 @* -------------- Relative Brightness -------------- *@
                                 <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
                                 <div class="input-group input-group-sm justify-content-center mb-3 px-3">
@@ -126,25 +121,12 @@
                                     />
                                     <span class="input-group-text text-7 text-center">%</span>
                                 </div>
-                                @* <div class="edit-dialog-row">
-                                    <label class="edit-dialog-label">Relative Brightness (%) *@
-                                        @* rounded-4 w-25 text-7 text-center *@
-                                        @* <EditboxNumberLiveUpdate class="edit-dialog-number" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
-                                            @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true" *@
-                                        @* /> *@
-                                    @* </label>
-                                </div> *@
                                 @* -------------- Adjusted Brightness -------------- *@
                                 <div class="input-group input-group-sm justify-content-center mb-3 px-3">
                                     <span class="input-group-text w-50">Adjusted Brightness</span>
                                     <input type="number" disabled class="text-7 text-center w-25 form-control" @bind="adjustedBrightness" @bind:event="oninput"/>
                                     <span class="input-group-text text-7 text-center">%</span>
                                 </div>
-                                @* <div class="edit-dialog-row">
-                                    <label class="edit-dialog-label">Adjusted Brightness (%)
-                                        <input type="number" disabled class="edit-dialog-number" @bind="adjustedBrightness" @bind:event="oninput"/>
-                                    </label>
-                                </div> *@
                             </div
                         </div>
                     }
