@@ -3,6 +3,11 @@
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Can addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
+- Move back to .NET 8? 
+  Project template was Net8, nut I moved to NET9 to use ConcurrentDictionary. No longer used.  
+  Differences between 8 and 9, so maybe not a good idea to be using 8  
+  Either that or move to 10  
+  Pi maybe not set up for 10 - when installing service, had to install a separate copy of 8
 
 ### Code overhaul
 - Components
