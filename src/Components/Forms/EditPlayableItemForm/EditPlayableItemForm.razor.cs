@@ -1,10 +1,8 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Services.MatrixConfig;
-using WearWare.Utils;
 
 namespace WearWare.Components.Forms.EditPlayableItemForm
 {
@@ -18,6 +16,9 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         [Inject] private ILogger<EditPlayableItemForm> _logger { get; set; } = null!;
         [Inject] private IJSRuntime JS { get; set; } = null!;
         [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
+
+        /// <summary> The z-index for this form </summary>
+        [Parameter] public int ZIndex { get; set; } = 2000;
 
         /// <summary>
         /// The model for the form

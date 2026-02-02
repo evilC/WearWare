@@ -8,8 +8,10 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
 {
     public partial class MatrixOptionsForm
     {
-        [Parameter] public string Action { get; set; } = "Save";
+        /// <summary> The z-index for this form </summary>
+        [Parameter] public int ZIndex { get; set; } = 2010;
         [Parameter] public string? Title { get; set; }
+        [Parameter] public string Action { get; set; } = "Save";
         [Parameter] public LedMatrixOptionsConfig Options { get; set; } = new LedMatrixOptionsConfig();
         [Parameter] public LedMatrixOptionsVisibility Visibility { get; set; } = new LedMatrixOptionsVisibility();
         [Parameter] public int RelativeBrightness { get; set; }

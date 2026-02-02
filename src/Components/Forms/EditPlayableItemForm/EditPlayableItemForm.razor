@@ -19,12 +19,13 @@
             OnCancel="OnMatrixOptionsCancel"
             Action="OK"
             Title="@BuildMatrixOptionsTitle()"
+            ZIndex="@(ZIndex + 10)"
         />
     }
     else
     {
         @* Regular view *@
-        <div class = "ww-modal">
+        <div class = "ww-modal" style="z-index:@(ZIndex)">
             <div class="ww-modal-header text-center">
                 <h2>@BuildPageTitle()</h2>
             </div>

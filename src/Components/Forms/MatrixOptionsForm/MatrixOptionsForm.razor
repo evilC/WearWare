@@ -2,7 +2,7 @@
     <EditForm EditContext="_editContext" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
 
-    <div class="ww-modal">
+    <div class="ww-modal" style="z-index:@(ZIndex)">
         <div class="ww-modal-header">
             <div class="text-center">
                 <h2>@(!string.IsNullOrEmpty(Title) ? Title : $"Matrix Options for {Action}")</h2>
@@ -251,7 +251,7 @@
                 <textarea class="form-control mw-args-preview-textarea" rows="2" readonly>@ArgsPreview</textarea>
             </div>
 
-            <div class="row justify-content-center"
+            <div class="row justify-content-center">
                 <button type="button" class="btn btn-secondary btn-lg me-4 col-5" @onclick="HandleOk">Cancel</button>
                 <button type="submit" class="btn btn-primary btn-lg col-5" disabled="@_hasValidationErrors">@Action</button>
             </div>
