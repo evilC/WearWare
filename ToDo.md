@@ -8,9 +8,6 @@
 - Can addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
 - Import page uses '<ul>'
 - Set large checkboxes for MatrixOptionsForm
-- Why can we no longer hit next on mobile keyboard to go to next field?  
-  Focus grabber cannot work  
-- Validation messages in EditPlayableItemForm not centered with input group
 
 ### Code overhaul
 - Components

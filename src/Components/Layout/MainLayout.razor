@@ -19,3 +19,13 @@
 </div>
 
 <OperationProgressOverlay />
+@*
+My mobile has a habit of sending Enter when you click Next in the virtual keyboard.
+This script converts Enter key presses into Tab key presses.
+Please note that this app still will not tab to the next input for most fields...
+I do not like the way that the virtual keyboard stays open and covers input fields on my phone,
+so most fields in the app have a "focus grabber" select element that is focused instead,
+which closes the keyboard.
+Search for "AddFocusGrabber=true" in the codebase to see where these are used.
+*@
+<script src="/js/enterToTab.js"></script>
