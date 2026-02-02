@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @inherits InputBase<int?>
 
-<input @attributes="AdditionalAttributes"
+<input type="number" @attributes="AdditionalAttributes"
     class="@CssClass"
     value="@(CurrentValueAsString ?? string.Empty)"
     @oninput="HandleInput" />
