@@ -49,11 +49,6 @@ input[type=number] {
     height: auto;
     white-space: normal;
 }
-/* Sizes PlayMode Radios */
-.ww-modal ::deep .edit-dialog-playmode-radio {
-    transform: scale(2.1);
-    outline: none; box-shadow: none;    /* Hides validation outline on radio buttons */
-}
 
 /* Sizes InputNumber fields - PlayModeValue, Relative Brightness etc */
 .ww-modal ::deep .edit-dialog-number {

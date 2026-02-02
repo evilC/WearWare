@@ -15,11 +15,6 @@
     width: 64px !important;
 }
 
-.ww-large-checkbox {
-    width: 1.5rem;
-    height: 1.5rem;
-}
-
 /* Default styles */
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;

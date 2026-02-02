@@ -41,6 +41,16 @@
     top: 0.5rem;
 }
 
+.shell-body ::deep .ww-large-checkbox, .ww-large-checkbox {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.shell-body ::deep .ww-large-radio, .ww-large-radio {
+    transform: scale(2.1);
+    outline: none; box-shadow: none;    /* Hides validation outline on radio buttons */
+}
+
 /* Modal overlays */
 .shell-body ::deep .ww-modal {
     position: fixed;
