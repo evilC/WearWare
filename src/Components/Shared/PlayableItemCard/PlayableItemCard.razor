@@ -6,7 +6,7 @@
     {
         @* Image *@
         <div class="d-flex align-items-center">
-            <img class="rounded playable-item-image-size" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
+            <img class="rounded playable-item-image-size" src="@ImageSrc" alt="@Item?.Name" />
         </div>
     }
     <div class="d-flex flex-column justify-content-center">

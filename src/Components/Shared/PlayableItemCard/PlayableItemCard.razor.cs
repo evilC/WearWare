@@ -8,15 +8,9 @@ namespace WearWare.Components.Shared.PlayableItemCard
     {
         [Parameter] public PlayableItem? Item { get; set; }
         [Parameter] public string? ImageSrc { get; set; }
-        [Parameter] public EventCallback<PlayableItem?> ImageClicked { get; set; }
+        
         [Parameter] public EditPlayableItemFormPage FormPage { get; set; }
 
-        private async Task HandleImageClick()
-        {
-            if (ImageClicked.HasDelegate)
-            {
-                await ImageClicked.InvokeAsync(Item);
-            }
-        }
+        
     }
 }

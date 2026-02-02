@@ -43,10 +43,10 @@ namespace WearWare.Components.Pages.Library
         }
 
         /// <summary>
-        /// Called when Reconvert is clicked for a library item.
+        /// Called when Edit is clicked for a library item.
         /// </summary>
         /// <param name="item"></param>
-        private void ShowReconvert(PlayableItem item)
+        private void OnEditClicked(PlayableItem item)
         {
             _editFormModel = new EditPlayableItemFormModel()
             {
@@ -56,6 +56,16 @@ namespace WearWare.Components.Pages.Library
                 OriginalItem = item,
                 UpdatedItem = item.Clone(),
             };
+        }
+
+        /// <summary>
+        /// Called when the item card is clicked for a library item.
+        /// Plays a preview of the item.
+        /// </summary>
+        /// <param name="item"></param>
+        private void OnItemClicked(PlayableItem item)
+        {
+            LibraryService.PlayPreviewItem(item);
         }
 
         /// <summary>
