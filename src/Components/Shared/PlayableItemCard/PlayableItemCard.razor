@@ -4,8 +4,8 @@
 <div class="d-flex playable-item-card-height gap-2">
     @if (!string.IsNullOrEmpty(ImageSrc))
     {
-        <div>
-            @* Image *@
+        @* Image *@
+        <div class="d-flex align-items-center">
             <img class="rounded playable-item-image-height playable-item-image-width" src="@ImageSrc" alt="@Item?.Name" @onclick="HandleImageClick" style="cursor:@(ImageClicked.HasDelegate ? "pointer" : "default")" />
         </div>
     }
