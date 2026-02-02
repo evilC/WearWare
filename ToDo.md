@@ -3,7 +3,6 @@
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Can addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
-- Import page uses '<ul>'
 
 ### Code overhaul
 - Components
