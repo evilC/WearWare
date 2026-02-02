@@ -2,12 +2,8 @@
 
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
-- CSS overhaul  
-  - Move more stuff to Bootsrap
-  - Styles on Import page all embedded
 - Can addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
 - Import page uses '<ul>'
-- Set large checkboxes for MatrixOptionsForm
 
 ### Code overhaul
 - Components
