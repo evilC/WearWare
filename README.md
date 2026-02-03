@@ -32,7 +32,9 @@ This folder should contain the following subfolders:
 ### Remote Dev (VSCode on Windows, debug on Pi)
 - WSL must be installed, and Rsync must be added to WSL  
   This is to allow VSCode to transfer the built files to the Pi
-- Passwordless SSH to the Pi as root must be configured
+- Passwordless SSH to the Pi as root must be configured  
+- The Command Variable VSCode extension must be installed  
+  This allows us to build linux style paths for use in `tasks.json`
 - `launch.json` and `target.json` may need to be edited for the paths you use on the Pi (Remember to deploy to `WearWare/bin`, not `WearWare`!)
 - Ensure that the fork of rpi-rgb-led-matrix mentioned above is the one checked out in the submodule (Git should enforce this)
 - EITHER
