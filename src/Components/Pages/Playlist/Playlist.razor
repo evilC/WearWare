@@ -21,7 +21,7 @@
 }
 else if (_editFormModel is not null)
 {
-    @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix && _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+    @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
     {
         @* ReConvert All dialog *@
         <EditPlayableItemForm @ref="_editFormRef"
