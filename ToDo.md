@@ -1,13 +1,24 @@
 # ToDo list
 
 ## High Priority
+- Implement DataPageBase for all pages
+- Split up `Components\Shared`  
+  - Form components into own folder  
+  - Overlays into own folder
+- Reduce using spam
+  - global using for regular C# files  
+  - _Imports.razor for razor file
+- `_addformRef` & `_editformRef` can be gotten rid of now that we don't use the scroll locker
 - Error handling in Add / Edit (Copying files + converting stream)  
-- Can addformRef / Editformref be gotten rid of now that we don't use the scroll locker?
+- Can I move back to stock page layout?  
+  - Do I really need to do `ww-modal` in the way that I am?  
+  - Maybe move to .NET 10 at same time?
 - Move back to .NET 8? 
   Project template was Net8, nut I moved to NET9 to use ConcurrentDictionary. No longer used.  
   Differences between 8 and 9, so maybe not a good idea to be using 8  
   Either that or move to 10  
-  Pi maybe not set up for 10 - when installing service, had to install a separate copy of 8
+  Pi maybe not set up for 10 - when installing service, had to install a separate copy of 8  
+  Tried moving back to 8, Pi crashed on app start.  
 
 ### Code overhaul
 - Components
@@ -20,7 +31,6 @@
   `@attribute [StreamRendering(true)]` to start of all pages.  
   - Generally, the stub seems to be there (eg `if (importFiles == null)` on Import page)  
     However, even in that example, it's after another check. Should always be first?
-- More stuff in _Imports.razor?
 
 ## Med Priority
 - Implement Max Brightness option  
@@ -87,12 +97,6 @@ Either way, need to be able to tell if original file got overwritten or not
   This is because some Matrix options (eg RowAddressType) cannot be changed  
   PR `matrix-reset-01` submitted to rectify this
 
-## Tricky
-- UI pages not responsive immediately after loading  
-  Need some way to disable the page until it has fully loaded  
-  Tried adding initialization service, but it got quite messy. Also broke repo when tried to revert out  
-  Investigate "lazy loading" next?
-
 # Notes
 ## Blazor
 - Project is currently .net9, but was created with .net8 template  
@@ -104,29 +108,3 @@ Either way, need to be able to tell if original file got overwritten or not
   - NET9 has unminified JS / CSS for bootstrap that may make it easier to do CSS overhaul
   - NET9 has same EOL date as NET8 (End of 2026)
   - NET10 has EOL of 2 years' time
-
-## CSS styling
-  - EditForms cannot be directly styled with normal CSS classes, because razor components are isolated.  
-    An EditForm **is** a component, so trying to style it from outside (eg on the parent page) is blocked.
-  - Bootstrap is not affected by this, not 100% why, but probably something to do with bootstrap bein bundles with Blazor
-  - To create a custom class that affects both Blazor EditForms and other elements, we can do the following:  
-    `MyComponent.razor`
-    ```
-    <div class="my-div">
-        <EditForm Model="MyModel" FormName="my-form">
-            <div style="width:50%">
-                <InputText class="my-class" @bind-value="@MyModel.Name"></InputText>
-            </div>
-        </EditForm>
-    </div>
-    <form>
-        <input class="my-class" value="bar"/>
-    </form>
-    ```
-    `MyComponent.razor.css`
-    ```
-    .my-div ::deep .my-class, .my-class {
-        width: 500px;
-    }
-    ```
-    Have also seen examples with `.my-div ::deep .my-class ::after`. Not sure what that does

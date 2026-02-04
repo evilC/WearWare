@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
+using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Components.Pages.Library
 {
-    public partial class Library
+    public partial class Library : DataPageBase
     {
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
@@ -18,8 +19,19 @@ namespace WearWare.Components.Pages.Library
 
         protected override void OnInitialized()
         {
-            LibraryService.ItemsChanged += OnItemsChanged;
+            base.OnInitialized();
+            if (!_subscribed)
+            {
+                LibraryService.ItemsChanged += OnItemsChanged;
+                _subscribed = true;
+            }
+        }
+
+        protected override Task EnsureDataLoadedAsync()
+        {
+            // Services are synchronous today, so capture data immediately.
             items = LibraryService.Items;
+            return Task.CompletedTask;
         }
 
         private void OnItemsChanged()
@@ -28,9 +40,17 @@ namespace WearWare.Components.Pages.Library
             InvokeAsync(StateHasChanged);
         }
 
-        public void Dispose()
+        private bool _subscribed;
+
+        // Unsubscribe from events to prevent memory leaks!
+        public override void Dispose()
         {
-            LibraryService.ItemsChanged -= OnItemsChanged;
+            if (_subscribed)
+            {
+                LibraryService.ItemsChanged -= OnItemsChanged;
+                _subscribed = false;
+            }
+            base.Dispose();
         }
 
         private async Task ConfirmDelete(PlayableItem item)

@@ -1,5 +1,7 @@
 @page "/library"
+@inherits DataPageBase
 @using WearWare.Common.Media
+@using WearWare.Components.Base
 @using WearWare.Components.Forms.EditPlayableItemForm
 @using WearWare.Components.Shared.PlayableItemCard
 @rendermode InteractiveServer
@@ -33,11 +35,11 @@ else
 {
     @* Regular Library view *@
     <span style="display:block; margin-bottom:1em;">Click on an image to play a preview as a QuickMedia item in FOREVER mode. Click the item again to stop the preview.</span>
-    @if (items == null)
+    @if (!Ready)
     {
-        <p>Loading...</p>
+        <LoadingOverlay />
     }
-    else if (!items.Any())
+    else if (items == null || !items.Any())
     {
         <p>No items found in the library.</p>
     }
