@@ -1,31 +1,24 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page-shell">
-    <header class="site-header">
+<div class="page">
+    <div class="sidebar">
         <NavMenu />
-    </header>
-
-    <article class="shell-body content px-2 py-1">
-        @Body
-    </article>
-
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <a class="dismiss">🗙</a>
     </div>
 
+    <main>
+        <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            <OperationProgressOverlay />
+            @Body
+        </article>
+    </main>
 </div>
 
-<OperationProgressOverlay />
-@*
-My mobile has a habit of sending Enter when you click Next in the virtual keyboard.
-This script converts Enter key presses into Tab key presses.
-Please note that this app still will not tab to the next input for most fields...
-I do not like the way that the virtual keyboard stays open and covers input fields on my phone,
-so most fields in the app have a "focus grabber" select element that is focused instead,
-which closes the keyboard.
-Search for "AddFocusGrabber=true" in the codebase to see where these are used.
-*@
-<script src="/js/enterToTab.js"></script>
-<script src="/js/scroll-utils.js"></script>
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

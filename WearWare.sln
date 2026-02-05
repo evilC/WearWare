@@ -1,0 +1,103 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rpi-rgb-led-matrix", "rpi-rgb-led-matrix", "{EF04B213-FC8E-D61A-D123-67B9F848FC6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WearWare", "src\WearWare.csproj", "{FE61E0DD-1A13-B3E3-4627-C67174DD5089}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "bindings", "bindings", "{34EEC31D-4EB1-666A-C406-BE819A62C89E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "c#", "c#", "{AD147B02-B9DB-7418-27FB-F7F3769FF29D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPiRgbLEDMatrix", "rpi-rgb-led-matrix\bindings\c#\RPiRgbLEDMatrix.csproj", "{E9AB487F-E285-896C-EFCF-D8311CA10A8B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoxesBoxesBoxes", "rpi-rgb-led-matrix\bindings\c#\examples\BoxesBoxesBoxes\BoxesBoxesBoxes.csproj", "{CA672B52-5DE6-568A-5C5B-9B0D2A9C3C21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FontExample", "rpi-rgb-led-matrix\bindings\c#\examples\FontExample\FontExample.csproj", "{DBFD2CDD-CE92-BF50-FF37-47F6F19F46DC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatrixRain", "rpi-rgb-led-matrix\bindings\c#\examples\MatrixRain\MatrixRain.csproj", "{A3B3BA55-77F8-6A19-5D05-ABF9E051AC4A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinimalExample", "rpi-rgb-led-matrix\bindings\c#\examples\MinimalExample\MinimalExample.csproj", "{6C311282-1CCB-68A6-33BC-E4933DFC0F65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlayGIF", "rpi-rgb-led-matrix\bindings\c#\examples\PlayGIF\PlayGIF.csproj", "{DE3C1602-99B4-26F0-A6E1-A0DDF4191103}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PulsingBrightness", "rpi-rgb-led-matrix\bindings\c#\examples\PulsingBrightness\PulsingBrightness.csproj", "{64AB416F-39F3-462A-6252-E1010F088E13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rotating3DCube", "rpi-rgb-led-matrix\bindings\c#\examples\Rotating3DCube\Rotating3DCube.csproj", "{1404E0F4-AFAA-C46D-3BD9-786E13B60D6A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamPlayer", "rpi-rgb-led-matrix\bindings\c#\examples\StreamPlayer\StreamPlayer.csproj", "{D56C0877-897C-0F0F-C5C3-5A97C44D5721}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FE61E0DD-1A13-B3E3-4627-C67174DD5089}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE61E0DD-1A13-B3E3-4627-C67174DD5089}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE61E0DD-1A13-B3E3-4627-C67174DD5089}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE61E0DD-1A13-B3E3-4627-C67174DD5089}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9AB487F-E285-896C-EFCF-D8311CA10A8B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9AB487F-E285-896C-EFCF-D8311CA10A8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9AB487F-E285-896C-EFCF-D8311CA10A8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9AB487F-E285-896C-EFCF-D8311CA10A8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA672B52-5DE6-568A-5C5B-9B0D2A9C3C21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA672B52-5DE6-568A-5C5B-9B0D2A9C3C21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA672B52-5DE6-568A-5C5B-9B0D2A9C3C21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA672B52-5DE6-568A-5C5B-9B0D2A9C3C21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBFD2CDD-CE92-BF50-FF37-47F6F19F46DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBFD2CDD-CE92-BF50-FF37-47F6F19F46DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBFD2CDD-CE92-BF50-FF37-47F6F19F46DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBFD2CDD-CE92-BF50-FF37-47F6F19F46DC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3B3BA55-77F8-6A19-5D05-ABF9E051AC4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3B3BA55-77F8-6A19-5D05-ABF9E051AC4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3B3BA55-77F8-6A19-5D05-ABF9E051AC4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3B3BA55-77F8-6A19-5D05-ABF9E051AC4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C311282-1CCB-68A6-33BC-E4933DFC0F65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C311282-1CCB-68A6-33BC-E4933DFC0F65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C311282-1CCB-68A6-33BC-E4933DFC0F65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C311282-1CCB-68A6-33BC-E4933DFC0F65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE3C1602-99B4-26F0-A6E1-A0DDF4191103}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE3C1602-99B4-26F0-A6E1-A0DDF4191103}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE3C1602-99B4-26F0-A6E1-A0DDF4191103}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE3C1602-99B4-26F0-A6E1-A0DDF4191103}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64AB416F-39F3-462A-6252-E1010F088E13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64AB416F-39F3-462A-6252-E1010F088E13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64AB416F-39F3-462A-6252-E1010F088E13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64AB416F-39F3-462A-6252-E1010F088E13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1404E0F4-AFAA-C46D-3BD9-786E13B60D6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1404E0F4-AFAA-C46D-3BD9-786E13B60D6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1404E0F4-AFAA-C46D-3BD9-786E13B60D6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1404E0F4-AFAA-C46D-3BD9-786E13B60D6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D56C0877-897C-0F0F-C5C3-5A97C44D5721}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D56C0877-897C-0F0F-C5C3-5A97C44D5721}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D56C0877-897C-0F0F-C5C3-5A97C44D5721}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D56C0877-897C-0F0F-C5C3-5A97C44D5721}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FE61E0DD-1A13-B3E3-4627-C67174DD5089} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{34EEC31D-4EB1-666A-C406-BE819A62C89E} = {EF04B213-FC8E-D61A-D123-67B9F848FC6E}
+		{AD147B02-B9DB-7418-27FB-F7F3769FF29D} = {34EEC31D-4EB1-666A-C406-BE819A62C89E}
+		{E9AB487F-E285-896C-EFCF-D8311CA10A8B} = {AD147B02-B9DB-7418-27FB-F7F3769FF29D}
+		{FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2} = {AD147B02-B9DB-7418-27FB-F7F3769FF29D}
+		{CA672B52-5DE6-568A-5C5B-9B0D2A9C3C21} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{DBFD2CDD-CE92-BF50-FF37-47F6F19F46DC} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{A3B3BA55-77F8-6A19-5D05-ABF9E051AC4A} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{6C311282-1CCB-68A6-33BC-E4933DFC0F65} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{DE3C1602-99B4-26F0-A6E1-A0DDF4191103} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{64AB416F-39F3-462A-6252-E1010F088E13} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{1404E0F4-AFAA-C46D-3BD9-786E13B60D6A} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+		{D56C0877-897C-0F0F-C5C3-5A97C44D5721} = {FFE467E0-DF3B-CDDF-4A3D-00EFD625DEF2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1B509108-304B-48BB-9EC9-DF3ACE0033DE}
+	EndGlobalSection
+EndGlobal

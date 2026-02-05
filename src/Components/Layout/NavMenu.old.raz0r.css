@@ -1,0 +1,27 @@
+/* ww-nav: simple horizontal nav used across all sizes. */
+.ww-nav-scrollable {
+    /* Theme tokens scoped to this element so component-scoped css defines them correctly */
+    --ww-nav-start: #052767; /* deep blue */
+    --ww-nav-end: #3a0647;   /* purple */
+    --ww-nav-accent: #4fc3ff; /* highlight */
+    --ww-nav-text: #d7e8ff;  /* link text */
+    --ww-nav-active-text: #ffffff;
+
+    background: linear-gradient(90deg, var(--ww-nav-start), var(--ww-nav-end));
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06) inset;
+    min-width: 0; /* allow container to shrink in grid/flex parents */
+}
+
+.nav-pills{
+    margin: 1em 0;          /* Margin above and below links */
+    white-space: nowrap;    /* Prevent nav link text from breaking across lines (e.g. "Quick Media") */
+}
+
+/* Utility fallback: ensure the scrollable container itself doesn't become columnar */
+.ww-nav-scrollable,
+.ww-nav-scrollable > .ww-nav,
+.ww-nav-item,
+.ww-nav-item .ww-nav-link {
+    /* Add a high-specificity rule to override generic framework utilities if needed */
+    -webkit-overflow-scrolling: touch;
+}

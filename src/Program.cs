@@ -1,4 +1,3 @@
-// ...existing code...
 using WearWare.Components;
 using WearWare.Components.Endpoints;
 using WearWare.Services.Import;
@@ -101,6 +100,11 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+// app.UseHttpsRedirection();
+
+/*
+Old Blazor 8 code. May not be compatible
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Desktop")
 {
     app.UseDeveloperExceptionPage();
@@ -110,8 +114,7 @@ else
     app.UseExceptionHandler("/Error");
     // app.UseHsts(); // Not needed if you never use HTTPS
 }
-
-app.UseStaticFiles();
+*/
 app.UseAntiforgery();
 
 
@@ -124,6 +127,7 @@ PlaylistImageEndpoints.MapEndpoints(app);
 // Register QuickMedia image endpoints
 QuickMediaImageEndpoints.MapEndpoints(app);
 
+app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -1,0 +1,87 @@
+.page-shell {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    height: 100vh;
+    min-height: 100vh;
+    overflow: hidden;
+    min-width: 0; /* allow children to shrink below their content min-width */
+}
+
+.site-header {
+    grid-row: 1;
+    position: relative;
+    z-index: 20;
+    background: var(--header-bg, #fff);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+    min-width: 0;
+}
+
+.shell-body {
+    grid-row: 2;
+    overflow: auto;
+    min-width: 0;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+.shell-body ::deep .ww-large-checkbox, .ww-large-checkbox {
+    /* width: 1.5em;
+    height: 1.5em; */
+    transform: scale(1.7);
+}
+
+.shell-body ::deep .ww-large-radio, .ww-large-radio {
+    transform: scale(2.1);
+    outline: none; box-shadow: none;    /* Hides validation outline on radio buttons */
+}
+
+/* Modal overlays */
+.shell-body ::deep .ww-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: white;
+    background-clip: border-box;
+    border: 1px solid rgba(0, 0, 0, .125);
+}
+
+.shell-body ::deep .ww-modal .ww-modal-header {
+    padding: .5rem 1rem;
+    margin-bottom: 0;
+    background-color: rgba(0, 0, 0, .03);
+    border-bottom: 1px solid rgba(0, 0, 0, .125);
+}
+
+.shell-body ::deep .ww-modal .ww-modal-body {
+    overflow: auto;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+
+.shell-body ::deep .ww-modal .ww-modal-footer {
+    padding: .5rem 1rem;
+    background-color: rgba(0, 0, 0, .03);
+    border-top: 1px solid rgba(0, 0, 0, .125);
+}
