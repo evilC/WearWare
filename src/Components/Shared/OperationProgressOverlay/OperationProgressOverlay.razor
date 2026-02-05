@@ -1,6 +1,8 @@
 @using WearWare.Services.OperationProgress
 @using System.Threading.Tasks
+@using Microsoft.AspNetCore.Components
 @inject IOperationProgressService OperationProgressService
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <div class="mw-progress-overlay" hidden="@(!_visible)">
@@ -9,7 +11,7 @@
         <div class="mw-progress-message">
             @if (_current.Steps != null && _current.Steps.Count > 0)
             {
-                <ul class="mw-progress-steps">
+                <ul class="mw-progress-steps" @ref="_stepsListRef">
                     @foreach (var s in _current.Steps)
                     {
                         <li>@s</li>
@@ -32,6 +34,7 @@
 
 @code {
     private OperationProgressEvent _current = new OperationProgressEvent();
+    private ElementReference _stepsListRef;
     private bool _visible;
 
     protected override void OnInitialized()
@@ -73,6 +76,12 @@
             }
         }
         InvokeAsync(StateHasChanged);
+        // Ensure the list scrolls to show the latest step after render
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(20);
+            try { await InvokeAsync(() => JS.InvokeVoidAsync("mw.scrollToBottom", _stepsListRef)); } catch { }
+        });
     }
 
     private void Acknowledge()
@@ -87,3 +96,4 @@
         OperationProgressService.OnProgressChanged -= HandleProgress;
     }
 }
+
