@@ -1,7 +1,6 @@
 # ToDo list
 
 ## High Priority
-- Implement DataPageBase for all pages
 - Split up `Components\Shared`  
   - Form components into own folder  
   - Overlays into own folder
