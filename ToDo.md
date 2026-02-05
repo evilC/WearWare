@@ -39,6 +39,7 @@
   Would require dynamic form validation?
 - Implement nicer confirm dialog for delete
 - Public everywhere! Change to internal where possible
+- Why do OperationProgress lines for PlaylistService.CopyPlaylist often not show up until job is complete?
 
 ### Crash hardening.  
 - Various places where null-forgiving operators are used
