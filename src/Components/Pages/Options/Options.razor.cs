@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Components;
+using WearWare.Components.Base;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Components.Pages.Options
 {
-    public partial class Options
+    public partial class Options : DataPageBase
     {
         [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
         
@@ -18,6 +19,11 @@ namespace WearWare.Components.Pages.Options
         {
             modalOptions = MatrixConfigService.CloneOptions();
             showForm = true;
+            return Task.CompletedTask;
+        }
+
+        protected override Task EnsureDataLoadedAsync()
+        {
             return Task.CompletedTask;
         }
 

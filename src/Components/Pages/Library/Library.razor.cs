@@ -29,7 +29,6 @@ namespace WearWare.Components.Pages.Library
 
         protected override Task EnsureDataLoadedAsync()
         {
-            // Services are synchronous today, so capture data immediately.
             items = LibraryService.Items;
             return Task.CompletedTask;
         }
