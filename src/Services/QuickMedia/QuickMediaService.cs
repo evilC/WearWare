@@ -167,7 +167,7 @@ public class QuickMediaService
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
                 var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
                 var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To quickmedia folder
-                File.Copy(copyFrom, copyTo, overwrite: true);
+                await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
             }
             catch
             {
@@ -184,7 +184,7 @@ public class QuickMediaService
                 var copyFrom = formModel.OriginalItem.GetSourceFilePath();    // From library folder
                 var copyTo = formModel.UpdatedItem.GetSourceFilePath();       // To quickmedia folder
                 if (!File.Exists(copyTo)){
-                    File.Copy(copyFrom, copyTo, overwrite: true);
+                    await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
                 }
             }
             catch

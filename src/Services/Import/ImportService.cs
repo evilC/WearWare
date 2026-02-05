@@ -143,7 +143,7 @@ namespace WearWare.Services.Import
                 {
                     File.Delete(destPath);
                 }
-                File.Copy(sourcePath, destPath);
+                await FileUtils.CopyFileAsync(sourcePath, destPath).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

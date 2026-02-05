@@ -5,12 +5,13 @@ using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
 using WearWare.Services.StreamConverter;
+using WearWare.Utils;
 
 namespace WearWare.Services.Playlist
 {
     public class PlaylistService
     {
-        private Dictionary<string, PlaylistItems> _playlists = [];
+        private Dictionary<string, PlaylistItems> _playlists = new();
         private readonly MediaControllerService _mediaController;
         private readonly IStreamConverterService _streamConverterService;
         public event Action? StateChanged;
@@ -197,7 +198,7 @@ namespace WearWare.Services.Playlist
         /// <param name="libraryItem"></param> The library item to add
         /// <param name="playMode"></param> The play mode for the item
         /// <param name="playModeValue"></param> The play mode value for the item
-        public void AddPlaylistItem(PlaylistItems playlist,
+        public async Task AddPlaylistItem(PlaylistItems playlist,
             int insertIndex,
             PlayableItem libraryItem,
             PlayMode playMode,
@@ -228,11 +229,11 @@ namespace WearWare.Services.Playlist
             // Copy file from library to playlist folder
             var destPath = item.GetSourceFilePath();
             if (!File.Exists(destPath)){
-                File.Copy(libraryItem.GetSourceFilePath(), destPath, overwrite: true);
+                await FileUtils.CopyFileAsync(libraryItem.GetSourceFilePath(), destPath).ConfigureAwait(false);
             }
             destPath = item.GetStreamFilePath();
             if (!File.Exists(destPath)){
-                File.Copy(libraryItem.GetStreamFilePath(), destPath, overwrite: true);
+                await FileUtils.CopyFileAsync(libraryItem.GetStreamFilePath(), destPath).ConfigureAwait(false);
             }
             // ToDo: Check if playlist returns true
             playlist.AddItem(insertIndex, item);
@@ -298,7 +299,7 @@ namespace WearWare.Services.Playlist
                 // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
                 var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
                 var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To playlist folder
-                File.Copy(copyFrom, copyTo, overwrite: true);
+                await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
             }
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
@@ -306,10 +307,12 @@ namespace WearWare.Services.Playlist
                 // Copy source file from library to playlist folder
                 var copyFrom = formModel.OriginalItem.GetSourceFilePath();    // From library folder
                 var copyTo = formModel.UpdatedItem.GetSourceFilePath();       // To playlist folder
-                if (!File.Exists(copyTo)){
-                    File.Copy(copyFrom, copyTo, overwrite: true);
+                if (!File.Exists(copyTo))
+                {
+                    await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
                 }
             }
+
             _operationProgress.ReportProgress(opId, "Updating playlist...");
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
@@ -532,7 +535,7 @@ namespace WearWare.Services.Playlist
                 {
                     _operationProgress.ReportProgress(opId, $"Copying file {Path.GetFileName(file)}...");
                     var destFile = Path.Combine(newPath, Path.GetFileName(file));
-                    File.Copy(file, destFile, overwrite: true);
+                    await FileUtils.CopyFileAsync(file, destFile);
                 }
                 _playlists[newName] = newPlaylist;
                 _operationProgress.ReportProgress(opId, "Saving new playlist...");
@@ -578,5 +581,7 @@ namespace WearWare.Services.Playlist
                 Directory.Delete(path, recursive: true);
             }
         }
+
+        // Uses shared FileUtils.CopyFileAsync from WearWare.Utils to perform async file copies.
     }
 }
