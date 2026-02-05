@@ -13,13 +13,13 @@
         @if (Item is not null)
         {
             @* PlayMode *@
-            @if (FormPage != EditPlayableItemFormPage.Library && FormPage != EditPlayableItemFormPage.Import){
+            @if (FormPage != EditPlayableItemFormPage.Library
+                && FormPage != EditPlayableItemFormPage.Import
+                && FormMode != EditPlayableItemFormMode.Add){
                 <div class="fs-6">
                     @(
                         @* PlayMode *@
-                        $"{Item.PlayMode.ToString()}: " +
-                        @* PlayModeValue *@
-                        $"{(Item.PlayMode == PlayMode.Loop ? $" {Item.PlayModeValue}x" : (Item.PlayMode == PlayMode.Duration ? $" {Item.PlayModeValue}s" : ""))}"
+                        RenderPlayMode()
                     )
                 </div>
             }

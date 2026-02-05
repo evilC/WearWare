@@ -138,6 +138,8 @@ namespace WearWare.Components.Pages.Playlist
             editFormModel.UpdatedItem.PlayMode = PlayMode.Loop;
             editFormModel.UpdatedItem.PlayModeValue = 1;
             editFormModel.ImageUrl = BuildEditingImageURL(editFormModel);
+            editFormModel.FormPage = EditPlayableItemFormPage.Playlist;
+            editFormModel.FormMode = EditPlayableItemFormMode.Add;
             _editFormModel = editFormModel;
             await InvokeAsync(StateHasChanged);
             // await OnEditPlaylistItem(args.libItem, args.insertIndex, EditPlayableItemFormMode.Add);
