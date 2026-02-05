@@ -1,0 +1,12 @@
+global using System;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using System.Collections.Generic;
+global using System.Collections.Concurrent;
+global using System.Text.Json;
+global using Microsoft.AspNetCore.Components;
+global using Microsoft.JSInterop;
+global using WearWare;
+global using WearWare.Common;
+global using WearWare.Common.Media;
+global using WearWare.Config;

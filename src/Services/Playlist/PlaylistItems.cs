@@ -1,5 +1,3 @@
-using WearWare.Common.Media;
-using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Utils;
 

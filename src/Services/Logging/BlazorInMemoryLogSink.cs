@@ -1,6 +1,5 @@
 using Serilog.Core;
 using Serilog.Events;
-using System.Collections.Concurrent;
 
 // This class seems to be needed to fix the issue with Blazor not recognizing the InMemory sink
 namespace WearWare.Services.Logging

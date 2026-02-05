@@ -1,6 +1,3 @@
-using System.Text.Json;
-using WearWare.Common.Media;
-using WearWare.Config;
 using WearWare.Utils;
 using WearWare.Services.MediaController;
 using WearWare.Services.MatrixConfig;

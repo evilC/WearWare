@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using WearWare.Common.Media;
 using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Components.Shared.PlayableItemCard

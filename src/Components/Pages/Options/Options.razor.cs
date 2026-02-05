@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Components;
 using WearWare.Components.Base;
 using WearWare.Services.MatrixConfig;
 

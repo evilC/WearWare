@@ -1,7 +1,5 @@
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using RPiRgbLEDMatrix;
-using WearWare.Common;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Components.Forms.MatrixOptionsForm

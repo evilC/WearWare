@@ -1,4 +1,4 @@
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace WearWare.Utils
 {
@@ -10,7 +10,7 @@ namespace WearWare.Utils
             IndentCharacter = '\t',
             IndentSize = 1,
             AllowTrailingCommas = true,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
 
         public static T? FromJson<T>(string json)

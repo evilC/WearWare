@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using WearWare.Common.Media;
 using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Components.Forms.AddPlayableItemForm

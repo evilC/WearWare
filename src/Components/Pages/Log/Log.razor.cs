@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 using Serilog.Events;
 using WearWare.Services.Logging;
 

@@ -1,5 +1,3 @@
-using System.Threading.Tasks;
-using WearWare.Common;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Services.StreamConverter
