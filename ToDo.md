@@ -5,12 +5,7 @@
 - Can I move back to stock page layout?  
   - Do I really need to do `ww-modal` in the way that I am?  
   - Maybe move to .NET 10 at same time?
-- Move back to .NET 8? 
-  Project template was Net8, nut I moved to NET9 to use ConcurrentDictionary. No longer used.  
-  Differences between 8 and 9, so maybe not a good idea to be using 8  
-  Either that or move to 10  
-  Pi maybe not set up for 10 - when installing service, had to install a separate copy of 8  
-  Tried moving back to 8, Pi crashed on app start.  
+ 
 
 ### Code overhaul
 - Components
@@ -89,15 +84,3 @@ Either way, need to be able to tell if original file got overwritten or not
   Restart and it is OK  
   This is because some Matrix options (eg RowAddressType) cannot be changed  
   PR `matrix-reset-01` submitted to rectify this
-
-# Notes
-## Blazor
-- Project is currently .net9, but was created with .net8 template  
-  Does not actually need to be .net9 any more.
-  - There are differences between 8 and 9  
-      [Detailed at 8:14 here](https://app.pluralsight.com/ilx/video-courses/9500d8a5-f365-44e2-be7f-5657c0622651/2066ef53-e33b-4ea1-95f4-f9559c1265a5/a9ad7c83-732d-4b7e-b8c6-d23d2f4e853f)  
-      - net9 adds `app.MapStaticAssets()` just before `app.MapRazorComponents<App>()`
-      - net9 adds `@Assets` pointing to CSS stuff (inc bootstrap) and an `ImportMap` component.
-  - NET9 has unminified JS / CSS for bootstrap that may make it easier to do CSS overhaul
-  - NET9 has same EOL date as NET8 (End of 2026)
-  - NET10 has EOL of 2 years' time
