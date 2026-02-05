@@ -100,7 +100,7 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             var editFormModel = new EditPlayableItemFormModel() {
                 FormMode = EditPlayableItemFormMode.Edit,
-                FormPage = EditPlayableItemFormPage.Playlist,
+                FormPage = EditPlayableItemFormPage.QuickMedia,
                 ItemIndex = index,
                 OriginalItem = item,
                 UpdatedItem = item.Clone(),
