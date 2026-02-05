@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
+using WearWare.Components.Base;
 using WearWare.Components.Forms.AddCopyPlaylistForm;
 using WearWare.Components.Forms.AddPlayableItemForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
@@ -11,7 +12,7 @@ using WearWare.Utils;
 
 namespace WearWare.Components.Pages.Playlist
 {
-    public partial class Playlist
+    public partial class Playlist : DataPageBase
     {
         [Inject] public IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] public PlaylistService PlaylistService { get; set; } = null!;
@@ -47,15 +48,17 @@ namespace WearWare.Components.Pages.Playlist
 
         private AddCopyPlaylistFormModel _addCopyPlaylistModel = default!;
 
-        // private bool showAddPlaylistModal = false;
-        // private string newPlaylistName = string.Empty;
-        // private string? addPlaylistError = null;
+        private bool _subscribed = false;
 
-        protected override void OnInitialized()
+        protected override Task InitializeDataAsync()
         {
+            if (!_subscribed)
+            {
+                PlaylistService.StateChanged += OnStateChanged;
+                _subscribed = true;
+            }
             availablePlaylists = PlaylistService.GetPlaylistNames();
             _editingPlaylist = PlaylistService.GetPlaylistBeingEdited()?.Name;
-            // Set activePlaylist to the currently active playlist, if any
             activePlaylist = PlaylistService.GetActivePlaylistName();
             _playlist = PlaylistService.GetPlaylistBeingEdited();
             if (_playlist is not null)
@@ -63,7 +66,17 @@ namespace WearWare.Components.Pages.Playlist
                 _items = _playlist.GetPlaylistItems();
             }
             libraryItems = LibraryService.Items;
-            PlaylistService.StateChanged += OnStateChanged;
+            return Task.CompletedTask;
+        }
+
+        public override void Dispose()
+        {
+            if (_subscribed)
+            {
+                PlaylistService.StateChanged -= OnStateChanged;
+                _subscribed = false;
+            }
+            base.Dispose();
         }
 
         /// <summary>
@@ -75,11 +88,6 @@ namespace WearWare.Components.Pages.Playlist
         private void OnStateChanged()
         {
             InvokeAsync(StateHasChanged);
-        }
-
-        public void Dispose()
-        {
-            PlaylistService.StateChanged -= OnStateChanged;
         }
 
         private void OnActivePlaylistChanged(ChangeEventArgs e)
