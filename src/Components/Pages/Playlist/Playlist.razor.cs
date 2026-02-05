@@ -25,9 +25,6 @@ namespace WearWare.Components.Pages.Playlist
 
         /// <summary> The list of LibraryItems to choose from when adding to the playlist </summary>
         private IReadOnlyList<PlayableItem>? libraryItems;
-        /// <summary> Reference to the AddPlayableItemForm component </summary>
-        private AddPlayableItemForm? _addFormRef;
-        // Handler for AddPlayableItemForm component's OnAdd event
 
         private readonly string _logTag = "Playlist.razor";
         /// <summary> The list of available playlist names </summary>
@@ -39,9 +36,6 @@ namespace WearWare.Components.Pages.Playlist
         private List<PlayableItem>? _items;
 
         private string? activePlaylist;
-
-        /// <summary> Reference to the EditPlayableItemForm component </summary>
-        private EditPlayableItemForm? _editFormRef;
 
         // Dropdown for selecting which playlist to edit
         private string? _editingPlaylist;

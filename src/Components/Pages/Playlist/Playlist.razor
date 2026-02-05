@@ -16,7 +16,7 @@
 else if (_addFormModel != null)
 {
     @* Add PlayableItem dialog*@
-    <AddPlayableItemForm @ref="_addFormRef"
+    <AddPlayableItemForm
         FormModel="_addFormModel"
         LibraryItems="libraryItems"
         OnCancel="OnAddFormCancel"
@@ -29,7 +29,7 @@ else if (_editFormModel is not null)
     @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
     {
         @* ReConvert All dialog *@
-        <EditPlayableItemForm @ref="_editFormRef"
+        <EditPlayableItemForm
             FormModel="_editFormModel"
             OnReconvertAllOk="OnReconvertAll"
             OnCancel="OnEditFormCancel"
@@ -40,7 +40,6 @@ else if (_editFormModel is not null)
     {
         @* Edit PlayableItem dialog*@
         <EditPlayableItemForm
-            @ref="_editFormRef"
             FormModel="_editFormModel"
             OnSave="OnSavePlaylistItem"
             OnCancel="OnEditFormCancel"
@@ -51,7 +50,7 @@ else if (_editFormModel is not null)
 else if (_addCopyPlaylistModel != null)
 {
     @* Add / Copy Playlist dialog*@
-    @* @ref="addEditPlaylistFormRef" *@
+ 
     <AddCopyPlaylistForm 
         Model="_addCopyPlaylistModel"
         OnCancel="CancelAddCopyPlaylist"

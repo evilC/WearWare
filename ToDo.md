@@ -7,7 +7,6 @@
 - Reduce using spam
   - global using for regular C# files  
   - _Imports.razor for razor file
-- `_addformRef` & `_editformRef` can be gotten rid of now that we don't use the scroll locker
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Can I move back to stock page layout?  
   - Do I really need to do `ww-modal` in the way that I am?  

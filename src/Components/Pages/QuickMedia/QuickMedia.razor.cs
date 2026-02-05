@@ -22,8 +22,6 @@ namespace WearWare.Components.Pages.QuickMedia
         private IReadOnlyList<PlayableItem>? _libraryItems;
         private EditPlayableItemFormModel? _addFormModel = null;
         private EditPlayableItemFormModel? _editFormModel = null;
-        private AddPlayableItemForm? _addFormRef;
-        private EditPlayableItemForm? _editFormRef;
         private bool _subscribed;
 
         protected override Task InitializeDataAsync()

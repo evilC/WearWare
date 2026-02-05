@@ -16,7 +16,6 @@ else if (_addFormModel is not null)
 {
 	@* Add QuickMedia item dialog*@
 	<AddPlayableItemForm 
-		@ref="_addFormRef"
 		LibraryItems="_libraryItems"
 		FormModel="_addFormModel"
 		PageTitle="@($"QuickMedia Button {_addFormModel.ItemIndex+1}")"
@@ -29,7 +28,7 @@ else if(_editFormModel is not null)
 	@if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
 	{
 		@* ReConvert All dialog *@
-		<EditPlayableItemForm @ref="_editFormRef"
+		<EditPlayableItemForm
 			FormModel="_editFormModel"
 			OnReconvertAllOk="OnReconvertAll"
 			OnCancel="OnEditFormCancel"
@@ -40,7 +39,6 @@ else if(_editFormModel is not null)
 	{
 		@* Edit PlayableItem dialog*@
 		<EditPlayableItemForm
-			@ref="_editFormRef"
 			FormModel="_editFormModel"
 			OnSave="OnSaveQuickMediaItem"
 			OnCancel="OnEditFormCancel"

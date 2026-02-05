@@ -14,7 +14,6 @@ namespace WearWare.Components.Pages.Library
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
         private EditPlayableItemFormModel? _editFormModel;
-        private EditPlayableItemForm? _editFormRef;
         private IReadOnlyList<PlayableItem>? items;
         private bool _subscribed;
 
