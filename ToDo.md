@@ -1,9 +1,6 @@
 # ToDo list
 
 ## High Priority
-- Split up `Components\Shared`  
-  - Form components into own folder  
-  - Overlays into own folder
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Can I move back to stock page layout?  
   - Do I really need to do `ww-modal` in the way that I am?  
