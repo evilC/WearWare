@@ -7,7 +7,8 @@
 {
 	<LoadingOverlay />
 }
-else if (_addFormModel != null)
+
+@if (_addFormModel != null)
 {
     @* Add PlayableItem dialog*@
     <AddPlayableItemForm
@@ -15,7 +16,7 @@ else if (_addFormModel != null)
         LibraryItems="libraryItems"
         OnCancel="OnAddFormCancel"
         OnAdd="OnAddDialogItemChosen"
-        PageTitle="Playlist item"
+        PageTitle="Adding Playlist item"
     />
 }
 else if (_editFormModel is not null)
@@ -49,6 +50,11 @@ else if (_addCopyPlaylistModel != null)
         OnCancel="CancelAddCopyPlaylist"
         OnSubmit="OnAddCopyPlaylistFormSubmit"
     />
+}
+
+@if (availablePlaylists == null || !availablePlaylists.Any())
+{
+    <p>No playlists found. Create a new playlist to get started.</p>
 }
 else
 {
@@ -128,6 +134,7 @@ else
                                     <PlayableItemCard
                                         ImageSrc="@($"/playlist-images/{_playlist.Name}/{item.SourceFileName}")"
                                         FormPage="EditPlayableItemFormPage.Playlist"
+                                        FormMode="EditPlayableItemFormMode.Edit"
                                         Item="item"
                                     />
                                 </div>
@@ -140,5 +147,4 @@ else
             }
         </div>
     }
-
 }
