@@ -8,29 +8,34 @@
 {
 	<LoadingOverlay />
 }
-else if (_editFormModel != null)
+else
 {
     @* Edit *@
-    @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+    @if (_editFormModel != null)
     {
-        @* ReConvert All dialog *@
-        <EditPlayableItemForm
-            FormModel="_editFormModel"
-            OnReconvertAllOk="OnReconvertAll"
-            OnCancel="OnEditFormCancel"
-        />
-    }
-    else
-    {
-        @* Edit PlayableItem dialog*@
-        <EditPlayableItemForm
-            FormModel="_editFormModel"
-            OnSave="OnSaveLibraryItem"
-            OnCancel="OnEditFormCancel"
-        />
-    }
+        @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix 
+        || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
+        {
+            @* ReConvert All dialog *@
+            <EditPlayableItemForm
+                FormModel="_editFormModel"
+                OnReconvertAllOk="OnReconvertAll"
+                OnCancel="OnEditFormCancel"
+            />
+        }
+        else
+        {
+            @* Edit PlayableItem dialog*@
+            <EditPlayableItemForm
+                FormModel="_editFormModel"
+                OnSave="OnSaveLibraryItem"
+                OnCancel="OnEditFormCancel"
+            />
+        }
+    } 
 }
-else
+
+@if (items != null && items.Any())
 {
     @* Regular Library view *@
     <span style="display:block; margin-bottom:1em;">Click on an image to play a preview as a QuickMedia item in FOREVER mode. Click the item again to stop the preview.</span>

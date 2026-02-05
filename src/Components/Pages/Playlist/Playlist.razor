@@ -7,7 +7,8 @@
 {
 	<LoadingOverlay />
 }
-else if (_addFormModel != null)
+
+@if (_addFormModel != null)
 {
     @* Add PlayableItem dialog*@
     <AddPlayableItemForm
@@ -49,6 +50,11 @@ else if (_addCopyPlaylistModel != null)
         OnCancel="CancelAddCopyPlaylist"
         OnSubmit="OnAddCopyPlaylistFormSubmit"
     />
+}
+
+@if (availablePlaylists == null || !availablePlaylists.Any())
+{
+    <p>No playlists found. Create a new playlist to get started.</p>
 }
 else
 {
@@ -141,5 +147,4 @@ else
             }
         </div>
     }
-
 }
