@@ -530,6 +530,7 @@ namespace WearWare.Services.Playlist
                 Directory.CreateDirectory(newPath);
                 foreach (var file in Directory.GetFiles(oldPath))
                 {
+                    _operationProgress.ReportProgress(opId, $"Copying file {Path.GetFileName(file)}...");
                     var destFile = Path.Combine(newPath, Path.GetFileName(file));
                     File.Copy(file, destFile, overwrite: true);
                 }
