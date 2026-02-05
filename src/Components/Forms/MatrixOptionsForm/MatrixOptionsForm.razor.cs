@@ -32,7 +32,7 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
         private string ArgsPreview { get; set; } = string.Empty;
 
         // Helper properties for rendering
-        private int ActualBrightness => BrightnessCalculator.CalculateAbsoluteBrightness(Options?.Brightness ?? _defaults.Brightness, RelativeBrightness);
+        private int AdjustedBrightness => BrightnessCalculator.CalculateAbsoluteBrightness(Options?.Brightness ?? _defaults.Brightness, RelativeBrightness);
         // (select/checkbox wrappers migrated to reusable components)
 
         protected override void OnParametersSet()

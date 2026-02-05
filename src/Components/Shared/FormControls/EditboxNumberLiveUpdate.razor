@@ -7,8 +7,7 @@
           value="@(CurrentValueAsString ?? string.Empty)"
           @oninput="HandleInput" />
 @if (AddFocusGrabber){
-       @* Hides keyboard on mobile devices when you click Next on the virtual keyboard *@
-       <select style="width: 0px; height: 0px;"/>
+       <FocusGrabber/>
 }
 
 
@@ -42,7 +41,10 @@
                      return true;
               }
 
-              validationErrorMessage = "Now that's just silly :)";
+              if (!string.IsNullOrEmpty(value))
+              {
+                     validationErrorMessage = "Now that's just silly :)";
+              }
               result = default!;
               return false;
        }

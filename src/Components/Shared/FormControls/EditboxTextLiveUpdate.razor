@@ -5,12 +5,9 @@
        class="@CssClass"
        value="@(CurrentValueAsString ?? string.Empty)"
        @oninput="HandleInput" />
-       @if (AddFocusGrabber){
-              @* Hides keyboard on mobile devices when you click Next on the virtual keyboard.
-                 Position the select offscreen so it does not participate in the input-group layout
-                 (avoids breaking rounded corners) but remains focusable. *@
-              <select class="ww-focus-grabber" tabindex="0"></select>
-       }
+@if (AddFocusGrabber){
+       <FocusGrabber />
+}
 
 @code {
        [Parameter]
