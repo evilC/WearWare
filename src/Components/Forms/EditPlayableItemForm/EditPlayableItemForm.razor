@@ -85,7 +85,7 @@
                             @* -------------- PlayModeValue -------------- *@
                             <div class="d-flex flex-column align-items-center justify-content-center card bg-light border-secondary rounded-4 p-2 gap-0 w-25">
                                 <label class="text-7 text-center">Value</label>
-                                <EditboxNumberLiveUpdate class="rounded-4 w-100 text-7 text-center" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
+                                <EditboxNumberLiveUpdate class="rounded-3 w-100 text-7 text-center" @bind-Value="FormModel.UpdatedItem.PlayModeValue"
                                     disabled="@(FormModel.UpdatedItem.PlayMode == PlayMode.Forever)" onfocus="this.select()" AddFocusGrabber=true/>
                             </div>
                         </div>
@@ -110,7 +110,7 @@
                             </div>
                         }
                         <div class="d-flex justify-content-center mb-3">
-                            <div class="card">
+                            <div class="card rounded-4">
                                 <div class="card-header mb-3">
                                     <div class="text-center text-6 mb-0">Brightness</div>
                                 </div>

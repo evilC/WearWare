@@ -1,61 +1,6 @@
 ﻿@using WearWare.Services.Environment
 @inject EnvironmentService EnvironmentService
 
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">WearWare</a>
-    </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="playlist">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Playlist
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="quickmedia">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> QuickMedia
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="library">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Library
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="import">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Import
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="options">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Options
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="log">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Log
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
-@*
 <div class="ww-nav-scrollable overflow-auto" role="navigation" aria-label="Main navigation">
     <nav class="ww-nav nav nav-pills flex-nowrap">
         <div class="ww-nav-item nav-item">
@@ -93,4 +38,3 @@
         }
     </nav>
 </div>
-*@
