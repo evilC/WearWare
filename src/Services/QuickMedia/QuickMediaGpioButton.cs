@@ -2,7 +2,6 @@ using System.Device.Gpio;
 using Iot.Device.Button;
 using WearWare.Common.Media;
 using WearWare.Services.MediaController;
-using System.Threading;
 
 namespace WearWare.Services.QuickMedia
 {

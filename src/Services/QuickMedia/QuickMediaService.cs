@@ -1,4 +1,3 @@
-using Iot.Device.ExplorerHat;
 using WearWare.Common.Media;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Config;

@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading.Channels;
 
 namespace WearWare.Services.OperationProgress
@@ -8,10 +7,10 @@ namespace WearWare.Services.OperationProgress
     {
         private readonly ConcurrentDictionary<Guid, OperationProgressEvent> _ops = new();
         // Simple sequential lock: only one operation active at a time
-        private readonly System.Threading.SemaphoreSlim _operationLock = new(1, 1);
+        private readonly SemaphoreSlim _operationLock = new(1, 1);
         private Guid _lockOwner = Guid.Empty;
         private readonly Channel<OperationProgressEvent> _channel;
-        private readonly System.Threading.CancellationTokenSource _cts = new();
+        private readonly CancellationTokenSource _cts = new();
         private readonly Task _consumerTask;
 
         public event Action<OperationProgressEvent> OnProgressChanged = _ => { };
@@ -95,7 +94,7 @@ namespace WearWare.Services.OperationProgress
             catch { }
         }
 
-        private async Task ConsumeLoopAsync(System.Threading.CancellationToken ct)
+        private async Task ConsumeLoopAsync(CancellationToken ct)
         {
             try
             {

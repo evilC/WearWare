@@ -1,12 +1,6 @@
 @page "/playlist"
 @inherits DataPageBase
 @rendermode InteractiveServer
-@using WearWare.Common.Media
-@using WearWare.Components.Forms.AddCopyPlaylistForm
-@using WearWare.Components.Forms.AddPlayableItemForm
-@using WearWare.Components.Forms.EditPlayableItemForm
-@using WearWare.Components.Shared.PlayableItemCard
-
 <PageTitle>WareWare Playlist</PageTitle>
 
 @if (!Ready)
@@ -50,7 +44,6 @@ else if (_editFormModel is not null)
 else if (_addCopyPlaylistModel != null)
 {
     @* Add / Copy Playlist dialog*@
- 
     <AddCopyPlaylistForm 
         Model="_addCopyPlaylistModel"
         OnCancel="CancelAddCopyPlaylist"
