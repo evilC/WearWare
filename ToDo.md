@@ -22,7 +22,7 @@
   Would require dynamic form validation?
 - Implement nicer confirm dialog for delete
 - Public everywhere! Change to internal where possible
-
+- Reorder playlist
 
 ### Crash hardening.  
 - Various places where null-forgiving operators are used
