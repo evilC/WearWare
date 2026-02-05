@@ -2,17 +2,15 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
-using WearWare.Common;
 using WearWare.Common.Media;
+using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
-using WearWare.Config;
 using WearWare.Services.Import;
 using WearWare.Services.MatrixConfig;
-using WearWare.Utils;
 
 namespace WearWare.Components.Pages.Import
 {
-    public partial class Import
+    public partial class Import : DataPageBase
     {
         [Inject] private ImportService ImportService { get; set; } = null!;
         [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
@@ -24,24 +22,38 @@ namespace WearWare.Components.Pages.Import
         EditPlayableItemFormModel? _editFormModel = null;
         private List<PlayableItem>? importItems;
 
+        private bool _subscribed;
         private EditPlayableItemForm? editFormRef;
         private string inputId = "fileInput_" + Guid.NewGuid().ToString("N");
 
-        protected override void OnInitialized()
-        {
-            importItems = ImportService.GetImportItems();
-            ImportService.StateChanged += OnStateChanged;
-        }
-
+        /// <summary>
+        /// Called when files change - eg new file imported, or existing one deleted
+        /// </summary>
         private void OnStateChanged()
         {
             importItems = ImportService.GetImportItems();
             InvokeAsync(StateHasChanged);
         }
 
-        public void Dispose()
+        protected override Task InitializeDataAsync()
         {
-            ImportService.StateChanged -= OnStateChanged;
+            if (!_subscribed)
+            {
+                ImportService.StateChanged += OnStateChanged;
+                _subscribed = true;
+            }
+            importItems = ImportService.GetImportItems();
+            return Task.CompletedTask;
+        }
+
+        public override void Dispose()
+        {
+            if (_subscribed)
+            {
+                ImportService.StateChanged -= OnStateChanged;
+                _subscribed = false;
+            }
+            base.Dispose();
         }
 
         /// <summary>

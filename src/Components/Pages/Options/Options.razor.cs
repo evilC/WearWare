@@ -11,19 +11,15 @@ namespace WearWare.Components.Pages.Options
         private bool showForm = false;
         private LedMatrixOptionsConfig modalOptions = new();
 
-        protected override void OnInitialized()
+        protected override Task InitializeDataAsync()
         {
+            return Task.CompletedTask;
         }
 
         private Task ShowForm()
         {
             modalOptions = MatrixConfigService.CloneOptions();
             showForm = true;
-            return Task.CompletedTask;
-        }
-
-        protected override Task EnsureDataLoadedAsync()
-        {
             return Task.CompletedTask;
         }
 

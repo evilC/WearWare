@@ -16,32 +16,20 @@ namespace WearWare.Components.Pages.Library
         private EditPlayableItemFormModel? _editFormModel;
         private EditPlayableItemForm? _editFormRef;
         private IReadOnlyList<PlayableItem>? items;
+        private bool _subscribed;
 
-        protected override void OnInitialized()
+        protected override Task InitializeDataAsync()
         {
-            base.OnInitialized();
             if (!_subscribed)
             {
                 LibraryService.ItemsChanged += OnItemsChanged;
                 _subscribed = true;
             }
-        }
 
-        protected override Task EnsureDataLoadedAsync()
-        {
             items = LibraryService.Items;
             return Task.CompletedTask;
         }
 
-        private void OnItemsChanged()
-        {
-            items = LibraryService.Items;
-            InvokeAsync(StateHasChanged);
-        }
-
-        private bool _subscribed;
-
-        // Unsubscribe from events to prevent memory leaks!
         public override void Dispose()
         {
             if (_subscribed)
@@ -52,6 +40,18 @@ namespace WearWare.Components.Pages.Library
             base.Dispose();
         }
 
+        /// <summary>
+        /// Called when the library items have changed. Updates the local items list and triggers a re-render.
+         /// Note that this may be called before the circuit is interactive, so we don't use any JS interop here.
+         /// Instead, we just update state and let the normal render cycle show any errors or updated data once ready.
+         /// This can be triggered by changes to the library folder, so it's important that it doesn't assume interactivity or loaded data.
+        /// </summary>
+        private void OnItemsChanged()
+        {
+            items = LibraryService.Items;
+            InvokeAsync(StateHasChanged);
+        }
+
         private async Task ConfirmDelete(PlayableItem item)
         {
             var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete library item '{item.Name}' and its files?");
@@ -59,6 +59,7 @@ namespace WearWare.Components.Pages.Library
             {
                 LibraryService.DeleteLibraryItem(item);
             }
+            await InvokeAsync(StateHasChanged);
         }
 
         /// <summary>
@@ -93,6 +94,7 @@ namespace WearWare.Components.Pages.Library
         private async Task OnEditFormCancel()
         {
             _editFormModel = null;
+            await InvokeAsync(StateHasChanged);
         }
 
         /// <summary>
