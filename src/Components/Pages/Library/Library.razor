@@ -7,9 +7,13 @@
 
 <PageTitle>WareWare - Library</PageTitle>
 
-@* Edit *@
-@if (_editFormModel != null)
+@if (!Ready)
 {
+	<LoadingOverlay />
+}
+else if (_editFormModel != null)
+{
+    @* Edit *@
     @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
     {
         @* ReConvert All dialog *@

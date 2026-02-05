@@ -1,4 +1,5 @@
 @page "/quickmedia"
+@inherits DataPageBase
 @using WearWare.Common.Media
 @using WearWare.Components.Forms.AddPlayableItemForm
 @using WearWare.Components.Forms.EditPlayableItemForm
@@ -7,7 +8,11 @@
 
 <PageTitle>WareWare QuickMedia</PageTitle>
 
-@if (_addFormModel is not null)
+@if (!Ready)
+{
+	<LoadingOverlay />
+}
+else if (_addFormModel is not null)
 {
 	@* Add QuickMedia item dialog*@
 	<AddPlayableItemForm 

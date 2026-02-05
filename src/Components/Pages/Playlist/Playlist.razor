@@ -9,7 +9,11 @@
 
 <PageTitle>WareWare Playlist</PageTitle>
 
-@if (_addFormModel != null)
+@if (!Ready)
+{
+	<LoadingOverlay />
+}
+else if (_addFormModel != null)
 {
     @* Add PlayableItem dialog*@
     <AddPlayableItemForm @ref="_addFormRef"

@@ -8,7 +8,11 @@
 @* Use the same layout and styling as QuickMedia *@
 <link href="/src/Components/Pages/Mocks/Mocks.razor.css" rel="stylesheet" />
 
-@if (QuickMediaService.GetQuickMediaButtons() is null || QuickMediaService.GetQuickMediaButtons().Length == 0)
+@if (!Ready)
+{
+	<LoadingOverlay />
+}
+else if (QuickMediaService.GetQuickMediaButtons() is null || QuickMediaService.GetQuickMediaButtons().Length == 0)
 {
     <p>No quick-media buttons available.</p>
 }

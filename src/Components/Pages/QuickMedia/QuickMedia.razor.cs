@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using WearWare.Common.Media;
+using WearWare.Components.Base;
 using WearWare.Components.Forms.AddPlayableItemForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
@@ -9,7 +10,7 @@ using WearWare.Services.QuickMedia;
 
 namespace WearWare.Components.Pages.QuickMedia
 {
-    public partial class QuickMedia
+    public partial class QuickMedia : DataPageBase
     {
         [Inject] private QuickMediaService QuickMediaService { get; set; } = null!;
         [Inject] private LibraryService LibraryService { get; set; } = null!;
@@ -23,9 +24,15 @@ namespace WearWare.Components.Pages.QuickMedia
         private EditPlayableItemFormModel? _editFormModel = null;
         private AddPlayableItemForm? _addFormRef;
         private EditPlayableItemForm? _editFormRef;
+        private bool _subscribed;
 
-        protected override void OnInitialized()
+        protected override Task InitializeDataAsync()
         {
+            if (!_subscribed)
+            {
+                QuickMediaService.StateChanged += OnStateChanged;
+                _subscribed = true;
+            }
             try
             {
                 quickButtons = QuickMediaService?.GetQuickMediaButtons() ?? Array.Empty<IQuickMediaButton?>();
@@ -35,8 +42,17 @@ namespace WearWare.Components.Pages.QuickMedia
                 quickButtons = Array.Empty<IQuickMediaButton?>();
             }
             _libraryItems = LibraryService.Items;
-            if (QuickMediaService != null)
-                QuickMediaService.StateChanged += OnStateChanged;
+            return Task.CompletedTask;
+        }
+
+        public override void Dispose()
+        {
+            if (_subscribed)
+            {
+                QuickMediaService.StateChanged -= OnStateChanged;
+                _subscribed = false;
+            }
+            base.Dispose();
         }
 
         /// <summary>
@@ -48,13 +64,6 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             InvokeAsync(StateHasChanged);
         }
-
-        public void Dispose()
-        {
-            if (QuickMediaService != null)
-                QuickMediaService.StateChanged -= OnStateChanged;
-        }
-
         // ================================================== Add Dialog  ==================================================
         void OnAddDialogShow(int index)
         {
