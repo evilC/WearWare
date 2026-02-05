@@ -4,9 +4,6 @@
 - Split up `Components\Shared`  
   - Form components into own folder  
   - Overlays into own folder
-- Reduce using spam
-  - global using for regular C# files  
-  - _Imports.razor for razor file
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Can I move back to stock page layout?  
   - Do I really need to do `ww-modal` in the way that I am?  
