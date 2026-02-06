@@ -23,11 +23,11 @@
                     )
                 </div>
             }
-            @if (FormPage == EditPlayableItemFormPage.Import){
+            @if (FormPage == EditPlayableItemFormPage.Import || FormPage == EditPlayableItemFormPage.Library){
                 @* Type (Animation / Image) *@
                 <div class = "text-muted fs-6">@(MediaTypeMappings.GetMediaType(Path.GetExtension(Item.SourceFileName)) ?? MediaType.IMAGE)</div>
             }
-            else
+            if (FormPage != EditPlayableItemFormPage.Import)
             {
                 @* Brightness *@
                 <div class = "fs-6">Brightness: @Item.CurrentBrightness%</div>
