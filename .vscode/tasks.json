@@ -152,7 +152,7 @@
             "command": "ssh",
             "args": [
                 "${env:WEARWARE_REMOTE_MACHINE}",
-                "cd ${env:WEARWARE_REMOTE_LIB_DIR}/bindings/c# && rm -r bin && rm -r obj && make"
+                "cd ${env:WEARWARE_REMOTE_LIB_DIR}/bindings/c# && rm -rf bin && rm -rf obj && make"
             ],
             "problemMatcher": []
         },
