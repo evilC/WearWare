@@ -9,7 +9,7 @@
             "dependsOn": [
                 "dotnet-publish-pi-debug",
                 "wsl-rsync-ww-to-pi",
-                "copy-lib-remote-to-remote"
+                "copy-bindings-remote-to-remote"
             ],
             "group": "build"
         },
@@ -30,7 +30,7 @@
             "dependsOn": [
                 "dotnet-publish-pi-release",
                 "wsl-rsync-ww-to-pi",
-                "copy-lib-remote-to-remote"
+                "copy-bindings-remote-to-remote"
             ],
             "group": "build"
         },
@@ -92,12 +92,23 @@
         // ------ COPYING / TRANSFERRING ------
         {
             // Copies the built native lib and bindings from the remote machine to the remote publish folder
-            "label": "copy-lib-remote-to-remote",
+            "label": "copy-bindings-remote-to-remote",
             "type": "shell",
             "command": "ssh",
             "args": [
                 "${env:WEARWARE_REMOTE_MACHINE}",
                 "cp ${env:WEARWARE_REMOTE_LIB_DIR}/bindings/c#/bin/Release/net8.0/* ${env:WEARWARE_REMOTE_DIR}/bin/"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Copies the built led-image-viewer from the remote machine to the remote tools folder
+            "label": "copy-util-remote-to-remote",
+            "type": "shell",
+            "command": "ssh",
+            "args": [
+                "${env:WEARWARE_REMOTE_MACHINE}",
+                "cp ${env:WEARWARE_REMOTE_LIB_DIR}/utils/led-image-viewer ${env:WEARWARE_REMOTE_DIR}/tools/"
             ],
             "problemMatcher": []
         },
@@ -113,13 +124,24 @@
         },
         // ------ BUILDING NATIVE LIBS ------
         {
-            // Builds the native libs remotely
-            "label": "remote-build-native-libs",
+            // Builds the native lib remotely
+            "label": "remote-build-native-lib",
             "type": "shell",
             "command": "ssh",
             "args": [
                 "${env:WEARWARE_REMOTE_MACHINE}",
                 "cd ${env:WEARWARE_REMOTE_LIB_DIR}/lib && make clean && make"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Builds the C++ utilities remotely
+            "label": "remote-build-lib-utils",
+            "type": "shell",
+            "command": "ssh",
+            "args": [
+                "${env:WEARWARE_REMOTE_MACHINE}",
+                "cd ${env:WEARWARE_REMOTE_LIB_DIR}/utils && make clean && make"
             ],
             "problemMatcher": []
         },

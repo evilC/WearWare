@@ -1,6 +1,5 @@
 # WearWare
 An application to turn a Raspberry Pi with an LED Matrix into a wearable LED screen t-shirt.  
-This repo is very much a Work-in-progress and should not be considered ready for consumption by others
 
 ## Setup
 Note: Some of the toolchain (Build tasks etc) are currently Windows-specific (WSL - Windows Subsytem for Linux is a requirement). If running a different OS, very minor adaptations will need to be made (Convert WSL commands to native linux)  
@@ -25,9 +24,11 @@ This folder should contain the following subfolders:
 - tools - Tools (eg the `led-image-viewer` executable) will go here
 
 #### Deploy assets
-- Build the rpi-rgb-led-matrix library.  
+- Build the rpi-rgb-led-matrix library and utils.  
+  The provided build tasks can be used to do this  
+  (`remote-build-native-lib` followed by `remote-build-lib-utils`)
 - Place a compiled copy of `led-image-viewer` in the tools folder  
-- .NET runtime must be installed on the Pi (Currently uses `net9.0`)
+  This can be done with the `copy-util-remote-to-remote` task
 
 ### Dev machine setup
 - .NET 10 SDK must be installed
@@ -65,7 +66,9 @@ It should work fine on any OS
 - What the Pi would be playing on the screen is shown in the Debug Console of the IDE
 
 ### Sundry build tasks  
-- `remote-build-native-libs` will build the RGB LED Matrix library on the Pi via SSH  
+- `remote-build-native-lib` will build the RGB LED Matrix library on the Pi via SSH  
+- `remote-build-lib-utils` will build the RGB LED Matrix utils on the Pi via SSH
+- `copy-util-remote-to-remote` will copy the `led-image-viewer` utility to the `tools` folder of WareWare on the Pi
 - `remote-build-bindings` will build the C# bindings on the Pi via SSH
 - `wsl-deploy-pi-release` (Windows only) will deploy to the Pi in RELEASE mode  
   Be sure that the above two build tasks have been performed at least once before
