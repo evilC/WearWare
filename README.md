@@ -3,7 +3,8 @@ An application to turn a Raspberry Pi with an LED Matrix into a wearable LED scr
 This repo is very much a Work-in-progress and should not be considered ready for consumption by others
 
 ## Setup
-Note: The toolchain (Build tasks etc) are currently Windows-specific (WSL - Windows Subsytem for Linux is a requirement). If running a different OS, you may need to adapt
+Note: Some of the toolchain (Build tasks etc) are currently Windows-specific (WSL - Windows Subsytem for Linux is a requirement). If running a different OS, very minor adaptations will need to be made (Convert WSL commands to native linux)  
+
 ### On the Pi:
 #### Dependencies  
 - .NET 10 runtime  
