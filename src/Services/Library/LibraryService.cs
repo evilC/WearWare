@@ -124,9 +124,9 @@ namespace WearWare.Services.Library
                     _operationProgress.ReportProgress(opId, "Converting stream...");
                     var result = await _streamConverterService.ConvertToStream(
                         PathConfig.LibraryPath, 
-                        formModel.OriginalItem.SourceFileName, 
+                        formModel.UpdatedItem.SourceFileName, 
                         PathConfig.LibraryPath, 
-                        formModel.OriginalItem.Name,
+                        formModel.UpdatedItem.Name,
                         formModel.UpdatedItem.RelativeBrightness, 
                         formModel.UpdatedItem.MatrixOptions
                     );
@@ -135,6 +135,7 @@ namespace WearWare.Services.Library
                         _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
                         return;
                     }
+                    formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
                 }
 
                 // Update metadata and save
