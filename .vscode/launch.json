@@ -3,7 +3,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug (Remote Pi)",
+            // Debugs the app on the Pi
+            // Will build the app, copy it to the Pi, and launch it with the debugger attached
+            // WSL (Windows) only
+            "name": "Debug (Remote Pi) - WSL",
             "type": "coreclr",
             "request": "launch",
             "program": "${env:WEARWARE_REMOTE_DIR}/bin/${workspaceFolderBasename}",
@@ -27,9 +30,10 @@
             "sourceFileMap": {
                 "/root/dev/${workspaceFolderBasename}": "${workspaceFolder}"
             },
-            "preLaunchTask": "deploy-to-pi"
+            "preLaunchTask": "wsl-deploy-pi-debug"
         },
         {
+            // Debugs the app locally with mock services
             "name": "Debug (Local with mocks)",
             "type": "coreclr",
             "request": "launch",
@@ -46,7 +50,7 @@
                 // - Program.cs will load Desktop-specific services (e.g., MockStreamPlayer)
                 "ASPNETCORE_ENVIRONMENT": "Desktop"
             },
-            "preLaunchTask": "publish-desktop-mock"
+            "preLaunchTask": "deploy-desktop-debug"
         }
     ]
 }

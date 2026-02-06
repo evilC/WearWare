@@ -5,6 +5,10 @@ This repo is very much a Work-in-progress and should not be considered ready for
 ## Setup
 Note: The toolchain (Build tasks etc) are currently Windows-specific (WSL - Windows Subsytem for Linux is a requirement). If running a different OS, you may need to adapt
 ### On the Pi:
+#### Dependencies  
+- .NET 10 runtime  
+  You probably need the .NET SDK 8 on the Pi too, to build the RGB LED Matrix library  
+
 #### Disk setup
 Pick a folder to deploy to (eg `/root/dev/WearWare`)
 This folder should contain the following subfolders:
@@ -25,32 +29,33 @@ This folder should contain the following subfolders:
 - .NET runtime must be installed on the Pi (Currently uses `net9.0`)
 
 ### Dev machine setup
+- .NET 10 SDK must be installed
 - Set the environment variable `WEARWARE_REMOTE_MACHINE` to point to the hostname and username used to SSH into the Pi (eg `root@DietPi`)
 = Set the environment varibale `WEARWARE_REMOTE_DIR` to point to the folder name where WearWare is to be deployed to on the Pi (eg `/root/dev/WearWare`)  
+= Set the environment variable `WEARWARE_REMOTE_LIB_DIR` to point to the folder where the RGB LED Matrix repo lives, eg `/root/dev/rpi-rgb-led-matrix`  
   Ensure the `bin` folder is created in this folder (eg `/root/dev/WearWare/bin`)
 
-### Remote Dev (VSCode on Windows, debug on Pi)
+### Remote Dev (VSCode on local machine, debug on Pi)
+- Passwordless SSH to the Pi as root must be configured  
+#### Dev on Windows
+Launch configurations are included in the repo  
 - WSL must be installed, and Rsync must be added to WSL  
   This is to allow VSCode to transfer the built files to the Pi
-- Passwordless SSH to the Pi as root must be configured  
 - The Command Variable VSCode extension must be installed  
   This allows us to build linux style paths for use in `tasks.json`
-- `launch.json` and `target.json` may need to be edited for the paths you use on the Pi (Remember to deploy to `WearWare/bin`, not `WearWare`!)
-- Ensure that the fork of rpi-rgb-led-matrix mentioned above is the one checked out in the submodule (Git should enforce this)
-- EITHER
-  - Ensure WSL is set up to compile C++:  
-    ```
-    sudo apt update
-    sudo apt install -y make build-essential rsync ssh \
-    crossbuild-essential-arm64
-    ```
-- OR
-  - Copy `librgbmatrix.so.1` into the path on the Pi (eg `/usr/lib`)
-- Select the `Debug (Remote Pi)` configuration
+- Select the `Debug (Remote Pi) - WSL` configuration
 - Hit F5 to debug - code will be run on the Pi
+#### Dev on Linux / Mac using VSCode
+Launch configurations are not included in the repo  
+However, the majority of tasks are absolutely compatible with linux with linux / mac  
+You should only need to:
+- Re-implement the `wsl-rsync-ww-to-pi` task (Very simple, just remove WSL)  
+- Duplicate the `wsl-deploy-pi-debug` compound task, replace `wsl-rsync-ww-to-pi` with your new task.
+- Duplicate the `Debug (Remote Pi) - WSL` configuration and point it at your new compound task 
 
 ### Local Dev (VSCode on local machine, Pi functionality mocked out)
 In this mode, you can work on business logic etc without needing to run on the Pi  
+It should work fine on any OS  
 - Select the `Debug (Local with mocks)` configuration
 - Hit F5 to run
 - A debug interface will be available on http://localhost:5000/mocks  
@@ -58,12 +63,18 @@ In this mode, you can work on business logic etc without needing to run on the P
 - In this mode, all LOOP type animations will only last for 1 second, as it has no way of knowing how long the animation is
 - What the Pi would be playing on the screen is shown in the Debug Console of the IDE
 
+### Sundry build tasks  
+- `remote-build-native-libs` will build the RGB LED Matrix library on the Pi via SSH  
+- `remote-build-bindings` will build the C# bindings on the Pi via SSH
+- `wsl-deploy-pi-release` (Windows only) will deploy to the Pi in RELEASE mode  
+  Be sure that the above two build tasks have been performed at least once before
+
 ### Hardware notes
 This code is currently designed for a Pi (I use a Zero W 2) with an Electrodragon Active-3 matrix driver **which has channel 3 disabled** (De-solder the 3rd chip). **If you are using all 3 channels, then be sure to set the Pin list in `ButtonPins.cs` to empty, or do not use the QuickMedia functionality**  
 Disabling the 3rd channel frees up GPIO pins 2, 3, 14, 16, 21 + 26  
-However, it is worth noting that pins 2+3 do not seem to be usable (They are high by default)  
-Pin 14 apparently can fluctuate by default  
-In order to fix this, you can add lines like so in `/boot/firmware/config.cfg`: `gpio=14=ip`
+Use pins 2, 3, 14 and 16 for buttons.  
+Use pins 21 and 26 for an ATX power switch (I use the PetrockBlock Powerblock)  
+** DO NOT ** try and use pins 2 and 3 for the PowerBlock! It will shut down as soon as it starts up (Because these pins default to high).  
 
 ## Using the app  
 - Upload some GIFs or images to the `incoming` folder of the Pi

@@ -1,53 +1,45 @@
 {
     "version": "2.0.0",
     "tasks": [
+        // ======= LAUNCH CONFIGURATIONS / COMPOUND TASKS =======
+        // ------ Launch Configurations ------
         {
-            "label": "build-native-libs",
-            "type": "shell",
-            "command": "wsl",
-            "args": [
-                "bash",
-                "-lc",
-                "make -C rpi-rgb-led-matrix/lib CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ AR=aarch64-linux-gnu-ar"
+            "label": "wsl-deploy-pi-debug",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "dotnet-publish-pi-debug",
+                "wsl-rsync-ww-to-pi",
+                "copy-lib-remote-to-remote"
             ],
-            "problemMatcher": []
+            "group": "build"
         },
         {
-            "label": "publish-linux-arm64-debug",
-            "type": "shell",
-            "command": "dotnet",
-            "args": [
-                "publish", "src/WearWare.csproj", "-c", "Debug", "-r", "linux-arm64", "-o", "src/bin/pi-publish"
+            "label": "deploy-desktop-debug",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "dotnet-publish-desktop-debug",
             ],
-            "problemMatcher": [],
-            "group": "build",
-            "dependsOn": "build-native-libs"
+            "group": "build"
         },
+        // ------ Compound tasks for manual execution ------
         {
-            "label": "Copy .so to publish",
-            "type": "shell",
-            "command": "wsl",
-            "args": [
-                "bash",
-                "-c",
-                "cp rpi-rgb-led-matrix/lib/librgbmatrix.so.1 \"src/bin/pi-publish\""
+            // Builds in release mode, copies to the Pi
+            // Use remote-build-native-libs and remote-build-bindings to native libs first
+            "label": "wsl-deploy-pi-release",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "dotnet-publish-pi-release",
+                "wsl-rsync-ww-to-pi",
+                "copy-lib-remote-to-remote"
             ],
-            "problemMatcher": [],
-            "dependsOn": "publish-linux-arm64-debug"
-        },        
-        {
-            "label": "deploy-to-pi",
-            "type": "shell",
-            "command": "wsl",
-            "args": [
-                "bash", "-c",
-                "rsync -avz --delete src/bin/pi-publish/ ${env:WEARWARE_REMOTE_MACHINE}:${env:WEARWARE_REMOTE_DIR}/bin/"
-            ],
-            "problemMatcher": [],
-            "dependsOn": ["Copy .so to publish"]
+            "group": "build"
         },
+        // ====== HELPER TASKS =======
+        // ------ DOTNET PUBLISH ------
         {
-            "label": "publish-desktop-mock",
+            // Compiles the C# code for desktop debugging
+            // In this mode, matrix functions are mocked out
+            "label": "dotnet-publish-desktop-debug",
             "type": "shell",
             "command": "dotnet",
             "args": [
@@ -57,6 +49,104 @@
                 "-o", "src/bin/desktop-publish"
             ],
             "group": "build"
-        }
+        },
+        {
+            // Compiles the C# code for the pi in DEBUG mode
+            "label": "dotnet-publish-pi-debug",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish", "src/WearWare.csproj", "-c", "Debug", "-r", "linux-arm64", "-o", "src/bin/pi-publish"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Compiles the C# code for the pi in RELEASE mode
+            "label": "dotnet-publish-pi-release",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish", "src/WearWare.csproj", "-c", "Release", "-r", "linux-arm64", "-o", "src/bin/pi-publish"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // If native lib so is built locally, this copies it to the publish folder...
+            // ... so it gets included when we rsync the publish folder to the Pi for debugging.
+            // Currently unused
+            /* Setup: (Run in WSL)
+            sudo apt update
+            sudo apt install -y make build-essential rsync ssh \
+            crossbuild-essential-arm64
+            */
+            "label": "copy-so-to-local-publish",
+            "type": "shell",
+            "command": "wsl",
+            "args": [
+                "bash",
+                "-c",
+                "cp rpi-rgb-led-matrix/lib/librgbmatrix.so.1 \"src/bin/pi-publish\""
+            ],
+            "problemMatcher": []
+        },
+        // ------ COPYING / TRANSFERRING ------
+        {
+            // Copies the built native lib and bindings from the remote machine to the remote publish folder
+            "label": "copy-lib-remote-to-remote",
+            "type": "shell",
+            "command": "ssh",
+            "args": [
+                "${env:WEARWARE_REMOTE_MACHINE}",
+                "cp ${env:WEARWARE_REMOTE_LIB_DIR}/bindings/c#/bin/Release/net8.0/* ${env:WEARWARE_REMOTE_DIR}/bin/"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "wsl-rsync-ww-to-pi",
+            "type": "shell",
+            "command": "wsl",
+            "args": [
+                "bash", "-c",
+                "rsync -avz --delete src/bin/pi-publish/ ${env:WEARWARE_REMOTE_MACHINE}:${env:WEARWARE_REMOTE_DIR}/bin/"
+            ],
+            "problemMatcher": []
+        },
+        // ------ BUILDING NATIVE LIBS ------
+        {
+            // Builds the native libs remotely
+            "label": "remote-build-native-libs",
+            "type": "shell",
+            "command": "ssh",
+            "args": [
+                "${env:WEARWARE_REMOTE_MACHINE}",
+                "cd ${env:WEARWARE_REMOTE_LIB_DIR}/lib && make clean && make"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Builds the c# bindings remotely
+            "label": "remote-build-bindings",
+            "type": "shell",
+            "command": "ssh",
+            "args": [
+                "${env:WEARWARE_REMOTE_MACHINE}",
+                "cd ${env:WEARWARE_REMOTE_LIB_DIR}/bindings/c# && rm -r bin && rm -r obj && make"
+            ],
+            "problemMatcher": []
+        },
+        {
+            // Builds the native libs locally using the WSL toolchain for ARM64.
+            // Be aware that this will not be as performant as building natively on the Pi...
+            // ... due to certain optimizations not being available when cross-compiling.
+            "label": "wsl-local-build-native-libs",
+            "type": "shell",
+            "command": "wsl",
+            "args": [
+                "bash",
+                "-lc",
+                "make -C rpi-rgb-led-matrix/lib CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ AR=aarch64-linux-gnu-ar"
+            ],
+            "problemMatcher": []
+        },
     ]
 }
