@@ -33,8 +33,8 @@ This folder should contain the following subfolders:
 ### Dev machine setup
 - .NET 10 SDK must be installed
 - Set the environment variable `WEARWARE_REMOTE_MACHINE` to point to the hostname and username used to SSH into the Pi (eg `root@DietPi`)
-= Set the environment varibale `WEARWARE_REMOTE_DIR` to point to the folder name where WearWare is to be deployed to on the Pi (eg `/root/dev/WearWare`)  
-= Set the environment variable `WEARWARE_REMOTE_LIB_DIR` to point to the folder where the RGB LED Matrix repo lives, eg `/root/dev/rpi-rgb-led-matrix`  
+- Set the environment varibale `WEARWARE_REMOTE_DIR` to point to the folder name where WearWare is to be deployed to on the Pi (eg `/root/dev/WearWare`)  
+- Set the environment variable `WEARWARE_REMOTE_LIB_DIR` to point to the folder where the RGB LED Matrix repo lives, eg `/root/dev/rpi-rgb-led-matrix`  
   Ensure the `bin` folder is created in this folder (eg `/root/dev/WearWare/bin`)
 
 ### Remote Dev (VSCode on local machine, debug on Pi)
