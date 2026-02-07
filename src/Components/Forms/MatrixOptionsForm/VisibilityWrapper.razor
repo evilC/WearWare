@@ -2,12 +2,30 @@
 
 @using System
 
-<div class="d-flex flex-row align-items-center">
+@{
+    var incomingClass = string.Empty;
+    if (AdditionalAttributes != null && AdditionalAttributes.TryGetValue("class", out var c) && c is string cs)
+    {
+        incomingClass = cs?.Trim() ?? string.Empty;
+    }
+    var wrapperClass = string.IsNullOrEmpty(incomingClass)
+        ? "ww-visibility-wrapper d-flex flex-row align-items-center"
+        : $"ww-visibility-wrapper d-flex flex-row align-items-center {incomingClass}";
+
+    Dictionary<string, object>? otherAttrs = null;
+    if (AdditionalAttributes != null)
+    {
+        otherAttrs = new Dictionary<string, object>(AdditionalAttributes);
+        otherAttrs.Remove("class");
+    }
+}
+
+<div class="@wrapperClass" @attributes="otherAttrs">
     @if (ShowEnableToggle)
     {
-        <InputCheckbox class="me-3 ww-large-checkbox" @bind-Value="EnabledChecked" />
+        <InputCheckbox class="form-check-input ww-large-checkbox" @bind-Value="EnabledChecked" />
     }
-    <label class="w-50">@Label</label>
+    <label class="@LabelClass">@Label</label>
     <CascadingValue Value="EnabledChecked">
         @ChildContent
     </CascadingValue>
@@ -19,8 +37,12 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
     [Parameter] public Func<bool?>? VisibilityGetter { get; set; }
     [Parameter] public Action<bool?>? VisibilitySetter { get; set; }
+    [Parameter] public string LabelClass { get; set; } = string.Empty;
 
     private bool EnabledChecked
     {

@@ -23,10 +23,10 @@ main {
 }
 
 /* Large Checkboxes */
-.content ::deep .ww-large-checkbox, .ww-large-checkbox {
-    /* width: 1.5em;
-    height: 1.5em; */
-    transform: scale(1.7);
+.content ::deep .form-check-input.ww-large-checkbox ,
+.content ::deep .ww-large-checkbox {
+    width: 1.5em;
+    height: 1.5em;
 }
 
 /* Large Radio Buttons */
@@ -60,7 +60,7 @@ main {
 .content ::deep .ww-modal .ww-modal-body {
     overflow: auto;
     flex: 1 1 auto;
-    padding: 1rem;
+    padding: 0.5rem;
 }
 
 .content ::deep .ww-modal .ww-modal-footer {
