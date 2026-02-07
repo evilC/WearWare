@@ -1,0 +1,12 @@
+#!/bin/bash
+# Restores WearWare
+source /usr/local/bin/vars-include
+
+echo Restoring up WareWare from folder $bf;
+if [ ! -d "$bp" ]; then
+	mkdir "$bp"
+fi
+ww stop
+rm -r "$ww/"*
+cp -r "$bp/"* "$ww/"
+ww start

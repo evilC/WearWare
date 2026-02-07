@@ -1,0 +1,2 @@
+# Shortcut to force bringing up eth0
+ifup eth0
