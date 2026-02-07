@@ -18,7 +18,7 @@
     }
 }
 
-<select class="@selectClass"
+<select class="form-select @selectClass"
         @attributes="otherAttrs"
         @onchange="OnChange"
         value="@(Value.HasValue ? Value.Value.ToString() : DefaultValue.ToString())">

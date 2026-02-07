@@ -16,7 +16,7 @@
     }
 }
 
-<select class="@selectClass" @attributes="otherAttrs" @onchange="OnChange" value="@(Value ?? DefaultValue)">
+<select class="form-select @selectClass" @attributes="otherAttrs" @onchange="OnChange" value="@(Value ?? DefaultValue)">
     @ChildContent
 </select>
 
