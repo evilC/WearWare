@@ -1,0 +1,18 @@
+# Save as /etc/systemd/system/wearware.service
+[Unit]
+Description=WearWare App
+Wants=hostapd.service avahi-daemon.service
+Before=hostapd.service ifup@eth0.service
+After=local-fs.target
+
+[Service]
+Environment=DOTNET_ROOT=/usr/share/dotnet
+Environment=PATH=/usr/share/dotnet:$PATH
+Environment=LD_LIBRARY_PATH=/usr/lib
+Type=simple
+WorkingDirectory=/root/dev/WearWare/bin
+ExecStart=/root/dev/WearWare/bin/WearWare
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

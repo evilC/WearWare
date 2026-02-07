@@ -1,0 +1,27 @@
+source /usr/local/bin/vars-include
+
+printf 'WareWare help \n\n'
+printf 'Available commands:\n\n'
+
+printf 'Start / Stop WareWare as service:\n'
+printf 'ww [start|stop]\n'
+printf 'Omit params to toggle\n\n'
+
+printf 'Backup WareWare:\n'
+printf 'bw folder name [-confirm]\n'
+printf 'Backs up WareWare to specified folder.\n'
+printf 'If folder exists, pass -confirm to overwrite\n'
+printf "Backups are stored in $br\n\n"
+
+printf 'Restore WareWare:\n'
+printf 'rw folder name\n'
+
+printf 'List backups:\n'
+printf 'lwb\n\n'
+
+printf 'Force ethernet up:\n'
+printf 'eup\n\n'
+
+printf 'Config ethernet:\n'
+printf 'ce\n'  
+printf 'Opens ifup override.conf in nano\n\n'
