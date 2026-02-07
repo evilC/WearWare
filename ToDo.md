@@ -2,6 +2,28 @@
 
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
+- Make line-endings consistent throughout the repo
+  - Massive mix of CRLF and LF, even among files of same file extension
+  - Whole repo should default to LF  
+    Except maybe .ahk files, which may need to be CRLF
+  - Fix editor with `.editorconfig` in root of repo - is editor-agnostic  
+    ```
+    [*]
+    end_of_line = lf
+
+    [*.ahk]
+    end_of_line = crlf
+    ```
+  - Fix Git with `.gitattributes`  
+    ```
+    # default behavior for all files
+    * text eol=lf
+
+    # override for AutoHotkey scripts
+    *.ahk text eol=crlf
+    ```
+    This will cause a lot of files to be re-committed
+
 
 ### Code overhaul
 - Components
