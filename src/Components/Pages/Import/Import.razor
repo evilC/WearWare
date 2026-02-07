@@ -24,7 +24,7 @@ else
     {
         @* Regular view *@
         <div class="mb-3">
-            <button type="button" class="btn btn-primary" @onclick="TriggerFileInput">Upload new file</button>
+            <button type="button" class="btn btn-primary w-100" @onclick="TriggerFileInput">Upload new file</button>
             <InputFile id="@inputId" style="display:none;" OnChange="HandleFileSelected" />
         </div>
         <div class="d-flex flex-column">
