@@ -31,7 +31,7 @@ else
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
                 @foreach (var item in importItems)
                 {
-                    <div class="col-12 mb-3">
+                    <div class="col-12 mb-3" data-import-file="@item.SourceFileName"> @* Attribute is used for scrolling to newly uploaded item *@
                         <div class="card h-100 shadow-sm bg-light">
                             <div class="card-body p-0">
                                 <div class="d-flex align-items-center gap-3 p-2" style="cursor:pointer;" @onclick="() => ShowForm(item)">

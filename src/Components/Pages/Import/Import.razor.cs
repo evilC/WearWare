@@ -3,14 +3,14 @@ using Microsoft.AspNetCore.Components.Forms;
 using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Import;
-using WearWare.Services.MatrixConfig;
+using WearWare.Services.OperationProgress;
 
 namespace WearWare.Components.Pages.Import
 {
     public partial class Import : DataPageBase
     {
         [Inject] private ImportService ImportService { get; set; } = null!;
-        [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
+        [Inject] private IOperationProgressService OperationProgress { get; set; } = null!;
         [Inject] private HttpClient Http { get; set; } = null!;
         // ToDo: Used for confirmations - replace with Blazor component?
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
@@ -22,6 +22,7 @@ namespace WearWare.Components.Pages.Import
         private bool _subscribed;
         private EditPlayableItemForm? editFormRef;
         private string inputId = "fileInput_" + Guid.NewGuid().ToString("N");
+        private string? _pendingScrollFileName;
 
         /// <summary>
         /// Called when files change - eg new file imported, or existing one deleted
@@ -41,6 +42,20 @@ namespace WearWare.Components.Pages.Import
             }
             importItems = ImportService.GetImportItems();
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Handles scrolling to newly added item after upload
+        /// </summary>
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            await base.OnAfterRenderAsync(firstRender);
+
+            if (!string.IsNullOrEmpty(_pendingScrollFileName))
+            {
+                await JSRuntime.InvokeVoidAsync("mw.scrollToAttribute", "data-import-file", _pendingScrollFileName);
+                _pendingScrollFileName = null;
+            }
         }
 
         public override void Dispose()
@@ -83,6 +98,7 @@ namespace WearWare.Components.Pages.Import
 
         /// <summary>
         /// Called when the edit form is submitted in the Import page.
+        /// (Importing already uploaded file into the Library)
         /// </summary>
         private async Task OnSaveImportItem(EditPlayableItemFormModel formModel)
         {
@@ -110,6 +126,7 @@ namespace WearWare.Components.Pages.Import
             if (file == null)
                 return;
 
+            var opId = await OperationProgress.StartOperation($"Uploading file ${file.Name}...");
             var content = new MultipartFormDataContent();
             var stream = file.OpenReadStream(long.MaxValue);
             var streamContent = new StreamContent(stream);
@@ -124,17 +141,21 @@ namespace WearWare.Components.Pages.Import
                 {
                     var msg = await resp.Content.ReadAsStringAsync();
                     await JSRuntime.InvokeVoidAsync("alert", $"Upload failed: {msg}");
+                    OperationProgress.CompleteOperation(opId, false, "Upload failed");
                 }
                 else
                 {
                     // Refresh local list (endpoint will also notify ImportService)
                     importItems = ImportService.GetImportItems();
+                    _pendingScrollFileName = file.Name;
+                    OperationProgress.CompleteOperation(opId, true, "Upload successful");
                     await InvokeAsync(StateHasChanged);
                 }
             }
             catch (Exception ex)
             {
                 await JSRuntime.InvokeVoidAsync("alert", $"Upload error: {ex.Message}");
+                OperationProgress.CompleteOperation(opId, false, "Upload error");
             }
         }
 
