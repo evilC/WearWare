@@ -1,3 +1,0 @@
-# Edits overrides for eth0
-# Use to set timeout so it does not wait for eth0 to come up before starting WearWare and hotspot
-sudo systemctl edit ifup@eth0.service
