@@ -31,7 +31,8 @@ main {
 
 /* Large Radio Buttons */
 .content ::deep .ww-large-radio, .ww-large-radio {
-    transform: scale(2.1);
+    width: 1.5em;
+    height: 1.5em;
     outline: none; box-shadow: none;    /* Hides validation outline on radio buttons */
 }
 

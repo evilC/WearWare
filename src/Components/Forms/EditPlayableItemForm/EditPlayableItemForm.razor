@@ -75,9 +75,9 @@
                                 <InputRadioGroup TValue="PlayMode" @bind-Value="FormModel.UpdatedItem!.PlayMode">
                                     @foreach (PlayMode playMode in Enum.GetValues(typeof(PlayMode)))
                                     {
-                                        <div class="d-flex flex-column align-items-center gap-1 px-2">
-                                            <label class="mb-1 text-7">@playMode.ToString()</label>
-                                            <InputRadio class="ww-large-radio mb-2" TValue="PlayMode" Value="@playMode" />
+                                        <div class="d-flex flex-column align-items-center px-2">
+                                            <label class="text-7">@playMode.ToString()</label>
+                                            <InputRadio class="ww-large-radio" TValue="PlayMode" Value="@playMode" />
                                         </div>
                                     }
                                 </InputRadioGroup>
