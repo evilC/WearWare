@@ -27,8 +27,6 @@
 
 ### Code overhaul
 - Components
-  - More re-use of components.
-    - Library and AddPlayableItemForm do not use PlayableItemCard (But would need PlayMode hidden)
   - Parameters of components can be made non-nullable by setting to `default!`;
   - Components can be wrapped in an `<ErrorBoundary>`  
     If something goes wrong, alternate UI can be shown and error does not bubble up to parent
