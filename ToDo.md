@@ -69,6 +69,11 @@ Either way, need to be able to tell if original file got overwritten or not
   - Shutdown
 - QuickActions and QuickMedia would need to share same GPIO handler  
   So that they do not try to subscribe to same button
+- PlayableItem's Matrix Options are not actually being used.  
+  It's using a stored one  
+  Every time we modify a playableItem's options, we should rebuild the native matrix options  
+  `playableItem.MatrixOptions.ToRGBLedMatrixOptions()`  
+  Changing Matrix however seems to caus corruption for 2nd item played
 
 
 ### General refactor of MediaController Start / Stop etc  
