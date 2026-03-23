@@ -20,14 +20,14 @@ else
         />
     }
 
-    @if (importItems != null && importItems.Any())
-    {
-        @* Regular view *@
         <div class="d-flex flex-column h-100">
             <div class="mb-3 flex-shrink-0">
                 <button type="button" class="btn btn-primary w-100" @onclick="TriggerFileInput">Upload new file</button>
                 <InputFile id="@inputId" style="display:none;" OnChange="HandleFileSelected" />
             </div>
+        @if (importItems != null && importItems.Any())
+        {
+            @* Regular view *@
             <div class="d-flex flex-column flex-grow-1 overflow-auto">
                 @foreach (var item in importItems)
                 {
@@ -51,10 +51,10 @@ else
                     </div>
                 }
             </div>
-        </div>
-    }
-    else
-    {
-        <p>No images found in the incoming folder.</p>
-    }
+        }
+        else
+        {
+            <p>No images found in the incoming folder.</p>
+        }
+    </div>
 }
