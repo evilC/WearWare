@@ -6,8 +6,11 @@ Note: Some of the toolchain (Build tasks etc) are currently Windows-specific (WS
 
 ### On the Pi:
 #### Dependencies  
-- .NET 10 runtime  
+- .Net 10 runtime  
   You probably need the .NET SDK 8 on the Pi too, to build the RGB LED Matrix library  
+  Installing .Net 10 SDK is probably best, as that covers all scenarios.  
+- (For debugging) VSDBG  
+  `curl -sSL https://aka.ms/getvsdbgsh | /bin/sh /dev/stdin -v latest -l ~/vsdbg`
 
 #### Disk setup
 Pick a folder to deploy to (eg `/root/dev/WearWare`)
