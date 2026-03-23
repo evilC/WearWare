@@ -43,6 +43,9 @@
 - Implement nicer confirm dialog for delete
 - Public everywhere! Change to internal where possible
 - Reorder playlist
+- If FOREVER mode item is playing, clicking `Save` in Matrix options does not close the page.  
+  It does seem to save though, and manually navigating to another page does work.
+
 
 ### Crash hardening.  
 - Various places where null-forgiving operators are used
