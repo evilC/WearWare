@@ -101,6 +101,21 @@ namespace WearWare.Services.MatrixConfig
         /// <returns>Command-line argument string.</returns>
         public string ToArgsString(int relativeBrightness)
         {
+            return string.Join(" ", BuildArgsList(relativeBrightness));
+        }
+
+        /// <summary>
+        /// Builds an argument list suitable for ProcessStartInfo.ArgumentList or direct process execution.
+        /// </summary>
+        /// <param name="relativeBrightness"></param>
+        /// <returns>List of argument tokens.</returns>
+        public List<string> ToArgsList(int relativeBrightness)
+        {
+            return BuildArgsList(relativeBrightness);
+        }
+
+        private List<string> BuildArgsList(int relativeBrightness)
+        {
             var args = new List<string>();
             if (Brightness.HasValue || relativeBrightness != 100)
                 args.Add($"--led-brightness={BrightnessCalculator.CalculateAbsoluteBrightness(Brightness ?? 100, relativeBrightness)}");
@@ -122,7 +137,7 @@ namespace WearWare.Services.MatrixConfig
             if (RowAddressType.HasValue) args.Add($"--led-row-addr-type={RowAddressType}");
             if (Rows.HasValue) args.Add($"--led-rows={Rows}");
             if (ScanMode != null) args.Add($"--led-scan-mode={ScanMode}");
-            return string.Join(" ", args);
+            return args;
         }
 
         // No validation for free-text fields: blank means "use default".

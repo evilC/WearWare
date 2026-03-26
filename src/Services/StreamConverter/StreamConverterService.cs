@@ -51,20 +51,32 @@ namespace WearWare.Services.StreamConverter
             var tmpStreamFile = $"{newFileNameNoExt}.stream.tmp";
             var tmpStreamPath = Path.Combine(destPath, tmpStreamFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
-            var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
-            var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{tmpStreamPath}\"";
-            _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
-            var psi = new ProcessStartInfo
-            {
-                FileName = "bash",
-                Arguments = $"-c {command}",
+            var argsList = matrixOptions.ToArgsList(relativeBrightness);
+            argsList.Add(inputPath);
+            argsList.Add($"-O{tmpStreamPath}");
+            var sudoPath = "/usr/bin/sudo";
+            if (!File.Exists(sudoPath))            {
+                return new ReConvertTaskResult { ExitCode = -1, Error = "sudo not found at " + sudoPath, Message = "Stream conversion failed - server misconfiguration." };
+            }
+            _logger.LogInformation("{LogTag} Executing led-image-viewer with args: {args}", _logTag, string.Join(" ", argsList));
+            var psi = new ProcessStartInfo {
+                FileName = "/usr/bin/sudo",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+            psi.ArgumentList.Clear();
+            psi.ArgumentList.Add(toolPath);
+            foreach (var a in argsList) psi.ArgumentList.Add(a);
 
             int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
+            /*
+            Note: If the code hangs here when running as a service, it's likely because the service does not have a path to the executable
+            eg bash, sudo etc.
+            Either the service needs to be configured with a PATH that includes the necessary executables...
+            ... or the full path to the executable needs to be specified in the code.
+            */
             using var process = Process.Start(psi);
             if (process == null)
                 return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start led-image-viewer.", Message = "Failed to start led-image-viewer.", ActualBrightness = actualBrightness };
