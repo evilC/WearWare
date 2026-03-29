@@ -6,7 +6,6 @@ using WearWare.Services.MediaController;
 using WearWare.Services.Playlist;
 using WearWare.Services.QuickMedia;
 using WearWare.Services.Mocks;
-using WearWare.Config;
 using System.Net;
 
 using Serilog;
@@ -17,6 +16,7 @@ using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
 using WearWare.Services.OperationProgress;
 using WearWare.Services.Environment;
+using WearWare.Services.TempMon;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -71,6 +71,7 @@ if (env == "Desktop")
     builder.Services.AddSingleton<IStreamConverterService, MockStreamConverterService>();
     builder.Services.AddSingleton<IStreamPlayer, MockStreamPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
+    builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
 }
 else
 {
@@ -82,6 +83,7 @@ else
     builder.Services.AddSingleton<IStreamConverterService, StreamConverterService>();
     builder.Services.AddSingleton<IStreamPlayer, RpiStreamPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
+    builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<QuickMediaService>();
