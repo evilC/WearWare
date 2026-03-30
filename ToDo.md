@@ -44,7 +44,11 @@
 - Public everywhere! Change to internal where possible
 - Reorder playlist
 - If FOREVER mode item is playing, clicking `Save` in Matrix options does not close the page.  
-  It does seem to save though, and manually navigating to another page does work.
+  It does seem to save though, and manually navigating to another page does work.  
+- Review storing of matrix options in PlayableItem / Re-use of matrix instance for all items  
+  Is there any advantage to newing up a matrix instance for each PlayableItem?  
+  - Some options will be baked into the stream (eg brightness)  
+  - Some options will be ignored on playback, as the same matrix instance is used for each item (eg limit refresh)
 
 
 ### Crash hardening.  
