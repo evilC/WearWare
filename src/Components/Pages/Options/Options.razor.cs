@@ -86,5 +86,20 @@ namespace WearWare.Components.Pages.Options
             _dotnetRef?.Dispose();
             base.Dispose();
         }
+
+        private string BuildTemperatureString()
+        {
+            if (!TempMonService.LastTemperatureC.HasValue)
+                return "Unavailable";
+            var temp = TempMonService.LastTemperatureC.Value;
+            var str = $"{temp:F2} °C ";
+            if (temp >= 80)
+                return str + "(THROTTLED)";
+            if (temp >= 70)
+                return str + "(High)";
+            if (temp >= 60)
+                return str + "(Elevated)";
+            return str + "(Normal)";
+        }
     }
 }
