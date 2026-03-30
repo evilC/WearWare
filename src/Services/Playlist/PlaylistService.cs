@@ -393,6 +393,8 @@ namespace WearWare.Services.Playlist
                 originalItem.UpdateFromClone(item);
                 itemIndex++;
             }
+            _operationProgress.ReportProgress(opId, "Saving playlist...");
+            playlist.Serialize();
             _operationProgress.CompleteOperation(opId, true, "Done");
         }    
 
