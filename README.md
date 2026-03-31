@@ -77,11 +77,15 @@ It should work fine on any OS
   Be sure that the above two build tasks have been performed at least once before
 
 ### Hardware notes
-This code is currently designed for a Pi (I use a Zero W 2) with an Electrodragon Active-3 matrix driver **which has channel 3 disabled** (De-solder the 3rd chip). **If you are using all 3 channels, then be sure to set the Pin list in `ButtonPins.cs` to empty, or do not use the QuickMedia functionality**  
-Disabling the 3rd channel frees up GPIO pins 2, 3, 14, 16, 21 + 26  
-Use pins 2, 3, 14 and 16 for buttons.  
-Use pins 21 and 26 for an ATX power switch (I use the PetrockBlock Powerblock)  
-** DO NOT ** try and use pins 2 and 3 for the PowerBlock! It will shut down as soon as it starts up (Because these pins default to high).  
+#### Physical buttons
+This app supports playing media on press of a button.  
+Buttons are wired via free GPIO pins.  
+Pull-up / pull-down resitors are not required, as the button handler will ignore all input for 100ms after initialization to allow for the voltage level to settle.  
+There is currently no UI to configure which pins are used, instead `config/buttonpins.json` is used.  
+This will be created on startup if it does not exist, or you can create it yourself. Format is eg `[2, 3, 16, 14]`  
+If using an Electrodragon Active-3 matrix driver board, channel 3 can be disabled by desoldering the chip next to channel 3, freeing up 6 GPIO pins - 2, 3, 14, 16, 21 + 26  
+If also using a Petrockblock Powerblock (ATX power switch), ** DO NOT ** try and use pins 2 and 3 for the PowerBlock! It will shut down as soon as it starts up (Because these pins default to high). Recommend using pins 21 (Status) and 26 (Shutdown)  
+In this manner, you can have two panels, four buttons, and an ATX style power switch.  
 
 ## Using the app  
 - Upload some GIFs or images to the `incoming` folder of the Pi

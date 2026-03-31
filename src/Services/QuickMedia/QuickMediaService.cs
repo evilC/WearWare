@@ -1,6 +1,4 @@
-using WearWare.Common.Media;
 using WearWare.Components.Forms.EditPlayableItemForm;
-using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
@@ -14,7 +12,7 @@ public class QuickMediaService
 {
     public event Action? StateChanged;
     private readonly IQuickMediaButton?[] _buttons;
-    private readonly int _maxButtons = ButtonPins.PinNumbers.Count;
+    private readonly IReadOnlyList<int> _buttonPins;
     private readonly MediaControllerService _mediaController;
     private readonly IQuickMediaButtonFactory _buttonFactory;
     private readonly ILogger<QuickMediaService> _logger;
@@ -33,7 +31,8 @@ public class QuickMediaService
     )
     {
         _logger = logger;
-        _buttons = new IQuickMediaButton[_maxButtons];
+        _buttonPins = GetButtonPins();
+        _buttons = new IQuickMediaButton[_buttonPins.Count];
         _mediaController = mediaController;
         _buttonFactory = buttonFactory;
         _matrixConfigService = matrixConfigService;
@@ -44,7 +43,7 @@ public class QuickMediaService
         // Note that there seems to be an issue with GPIO pins floating after first boot
         // So these buttons will default to uninitialized, and will be initialized later
         // This is currently done after the MediaControllerService has been started
-        for (int i = 0; i < _maxButtons; i++)
+        for (int i = 0; i < _buttonPins.Count; i++)
         {
             var button = DeserializeQuickMediaButton(i);
             if (button != null)
@@ -54,6 +53,31 @@ public class QuickMediaService
         }
         
         _logger.LogInformation("{tag} Initialized.", _logTag);
+    }
+
+    /// <summary>
+    /// Loads the button pin configuration from file, or creates a new one with an empty list if it doesn't exist, or is invalid
+    /// </summary>
+    /// <returns>A list of button pins</returns>
+    private IReadOnlyList<int> GetButtonPins()
+    {
+        IReadOnlyList<int> buttonPins;
+        var configFilePath = Path.Combine(PathConfig.ConfigPath, "buttonpins.json");
+        if (File.Exists(configFilePath)){
+            try
+            {
+                buttonPins = JsonUtils.FromJsonFile<IReadOnlyList<int>>(configFilePath) ?? [];
+                if (buttonPins != null) return buttonPins;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Error reading button pins configuration from file {filename}: {message}", _logTag, configFilePath, ex.Message);
+            }
+        }
+        // My default: 2, 3, 16, 14
+        buttonPins = [];
+        JsonUtils.ToJsonFile(configFilePath, buttonPins);
+        return buttonPins;
     }
 
     /// <summary>
@@ -103,7 +127,7 @@ public class QuickMediaService
         if (formModel.FormMode == EditPlayableItemFormMode.Edit)
         {
             var tmp = _buttons[formModel.ItemIndex];
-            if (formModel.ItemIndex < 0 || formModel.ItemIndex >= _maxButtons || tmp == null)
+            if (formModel.ItemIndex < 0 || formModel.ItemIndex >= _buttonPins.Count || tmp == null)
             {
                 _operationProgress.CompleteOperation(opId, false, "Error: Quick Media button not found for editing.");
                 return; // ToDo: Error handling
@@ -121,7 +145,7 @@ public class QuickMediaService
                     Directory.CreateDirectory(GetQuickMediaPath(formModel.ItemIndex));
                 }
                 _operationProgress.ReportProgress(opId, "Creating button");
-                button = _buttonFactory.Create(_mediaController, formModel.ItemIndex, formModel.UpdatedItem);
+                button = _buttonFactory.Create(_mediaController, formModel.ItemIndex, _buttonPins[formModel.ItemIndex], formModel.UpdatedItem);
             }
             catch (Exception ex)
             {
@@ -225,7 +249,7 @@ public class QuickMediaService
     public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
     {
         var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
-        for (int i = 0; i < _maxButtons; i++)
+        for (int i = 0; i < _buttonPins.Count; i++)
         {
             var button = _buttons[i];
             if (button == null) continue;
@@ -273,7 +297,7 @@ public class QuickMediaService
 
     public bool DeleteQuickMediaButton(int buttonNumber)
     {
-        if (buttonNumber < 0 || buttonNumber >= _maxButtons) return false;
+        if (buttonNumber < 0 || buttonNumber >= _buttonPins.Count) return false;
         var button = _buttons[buttonNumber];
         if (button == null) return false;
         var restartMediaController = false;
@@ -323,7 +347,7 @@ public class QuickMediaService
             var json = File.ReadAllText(path);  
             var dto = JsonUtils.FromJson<QuickMediaDto>(json);
             if (dto == null) return null;
-            var button = _buttonFactory.Create(_mediaController, dto.ButtonNumber, dto.Item);
+            var button = _buttonFactory.Create(_mediaController, dto.ButtonNumber, _buttonPins[dto.ButtonNumber], dto.Item);
             // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
             if (button.Item.MatrixOptions == null)
                 button.Item.MatrixOptions = _matrixConfigService.CloneOptions();

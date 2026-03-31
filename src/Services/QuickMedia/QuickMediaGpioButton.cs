@@ -1,6 +1,5 @@
 using System.Device.Gpio;
 using Iot.Device.Button;
-using WearWare.Common.Media;
 using WearWare.Services.MediaController;
 
 namespace WearWare.Services.QuickMedia
@@ -19,18 +18,13 @@ namespace WearWare.Services.QuickMedia
         // In the ButtonDown event, we ignore any presses until initialized is true.
         private bool _initialized = false;
 
-        public QuickMediaGpioButton(MediaControllerService mediaController, GpioController controller, int buttonNumber, PlayableItem item)
+        public QuickMediaGpioButton(MediaControllerService mediaController, GpioController controller, int buttonNumber, int pinNumber, PlayableItem item)
         {
             _mediaController = mediaController;
             _controller = controller;
             ButtonNumber = buttonNumber;
             Item = item;
 
-            if (Config.ButtonPins.PinNumbers.Count <= buttonNumber)
-            {
-                throw new ArgumentOutOfRangeException(nameof(buttonNumber), "Button number exceeds configured pins.");
-            }
-            var pinNumber = Config.ButtonPins.PinNumbers[buttonNumber];
             _button = new GpioButton(buttonPin: pinNumber, isPullUp: true, hasExternalResistor: false, gpio: _controller, shouldDispose: true, debounceTime: new TimeSpan(0, 0, 0, 0, 200));
             _button.ButtonDown += (sender, e) =>
             {
