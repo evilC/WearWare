@@ -1,5 +1,4 @@
 using WearWare.Services.MediaController;
-using WearWare.Common.Media;
 using WearWare.Services.QuickMedia;
 
 namespace WearWare.Services.Mocks
@@ -10,7 +9,7 @@ namespace WearWare.Services.Mocks
         {
         }
 
-        public IQuickMediaButton Create(MediaControllerService mediaController, int buttonNumber, PlayableItem item)
+        public IQuickMediaButton Create(MediaControllerService mediaController, int buttonNumber, int pinNumber, PlayableItem item)
         {
             return new MockQuickMediaButton(buttonNumber, item);
         }

@@ -22,7 +22,10 @@
     # override for AutoHotkey scripts
     *.ahk text eol=crlf
     ```
-    This will cause a lot of files to be re-committed
+  - Custom handling may also be needed for shell scripts in `/resources/pi-scripts`  
+    These have no extenstion, so would need to be done via path?  
+    These should be LF, so we may not need custom handling if the default is LF
+  - This will cause a lot of files to be re-committed
 
 
 ### Code overhaul
@@ -64,7 +67,7 @@ Either way, need to be able to tell if original file got overwritten or not
 
 ## Low Priority
 - If we trigger QuickMedia while the playlist is stopped, after it finishes playing, it should not start
-- Allow configuration of ButtonPins via GUI
+- Allow configuration of button pins via GUI
 - PlaylistService tidy
   - A bunch of stuff in here should be moved to PlaylistItems
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
