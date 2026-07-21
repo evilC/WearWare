@@ -22,7 +22,10 @@
     # override for AutoHotkey scripts
     *.ahk text eol=crlf
     ```
-    This will cause a lot of files to be re-committed
+  - Custom handling may also be needed for shell scripts in `/resources/pi-scripts`  
+    These have no extenstion, so would need to be done via path?  
+    These should be LF, so we may not need custom handling if the default is LF
+  - This will cause a lot of files to be re-committed
 
 
 ### Code overhaul
