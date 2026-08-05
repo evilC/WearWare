@@ -35,6 +35,12 @@ namespace WearWare.Services.Mocks
             return true;
         }
 
+        public bool PlayFseq(PlayableItem playableItem, CancellationToken ct)
+        {
+            _logger.LogInformation("[PLAYFSEQ MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
+            return PlayStream(playableItem, ct);
+        }
+
         public void Clear()
         {
             // No display to clear in the mock player

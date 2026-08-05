@@ -172,7 +172,9 @@ namespace WearWare.Services.MediaController
                         break;  // No more items in playlist
                     }
                     _currentItem = item;
-                    var success =_streamPlayer.PlayStream(item, ct);
+                    var success = _currentItemIsQuickMedia
+                        ? _streamPlayer.PlayStream(item, ct)
+                        : _streamPlayer.PlayFseq(item, ct);
                     if (!success)
                     {
                         if (_currentItemIsQuickMedia){

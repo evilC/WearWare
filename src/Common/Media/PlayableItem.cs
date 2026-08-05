@@ -47,6 +47,11 @@ namespace WearWare.Common.Media
             return Path.Combine(PathConfig.Root, ParentFolder, $"{Name}.stream");
         }
 
+        public string GetFseqFilePath()
+        {
+            return Path.Combine(PathConfig.Root, ParentFolder, $"{Name}.fseq");
+        }
+
         public string GetSourceFilePath()
         {
             return Path.Combine(PathConfig.Root, ParentFolder, SourceFileName);
