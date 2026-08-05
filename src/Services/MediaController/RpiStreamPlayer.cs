@@ -172,6 +172,7 @@ namespace WearWare.Services.MediaController
                     var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, playableItem.RelativeBrightness);
                     var brightness = new[] { Math.Clamp(combinedBrightness, 1, 100) };
                     var stop = new[] { 0 };
+                    using var stopRegistration = ct.Register(() => stop[0] = 1);
 
                     switch (playableItem.PlayMode)
                     {
