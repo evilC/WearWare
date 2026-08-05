@@ -168,48 +168,22 @@ namespace WearWare.Services.MediaController
                     using var sequence = new FrameSequence(width, height);
                     sequence.ReadFromFile(fseqPath);
 
-                    if (!TryGetFseqSingleLoopDurationUs(fseqPath, out var singleLoopDurationUs))
-                    {
-                        _logger.LogError("{logTag} Could not determine loop duration for fseq {FseqPath}", _logTag, fseqPath);
-                        return false;
-                    }
-
                     var baseBrightness = options.Brightness ?? 100;
                     var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, playableItem.RelativeBrightness);
                     var brightness = new[] { Math.Clamp(combinedBrightness, 1, 100) };
                     var stop = new[] { 0 };
 
-                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
                     switch (playableItem.PlayMode)
                     {
-                        case PlayMode.Duration:
-                            linkedCts.CancelAfter(TimeSpan.FromSeconds(playableItem.PlayModeValue));
+                        case PlayMode.Forever:
+                            sequence.PlayForever(_matrix, stop, brightness);
                             break;
                         case PlayMode.Loop:
-                            // FrameSequence.Play loops forever; for loop mode we stop after N full sequence durations.
-                            linkedCts.CancelAfter(TimeSpan.FromMilliseconds((singleLoopDurationUs * playableItem.PlayModeValue) / 1000.0));
+                            sequence.PlayCount(_matrix, playableItem.PlayModeValue > 0 ? (uint)playableItem.PlayModeValue : 0u, stop, brightness);
                             break;
-                    }
-
-                    var playTask = Task.Run(() => sequence.Play(_matrix, stop, brightness));
-
-                    while (!linkedCts.Token.IsCancellationRequested)
-                    {
-                        Thread.Sleep(20);
-                    }
-
-                    stop[0] = 1;
-                    try
-                    {
-                        playTask.Wait();
-                    }
-                    catch (AggregateException ex)
-                    {
-                        foreach (var inner in ex.InnerExceptions)
-                        {
-                            _logger.LogError(inner, "{logTag} Exception in PlayFseq task: {Message}", _logTag, inner.Message);
-                        }
-                        return false;
+                        case PlayMode.Duration:
+                            sequence.PlayDuration(_matrix, playableItem.PlayModeValue > 0 ? (uint)playableItem.PlayModeValue * 1000u : 0u, stop, brightness);
+                            break;
                     }
 
                     return true;
@@ -255,61 +229,6 @@ namespace WearWare.Services.MediaController
         private string GetFseqPath(PlayableItem playableItem)
         {
             return Path.Combine(PathConfig.Root, playableItem.ParentFolder, $"{playableItem.Name}.fseq");
-        }
-
-        private bool TryGetFseqSingleLoopDurationUs(string fseqPath, out long durationUs)
-        {
-            durationUs = 0;
-            const uint expectedMagic = 0x51455346;
-
-            try
-            {
-                using var fs = File.OpenRead(fseqPath);
-                using var br = new BinaryReader(fs);
-                if (fs.Length < 24)
-                {
-                    return false;
-                }
-
-                var magic = br.ReadUInt32();
-                var version = br.ReadUInt32();
-                _ = br.ReadUInt32(); // width
-                _ = br.ReadUInt32(); // height
-                var frameCount = br.ReadUInt32();
-                var frameSize = br.ReadUInt32();
-
-                if (magic != expectedMagic || version != 1 || frameCount == 0 || frameSize == 0)
-                {
-                    return false;
-                }
-
-                for (uint i = 0; i < frameCount; i++)
-                {
-                    if (fs.Position + 4 > fs.Length)
-                    {
-                        return false;
-                    }
-
-                    var holdUs = br.ReadUInt32();
-                    if (durationUs > long.MaxValue - holdUs)
-                    {
-                        return false;
-                    }
-                    durationUs += holdUs;
-
-                    if (fs.Position + frameSize > fs.Length)
-                    {
-                        return false;
-                    }
-                    fs.Seek(frameSize, SeekOrigin.Current);
-                }
-
-                return durationUs > 0;
-            }
-            catch
-            {
-                return false;
-            }
         }
     }
 }
