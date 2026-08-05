@@ -1,8 +1,10 @@
 # ToDo list
 
 ## Fseq conversion
-- Add Max brightness setting to options
-- Add brightness slider to options
+- Add Max brightness setting to options  
+  Change label of "Brightness" in Matrix Options GUI to "Max Brightness"?
+- Add brightness slider to options  
+  Effect is live, but persists only on clicking Save?
 - Remove all references to `led-image-viewer`  
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
@@ -12,6 +14,7 @@
 - ReConvert can be removed?
 - CurrentBrightness can be removed from PlaylistItem  
 - Replace Brightness on Library / Playlist pages with RelativeBrightness
+- Options Visibility can be removed
 
 
 ## High Priority
