@@ -3,6 +3,7 @@ using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Services.MatrixConfig;
+using System.Threading;
 
 namespace WearWare.Services.MediaController
 {
@@ -14,13 +15,28 @@ namespace WearWare.Services.MediaController
         private readonly ILogger<RpiStreamPlayer> _logger;
         private readonly string _logTag = "[STREAMPLAYER]";
         private readonly MatrixConfigService _matrixConfigService;
+        private readonly int[] _liveBrightness = [100];
+        private volatile int _activeRelativeBrightness = 100;
+        private volatile int _isPlaying;
 
         public RpiStreamPlayer(ILogger<RpiStreamPlayer> logger, MatrixConfigService matrixConfigService)
         {
             _logger = logger;
             _matrixConfigService = matrixConfigService;
             _matrixConfigService.OptionsChanged += MatrixOptionsChanged;
+            _matrixConfigService.BrightnessChanged += OnBrightnessChanged;
             MatrixOptionsChanged();
+        }
+
+        private void OnBrightnessChanged(int baseBrightness)
+        {
+            if (Interlocked.CompareExchange(ref _isPlaying, 0, 0) == 0)
+            {
+                return;
+            }
+
+            var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, _activeRelativeBrightness);
+            _liveBrightness[0] = combinedBrightness;
         }
 
         /// <summary>
@@ -92,20 +108,22 @@ namespace WearWare.Services.MediaController
 
                     var baseBrightness = options.Brightness ?? 100;
                     var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, playableItem.RelativeBrightness);
-                    var brightness = new[] { Math.Clamp(combinedBrightness, 1, 100) };
+                    _activeRelativeBrightness = playableItem.RelativeBrightness;
+                    _liveBrightness[0] = combinedBrightness;
+                    Interlocked.Exchange(ref _isPlaying, 1);
                     var stop = new[] { 0 };
                     using var stopRegistration = ct.Register(() => stop[0] = 1);
 
                     switch (playableItem.PlayMode)
                     {
                         case PlayMode.Forever:
-                            sequence.PlayForever(_matrix, stop, brightness);
+                            sequence.PlayForever(_matrix, stop, _liveBrightness);
                             break;
                         case PlayMode.Loop:
-                            sequence.PlayCount(_matrix, playableItem.PlayModeValue > 0 ? (uint)playableItem.PlayModeValue : 0u, stop, brightness);
+                            sequence.PlayCount(_matrix, playableItem.PlayModeValue > 0 ? (uint)playableItem.PlayModeValue : 0u, stop, _liveBrightness);
                             break;
                         case PlayMode.Duration:
-                            sequence.PlayDuration(_matrix, playableItem.PlayModeValue > 0 ? (uint)playableItem.PlayModeValue * 1000u : 0u, stop, brightness);
+                            sequence.PlayDuration(_matrix, playableItem.PlayModeValue > 0 ? (uint)playableItem.PlayModeValue * 1000u : 0u, stop, _liveBrightness);
                             break;
                     }
 
@@ -118,6 +136,7 @@ namespace WearWare.Services.MediaController
                 }
                 finally
                 {
+                    Interlocked.Exchange(ref _isPlaying, 0);
                     try
                     {
                         Clear();

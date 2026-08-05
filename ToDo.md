@@ -10,6 +10,8 @@
 - MatrixOptions can be completely removed from PlaylistItem?
 - Replace all references to Stream with Fseq
 - ReConvert can be removed?
+- CurrentBrightness can be removed from PlaylistItem  
+- Replace Brightness on Library / Playlist pages with RelativeBrightness
 
 
 ## High Priority

@@ -12,6 +12,7 @@ namespace WearWare.Services.MatrixConfig
         private static readonly string VisibilityFilePath = Path.Combine(PathConfig.ConfigPath, "matrixconfig-visibility.json");
 
         public event Action? OptionsChanged;
+        public event Action<int>? BrightnessChanged;
 
         public MatrixConfigService()
         {
@@ -38,10 +39,25 @@ namespace WearWare.Services.MatrixConfig
 
         public void UpdateOptions(LedMatrixOptionsConfig newOptions)
         {
+            var oldOptions = _options.Clone();
             _options = newOptions;
             JsonUtils.ToJsonFile(ConfigFilePath, _options);
             JsonUtils.ToJsonFile(VisibilityFilePath, _visibility);
-            OptionsChanged?.Invoke();
+
+            var brightnessChanged = oldOptions.Brightness != _options.Brightness;
+            var oldWithoutBrightness = oldOptions.Clone();
+            oldWithoutBrightness.Brightness = _options.Brightness;
+            var structuralChanged = !oldWithoutBrightness.IsEqual(_options);
+
+            if (brightnessChanged)
+            {
+                BrightnessChanged?.Invoke(_options.Brightness ?? 100);
+            }
+
+            if (structuralChanged)
+            {
+                OptionsChanged?.Invoke();
+            }
         }
 
         public LedMatrixOptionsVisibility Visibility => _visibility;
@@ -50,7 +66,6 @@ namespace WearWare.Services.MatrixConfig
         {
             _visibility = v ?? new LedMatrixOptionsVisibility();
             JsonUtils.ToJsonFile(VisibilityFilePath, _visibility);
-            OptionsChanged?.Invoke();
         }
 
         public LedMatrixOptionsConfig CloneOptions()
