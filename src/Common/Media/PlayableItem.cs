@@ -42,11 +42,6 @@ namespace WearWare.Common.Media
             MatrixOptions = matrixOptions;
         }
 
-        public string GetStreamFilePath()
-        {
-            return Path.Combine(PathConfig.Root, ParentFolder, $"{Name}.stream");
-        }
-
         public string GetFseqFilePath()
         {
             return Path.Combine(PathConfig.Root, ParentFolder, $"{Name}.fseq");

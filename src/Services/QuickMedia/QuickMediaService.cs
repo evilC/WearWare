@@ -161,13 +161,13 @@ public class QuickMediaService
         }
 
         if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem)){
-            _operationProgress.ReportProgress(opId, "Converting stream");
+            _operationProgress.ReportProgress(opId, "Converting fseq");
             // If the updated item needs re-conversion, do it now
             var readFrom = formModel.FormMode == EditPlayableItemFormMode.Add
                     ? PathConfig.LibraryPath                // For ADD, source is library folder
                     : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
             var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
-            var result = await _streamConverterService.ConvertToStream(
+            var result = await _streamConverterService.ConvertToFseq(
                 readFrom, 
                 formModel.UpdatedItem.SourceFileName, 
                 writeTo, formModel.UpdatedItem.Name, 
@@ -186,10 +186,10 @@ public class QuickMediaService
         {
             try
             {
-                _operationProgress.ReportProgress(opId, "Copying stream file");
-                // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
-                var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
-                var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To quickmedia folder
+                _operationProgress.ReportProgress(opId, "Copying fseq file");
+                // If in ADD mode but no re-convert needed, we still need to copy the .fseq from library to quickmedia folder
+                var copyFrom = formModel.OriginalItem.GetFseqFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetFseqFilePath();       // To quickmedia folder
                 await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
             }
             catch
@@ -270,7 +270,7 @@ public class QuickMediaService
             }
             _operationProgress.ReportProgress(opId, $"Re-converting Quick Media button {i+1}");
             var folder = button.GetAbsolutePath();
-            var result = await _streamConverterService.ConvertToStream(
+            var result = await _streamConverterService.ConvertToFseq(
                 folder,
                 item.SourceFileName,
                 folder,

@@ -1,5 +1,17 @@
 # ToDo list
 
+## Fseq conversion
+- Add Max brightness setting to options
+- Add brightness slider to options
+- Remove all references to `led-image-viewer`  
+- FSeq converter does not need to pass most parameters  
+  Only rows / cols / chain / parallel ?
+- Only relative brightness needs to be specified on import
+- MatrixOptions can be completely removed from PlaylistItem?
+- Replace all references to Stream with Fseq
+- ReConvert can be removed?
+
+
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Make line-endings consistent throughout the repo

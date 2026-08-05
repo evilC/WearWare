@@ -231,9 +231,9 @@ namespace WearWare.Services.Playlist
             if (!File.Exists(destPath)){
                 await FileUtils.CopyFileAsync(libraryItem.GetSourceFilePath(), destPath).ConfigureAwait(false);
             }
-            destPath = item.GetStreamFilePath();
+            destPath = item.GetFseqFilePath();
             if (!File.Exists(destPath)){
-                await FileUtils.CopyFileAsync(libraryItem.GetStreamFilePath(), destPath).ConfigureAwait(false);
+                await FileUtils.CopyFileAsync(libraryItem.GetFseqFilePath(), destPath).ConfigureAwait(false);
             }
             // ToDo: Check if playlist returns true
             playlist.AddItem(insertIndex, item);
@@ -273,13 +273,13 @@ namespace WearWare.Services.Playlist
             }
 
             if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem)){
-                _operationProgress.ReportProgress(opId, "Converting stream...");
+                _operationProgress.ReportProgress(opId, "Converting fseq...");
                 // If the updated item needs re-conversion, do it now
                 var readFrom = formModel.FormMode == EditPlayableItemFormMode.Add
                         ? PathConfig.LibraryPath                    // For ADD, source is library folder
                         : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
                 var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
-                var result = await _streamConverterService.ConvertToStream(readFrom, formModel.UpdatedItem.SourceFileName, writeTo, formModel.UpdatedItem.Name, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
+                var result = await _streamConverterService.ConvertToFseq(readFrom, formModel.UpdatedItem.SourceFileName, writeTo, formModel.UpdatedItem.Name, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
                 if (result.ExitCode == 0)
                 {
                     formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
@@ -295,10 +295,10 @@ namespace WearWare.Services.Playlist
             }
             else if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
-                _operationProgress.ReportProgress(opId, "Copying stream file...");
-                // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
-                var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
-                var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To playlist folder
+                _operationProgress.ReportProgress(opId, "Copying fseq file...");
+                // If in ADD mode but no re-convert needed, we still need to copy the .fseq from library to playlist folder
+                var copyFrom = formModel.OriginalItem.GetFseqFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetFseqFilePath();       // To playlist folder
                 await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
             }
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
@@ -376,7 +376,7 @@ namespace WearWare.Services.Playlist
                     item.MatrixOptions = options;
                 }
                 var folder = playlist.GetPlaylistAbsolutePath();
-                var result = await _streamConverterService.ConvertToStream(
+                var result = await _streamConverterService.ConvertToFseq(
                     folder,
                     item.SourceFileName,
                     folder,
@@ -436,7 +436,7 @@ namespace WearWare.Services.Playlist
             if (deleteFiles)
             {
                 var path = playlist.GetPlaylistAbsolutePath();
-                File.Delete(item.GetStreamFilePath());
+                File.Delete(item.GetFseqFilePath());
                 File.Delete(item.GetSourceFilePath());
             }
 

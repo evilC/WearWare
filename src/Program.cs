@@ -76,9 +76,9 @@ if (env == "Desktop")
 else
 {
     // RPi specific services
-    if (!File.Exists(Path.Combine(PathConfig.ToolsPath, "led-image-viewer")))
+    if (!File.Exists(Path.Combine(PathConfig.ToolsPath, "frame-sequence-player")))
     {
-        Log.Warning("led-image-viewer not found in tools folder! Stream conversion functionality will not work!");
+        Log.Warning("frame-sequence-player not found in tools folder! FSEQ conversion functionality will not work!");
     }
     builder.Services.AddSingleton<IStreamConverterService, StreamConverterService>();
     builder.Services.AddSingleton<IStreamPlayer, RpiStreamPlayer>();

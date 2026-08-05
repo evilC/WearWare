@@ -17,25 +17,26 @@ namespace WearWare.Services.Mocks
             _logger = logger;
         }
 
-        public async Task<ReConvertTaskResult> ConvertToStream(string sourcePath, string odldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<ReConvertTaskResult> ConvertToFseq(string sourcePath, string oldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(odldFileName));
-            if (mediaType == null){
-                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
+            if (mediaType == null)
+            {
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "FSEQ conversion failed - unknown media type." };
             }
-            var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
-            var inputPath = Path.Combine(sourcePath, odldFileName);
-            var streamFile = $"{newFileNameNoExt}.stream";
-            var streamPath = Path.Combine(destPath, streamFile);
-            var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
-            var matrixArgs = matrixOptions.ToArgsString(relativeBrightness);
-            var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{streamPath}\"";
-            _logger.LogInformation("{LogTag} Executing stream conversion command: {command}", _logTag, command);
 
-            File.Create(Path.Combine(destPath, $"{newFileNameNoExt}.stream")).Dispose();
+            var toolPath = Path.Combine(PathConfig.ToolsPath, "frame-sequence-player");
+            var inputPath = Path.Combine(sourcePath, oldFileName);
+            var fseqPath = Path.Combine(destPath, $"{newFileNameNoExt}.fseq");
+            var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
+            var matrixArgs = matrixOptions.ToArgsString(100);
+            var command = $"\"sudo {toolPath} {matrixArgs} {inputPath} -O{fseqPath}\"";
+            _logger.LogInformation("{LogTag} Executing fseq conversion command: {command}", _logTag, command);
+
+            File.Create(fseqPath).Dispose();
             await Task.Delay(1000); // Simulate some work
             int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
-            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "Stream conversion successful.", ActualBrightness = actualBrightness };
+            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "FSEQ conversion successful.", ActualBrightness = actualBrightness };
         }
     }
 }

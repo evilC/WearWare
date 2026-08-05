@@ -26,39 +26,35 @@ namespace WearWare.Services.StreamConverter
         }
 
         /// <summary>
-        /// Converts the specified source media file to a .stream file using led-image-viewer with the specified options.
+        /// Converts the specified source media file to a .fseq file using frame-sequence-player.
         /// </summary>
-        /// <param name="sourcePath"></param>
-        /// <param name="oldFileName"></param>
-        /// <param name="destPath"></param>
-        /// <param name="newFileNameNoExt"></param>
-        /// <param name="relativeBrightness"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        /// </summary>
-        /// <returns></returns>
-        public async Task<ReConvertTaskResult> ConvertToStream(string sourcePath, string oldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<ReConvertTaskResult> ConvertToFseq(string sourcePath, string oldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
             var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
             if (mediaType == null){
-                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "Stream conversion failed - unknown media type." };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "FSEQ conversion failed - unknown media type." };
             }
-            var toolPath = Path.Combine(PathConfig.ToolsPath, "led-image-viewer");
+            var toolPath = Path.Combine(PathConfig.ToolsPath, "frame-sequence-player");
+            if (!File.Exists(toolPath))
+            {
+                return new ReConvertTaskResult { ExitCode = -1, Error = $"Tool not found at {toolPath}", Message = "FSEQ conversion failed - missing tool." };
+            }
             var inputPath = Path.Combine(sourcePath, oldFileName);
-            var streamFile = $"{newFileNameNoExt}.stream";
-            var streamPath = Path.Combine(destPath, streamFile);
+            var outputFile = $"{newFileNameNoExt}.fseq";
+            var outputPath = Path.Combine(destPath, outputFile);
             // Write to a temporary file first, then atomically move into place to avoid read/write races
-            var tmpStreamFile = $"{newFileNameNoExt}.stream.tmp";
-            var tmpStreamPath = Path.Combine(destPath, tmpStreamFile);
+            var tmpOutputFile = $"{newFileNameNoExt}.fseq.tmp";
+            var tmpOutputPath = Path.Combine(destPath, tmpOutputFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
-            var argsList = matrixOptions.ToArgsList(relativeBrightness);
+
+            var argsList = matrixOptions.ToArgsList(100);
             argsList.Add(inputPath);
-            argsList.Add($"-O{tmpStreamPath}");
+            argsList.Add($"-O{tmpOutputPath}");
             var sudoPath = "/usr/bin/sudo";
             if (!File.Exists(sudoPath))            {
-                return new ReConvertTaskResult { ExitCode = -1, Error = "sudo not found at " + sudoPath, Message = "Stream conversion failed - server misconfiguration." };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "sudo not found at " + sudoPath, Message = "FSEQ conversion failed - server misconfiguration." };
             }
-            _logger.LogInformation("{LogTag} Executing led-image-viewer with args: {args}", _logTag, string.Join(" ", argsList));
+            _logger.LogInformation("{LogTag} Executing frame-sequence-player with args: {args}", _logTag, string.Join(" ", argsList));
             var psi = new ProcessStartInfo {
                 FileName = "/usr/bin/sudo",
                 RedirectStandardOutput = true,
@@ -79,7 +75,7 @@ namespace WearWare.Services.StreamConverter
             */
             using var process = Process.Start(psi);
             if (process == null)
-                return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start led-image-viewer.", Message = "Failed to start led-image-viewer.", ActualBrightness = actualBrightness };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start frame-sequence-player.", Message = "Failed to start frame-sequence-player.", ActualBrightness = actualBrightness };
 
             string output = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
@@ -92,26 +88,26 @@ namespace WearWare.Services.StreamConverter
                     // Ensure destination directory exists
                     Directory.CreateDirectory(destPath);
                     // Atomically replace existing file by move/rename. On Unix rename is atomic when on same filesystem.
-                    if (File.Exists(tmpStreamPath))
+                    if (File.Exists(tmpOutputPath))
                     {
                         // If target exists, delete it first to ensure move succeeds on Windows; on Unix rename will replace.
-                        if (File.Exists(streamPath)) File.Delete(streamPath);
-                        File.Move(tmpStreamPath, streamPath);
+                        if (File.Exists(outputPath)) File.Delete(outputPath);
+                        File.Move(tmpOutputPath, outputPath);
                     }
                 }
                 catch (Exception ex)
                 {
                     // Clean up temp file on failure
-                    try { if (File.Exists(tmpStreamPath)) File.Delete(tmpStreamPath); } catch {}
-                    return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "Stream conversion succeeded but failed to move temp file into place.", ActualBrightness = actualBrightness };
+                    try { if (File.Exists(tmpOutputPath)) File.Delete(tmpOutputPath); } catch {}
+                    return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "FSEQ conversion succeeded but failed to move temp file into place.", ActualBrightness = actualBrightness };
                 }
-                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "Stream conversion successful.", ActualBrightness = actualBrightness };
+                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "FSEQ conversion successful.", ActualBrightness = actualBrightness };
             }
             else
             {
                 // Clean up temp file on failure
-                try { if (File.Exists(tmpStreamPath)) File.Delete(tmpStreamPath); } catch {}
-                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = $"Stream conversion failed (exit code {exitCode})", ActualBrightness = actualBrightness };
+                try { if (File.Exists(tmpOutputPath)) File.Delete(tmpOutputPath); } catch {}
+                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = $"FSEQ conversion failed (exit code {exitCode})", ActualBrightness = actualBrightness };
             }
         }
     }

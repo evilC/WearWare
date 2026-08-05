@@ -11,9 +11,9 @@ namespace WearWare.Services.Mocks
             _logger = logger;
         }
 
-        public bool PlayStream(PlayableItem playableItem, CancellationToken ct)
+        public bool PlayFseq(PlayableItem playableItem, CancellationToken ct)
         {
-            _logger.LogInformation("[PLAYSTREAM MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
+            _logger.LogInformation("[PLAYFSEQ MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
             long endTime = 0;
             if (playableItem.PlayMode == PlayMode.Duration)
             {
@@ -33,12 +33,6 @@ namespace WearWare.Services.Mocks
                 Thread.Sleep(1000);
             }
             return true;
-        }
-
-        public bool PlayFseq(PlayableItem playableItem, CancellationToken ct)
-        {
-            _logger.LogInformation("[PLAYFSEQ MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
-            return PlayStream(playableItem, ct);
         }
 
         public void Clear()

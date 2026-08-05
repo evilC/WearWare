@@ -91,7 +91,7 @@ namespace WearWare.Services.Library
                 var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
 
                 if (File.Exists(jsonPath)) File.Delete(jsonPath);
-                if (File.Exists(item.GetStreamFilePath())) File.Delete(item.GetStreamFilePath());
+                if (File.Exists(item.GetFseqFilePath())) File.Delete(item.GetFseqFilePath());
                 if (File.Exists(item.GetSourceFilePath())) File.Delete(item.GetSourceFilePath());
             }
             catch
@@ -121,8 +121,8 @@ namespace WearWare.Services.Library
             {
                 if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem))
                 {
-                    _operationProgress.ReportProgress(opId, "Converting stream...");
-                    var result = await _streamConverterService.ConvertToStream(
+                    _operationProgress.ReportProgress(opId, "Converting fseq...");
+                    var result = await _streamConverterService.ConvertToFseq(
                         PathConfig.LibraryPath, 
                         formModel.UpdatedItem.SourceFileName, 
                         PathConfig.LibraryPath, 
@@ -194,7 +194,7 @@ namespace WearWare.Services.Library
                     continue;
                 }
                 _operationProgress.ReportProgress(opId, $"ReConverting {item.Name} ({currentItem} of {itemCount})");
-                var result = await _streamConverterService.ConvertToStream(
+                var result = await _streamConverterService.ConvertToFseq(
                     PathConfig.LibraryPath,
                     item.SourceFileName,
                     PathConfig.LibraryPath,

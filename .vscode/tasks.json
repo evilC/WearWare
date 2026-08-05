@@ -108,7 +108,7 @@
             "command": "ssh",
             "args": [
                 "${env:WEARWARE_REMOTE_MACHINE}",
-                "cp ${env:WEARWARE_REMOTE_LIB_DIR}/utils/led-image-viewer ${env:WEARWARE_REMOTE_DIR}/tools/"
+                "cp ${env:WEARWARE_REMOTE_LIB_DIR}/utils/frame-sequence-player ${env:WEARWARE_REMOTE_DIR}/tools/"
             ],
             "problemMatcher": []
         },

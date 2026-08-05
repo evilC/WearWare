@@ -33,14 +33,14 @@ This folder should contain the following subfolders:
 - library - Imported (Converted) files will go here
 - playlists - Playlists will be stored here
 - quickmedia - QuickMedia items will be stored here
-- tools - Tools (eg the `led-image-viewer` executable) will go here
+- tools - Tools (eg the `frame-sequence-player` executable) will go here
 
 #### Deploy assets
 
 - Build the rpi-rgb-led-matrix library and utils.  
   The provided build tasks can be used to do this  
   (`remote-build-native-lib` followed by `remote-build-lib-utils`)
-- Place a compiled copy of `led-image-viewer` in the tools folder  
+- Place a compiled copy of `frame-sequence-player` in the tools folder  
   This can be done with the `copy-util-remote-to-remote` task
 
 ### Dev machine setup
@@ -90,7 +90,7 @@ It should work fine on any OS
 
 - `remote-build-native-lib` will build the RGB LED Matrix library on the Pi via SSH  
 - `remote-build-lib-utils` will build the RGB LED Matrix utils on the Pi via SSH
-- `copy-util-remote-to-remote` will copy the `led-image-viewer` utility to the `tools` folder of WareWare on the Pi
+- `copy-util-remote-to-remote` will copy the `frame-sequence-player` utility to the `tools` folder of WareWare on the Pi
 - `remote-build-bindings` will build the C# bindings on the Pi via SSH
 - `wsl-deploy-pi-release` (Windows only) will deploy to the Pi in RELEASE mode  
   Be sure that the above two build tasks have been performed at least once before

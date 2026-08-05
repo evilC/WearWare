@@ -115,8 +115,8 @@ namespace WearWare.Services.Import
                 return;
             }
             formModel.UpdatedItem.Name = FilenameValidator.Sanitize(formModel.UpdatedItem.Name);
-            _operationProgress.ReportProgress(opId, "Converting stream...");
-            var result = await _streamConverterService.ConvertToStream(
+            _operationProgress.ReportProgress(opId, "Converting fseq...");
+            var result = await _streamConverterService.ConvertToFseq(
                 PathConfig.IncomingPath, 
                 formModel.UpdatedItem.SourceFileName, 
                 PathConfig.LibraryPath, 
