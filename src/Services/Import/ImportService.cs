@@ -48,11 +48,8 @@ namespace WearWare.Services.Import
             List<PlayableItem> importItems = [];
             foreach (var fileName in files)
             {
-                var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE;
                 var baseName = Path.GetFileNameWithoutExtension(fileName);
                 var sanitized = FilenameValidator.Sanitize(baseName);
-                var baseBrightness = _matrixConfigService.CloneOptions().Brightness ?? 100;
-                var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, 100);
                 importItems.Add(new PlayableItem(
                     sanitized,
                     PathConfig.LibraryFolder,
@@ -60,8 +57,7 @@ namespace WearWare.Services.Import
                     fileName,
                     PlayMode.Forever,
                     1,
-                    100,
-                    actual
+                    100
                 ));
             }
             return importItems;
@@ -152,8 +148,7 @@ namespace WearWare.Services.Import
                 Path.GetFileName(destPath),  
                 PlayMode.Forever,
                 0,
-                formModel.UpdatedItem.RelativeBrightness,
-                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness)
+                formModel.UpdatedItem.RelativeBrightness
             );
             // Serialize item to JSON and write to libraryPath as name.json
             try

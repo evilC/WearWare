@@ -115,8 +115,6 @@ namespace WearWare.Services.Library
             var opId = await _operationProgress.StartOperation("Updating Library Item");
             try
             {
-                formModel.UpdatedItem.CurrentBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness);
-
                 // Update metadata and save
                 try
                 {

@@ -1,5 +1,3 @@
-using WearWare.Services.MatrixConfig;
-
 namespace WearWare.Components.Forms.EditPlayableItemForm
 {
     /// <summary>
@@ -10,7 +8,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
     {
         private readonly string _logTag = "EditPlayableItemForm";
         [Inject] private ILogger<EditPlayableItemForm> _logger { get; set; } = null!;
-        [Inject] private IJSRuntime JS { get; set; } = null!;
 
         /// <summary> The z-index for this form </summary>
         [Parameter] public int ZIndex { get; set; } = 2000;
@@ -29,12 +26,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// </summary>
         [Parameter] public EventCallback<EditPlayableItemFormModel> OnSave { get; set; }
 
-        // === Form edited values ===
-
-        // === Form readouts ===
-        // What the brightness WOULD BE if we reprocessed now with current global brightness and selected relative brightness
-        private int adjustedBrightness;
-
         /// <summary>
         /// Called when the form opens
         /// </summary>
@@ -49,26 +40,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                     FormModel.UpdatedItem.PlayMode = PlayMode.Loop;
                     FormModel.UpdatedItem.PlayModeValue = 1;
                 }
-                CalculateBrightness();
             }
-        }
-
-        /// <summary>
-        /// Called after the component has been rendered.
-        /// Note: IDE says 0 references, but it is called by Blazor framework.
-        /// </summary>
-        /// <param name="firstRender">True if this is the first time the component is rendered</param>
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
-            {
-            }
-        }
-
-        // Recalculates adjusted brightness based on current global brightness and selected relative brightness
-        private void CalculateBrightness()
-        {
-            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(100, FormModel.UpdatedItem.RelativeBrightness);
         }
 
         /// <summary>

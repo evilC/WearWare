@@ -87,16 +87,9 @@
                                 </div>
                                 <div class="input-group input-group-sm justify-content-center mb-3 px-3">
                                     <span class="input-group-text w-50">Relative Brightness</span>
-                                    <EditboxNumberLiveUpdate class="text-7 text-center w-25 form-control" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
-                                        @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
-                                    />
+                                        <EditboxNumberLiveUpdate class="text-7 text-center w-25 form-control" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness" onfocus="this.select()" AddFocusGrabber="true" />
                                     <span class="input-group-text text-7 text-center">%</span>
                                 </div>
-                            </div>
-                            <div class="input-group input-group-sm justify-content-center mb-3 px-3">
-                                <span class="input-group-text w-50">Adjusted Brightness</span>
-                                <input type="number" disabled class="text-7 text-center w-25 form-control" @bind="adjustedBrightness" @bind:event="oninput"/>
-                                <span class="input-group-text text-7 text-center">%</span>
                             </div>
                         </div>
                     </div>

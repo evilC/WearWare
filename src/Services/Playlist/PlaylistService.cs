@@ -203,8 +203,7 @@ namespace WearWare.Services.Playlist
             PlayableItem libraryItem,
             PlayMode playMode,
             int playModeValue,
-            int relativeBrightness,
-            int currentBrightness)
+            int relativeBrightness)
         {
             var restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
@@ -220,8 +219,7 @@ namespace WearWare.Services.Playlist
                 sourceFileName: libraryItem.SourceFileName,
                 playMode: playMode,
                 playModeValue: playModeValue,
-                relativeBrightness: relativeBrightness,
-                currentBrightness: currentBrightness
+                relativeBrightness: relativeBrightness
             );
 
             var destPath = item.GetSourceFilePath();
@@ -290,9 +288,6 @@ namespace WearWare.Services.Playlist
                     await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
                 }
             }
-
-            formModel.UpdatedItem.CurrentBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness);
-
             _operationProgress.ReportProgress(opId, "Updating playlist...");
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {

@@ -193,7 +193,6 @@ public class QuickMediaService
                 return;
             }
         }
-        formModel.UpdatedItem.CurrentBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness);
         if (formModel.FormMode == EditPlayableItemFormMode.Add)
         {
             _operationProgress.ReportProgress(opId, "Adding button to collection");

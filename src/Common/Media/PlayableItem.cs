@@ -13,7 +13,6 @@ namespace WearWare.Common.Media
         public string SourceFileName { get; init; }
         [Range(1, 100, ErrorMessage = "Must be between 1 and 100.")]
         public int RelativeBrightness { get; set; } = 100;
-        public int CurrentBrightness { get; set; } = 100;
         public PlayMode PlayMode { get; set; } = PlayMode.Loop;
         public int PlayModeValue { get; set; } = 1;
         public string ParentFolder { get; set; }
@@ -25,8 +24,7 @@ namespace WearWare.Common.Media
             string sourceFileName, 
             PlayMode playMode, 
             int playModeValue, 
-            int relativeBrightness, 
-            int currentBrightness)
+            int relativeBrightness)
         {
             Name = name;
             MediaType = mediaType;
@@ -35,7 +33,6 @@ namespace WearWare.Common.Media
             PlayMode = playMode;
             PlayModeValue = playModeValue;
             RelativeBrightness = relativeBrightness;
-            CurrentBrightness = currentBrightness;
         }
 
         public string GetFseqFilePath()
@@ -60,8 +57,7 @@ namespace WearWare.Common.Media
                 SourceFileName,
                 PlayMode,
                 PlayModeValue,
-                RelativeBrightness,
-                CurrentBrightness
+                RelativeBrightness
             );
         }
 
@@ -74,7 +70,6 @@ namespace WearWare.Common.Media
             PlayMode = other.PlayMode;
             PlayModeValue = other.PlayModeValue;
             RelativeBrightness = other.RelativeBrightness;
-            CurrentBrightness = other.CurrentBrightness;
         }
     }
 }
