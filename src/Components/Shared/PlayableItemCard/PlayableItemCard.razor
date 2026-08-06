@@ -30,7 +30,7 @@
                 if (FormPage != EditPlayableItemFormPage.Import)
             {
                 @* Brightness *@
-                    <div class = "fs-6">Relative Brightness: @Item.RelativeBrightness%</div>
+                    <div class = "fs-6">@((FormPage == EditPlayableItemFormPage.Playlist || FormPage == EditPlayableItemFormPage.QuickMedia) ? "Rel Brightness" : "Relative Brightness"): @Item.RelativeBrightness%</div>
             }
         }
     </div>
