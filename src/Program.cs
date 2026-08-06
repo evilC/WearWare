@@ -16,6 +16,7 @@ using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
 using WearWare.Services.OperationProgress;
 using WearWare.Services.Environment;
+using WearWare.Services.Options;
 using WearWare.Services.TempMon;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,6 +57,7 @@ Log.Information("{sep} Starting on {Environment} {sep}", LogTools.HeaderHeadTail
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(blazorInMemorySink);
+builder.Services.AddSingleton<AppOptionsService>();
 builder.Services.AddSingleton<MatrixConfigService>();
 builder.Services.AddSingleton<PlaylistService>();
 builder.Services.AddSingleton<InMemoryLogService>();

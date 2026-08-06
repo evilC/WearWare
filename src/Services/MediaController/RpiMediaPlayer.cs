@@ -16,6 +16,7 @@ namespace WearWare.Services.MediaController
         private readonly string _logTag = "[MEDIAPLAYER]";
         private readonly MatrixConfigService _matrixConfigService;
         private readonly int[] _liveBrightness = [100];
+        private volatile int _currentBrightness = 100;
         private volatile int _activeRelativeBrightness = 100;
         private volatile int _isPlaying;
 
@@ -25,17 +26,20 @@ namespace WearWare.Services.MediaController
             _matrixConfigService = matrixConfigService;
             _matrixConfigService.OptionsChanged += MatrixOptionsChanged;
             _matrixConfigService.BrightnessChanged += OnBrightnessChanged;
+            _currentBrightness = _matrixConfigService.GetCurrentBrightness();
             MatrixOptionsChanged();
         }
 
-        private void OnBrightnessChanged(int baseBrightness)
+        private void OnBrightnessChanged(int currentBrightness)
         {
+            _currentBrightness = currentBrightness;
+
             if (Interlocked.CompareExchange(ref _isPlaying, 0, 0) == 0)
             {
                 return;
             }
 
-            var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, _activeRelativeBrightness);
+            var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(currentBrightness, _activeRelativeBrightness);
             _liveBrightness[0] = combinedBrightness;
         }
 
@@ -106,8 +110,7 @@ namespace WearWare.Services.MediaController
                     using var sequence = new FrameSequence(width, height);
                     sequence.ReadFromFile(fseqPath);
 
-                    var baseBrightness = options.Brightness ?? 100;
-                    var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, playableItem.RelativeBrightness);
+                    var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_currentBrightness, playableItem.RelativeBrightness);
                     _activeRelativeBrightness = playableItem.RelativeBrightness;
                     _liveBrightness[0] = combinedBrightness;
                     Interlocked.Exchange(ref _isPlaying, 1);

@@ -16,6 +16,19 @@ else if (!showForm)
         Current CPU temperature: @BuildTemperatureString()
     </div>
     <div class="mb-3">
+        <label class="form-label">Current Brightness: @_liveBrightness% (Max: @_matrixBrightnessCap%)</label>
+        <div class="mb-2">
+            <input type="range" class="form-range" min="1" max="@_matrixBrightnessCap" step="1"
+                value="@_liveBrightness" @oninput="OnLiveBrightnessInput" />
+        </div>
+        <div class="d-flex justify-content-between gap-2">
+            <button type="button" class="btn btn-outline-secondary" style="width:24%;" @onclick="StepDownCurrentBrightness">-5%</button>
+            <button type="button" class="btn btn-outline-secondary" style="width:24%;" @onclick="StepUpCurrentBrightness">+5%</button>
+            <button type="button" class="btn btn-outline-secondary" style="width:24%;" @onclick="ResetCurrentBrightness">Reset</button>
+            <button type="button" class="btn btn-outline-primary" style="width:24%;" @onclick="SaveCurrentBrightness">Save</button>
+        </div>
+    </div>
+    <div class="mb-3">
         <button class="btn btn-primary" style="width: 100%;" @onclick="ShowForm">Configure Matrix Options</button>
     </div>
 }
