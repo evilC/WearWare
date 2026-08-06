@@ -10,7 +10,6 @@
   Only rows / cols / chain / parallel ?
 - Replace all references to Stream with Fseq
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
-- StreamConverterService can be removed in lots of places
 
 
 ## High Priority

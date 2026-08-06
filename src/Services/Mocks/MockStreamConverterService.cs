@@ -35,8 +35,7 @@ namespace WearWare.Services.Mocks
 
             File.Create(fseqPath).Dispose();
             await Task.Delay(1000); // Simulate some work
-            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
-            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "FSEQ conversion successful.", ActualBrightness = actualBrightness };
+            return new ReConvertTaskResult { ExitCode = 0, Error = "", Message = "FSEQ conversion successful." };
         }
     }
 }

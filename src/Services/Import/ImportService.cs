@@ -22,16 +22,9 @@ namespace WearWare.Services.Import
         )
         {
             _matrixConfigService = matrixConfigService;
-            _matrixConfigService.OptionsChanged += OnMatrixOptionsChanged;
-            OnMatrixOptionsChanged();
             _streamConverterService = streamConverterService;
             _libraryService = libraryService;
             _operationProgress = operationProgress;
-        }
-
-        private void OnMatrixOptionsChanged()
-        {
-            
         }
 
         public List<PlayableItem>? GetImportItems()
@@ -95,10 +88,6 @@ namespace WearWare.Services.Import
         /// <summary>
         /// Called when the edit form is submitted in the Import page.
         /// </summary>
-        /// <param name="oldFileName"></param> The original filename in the incoming folder
-        /// <param name="newFileNameNoExt"></param> The new filename (without extension) to use in the library
-        /// <param name="relativeBrightness"></param> The relative brightness to set for the imported item
-        /// <param name="options"></param> The LED matrix options to use for the imported item
         /// <returns></returns>
         public async Task OnEditFormSubmit(EditPlayableItemFormModel formModel)
         {

@@ -1,9 +1,7 @@
 using WearWare.Components.Forms.EditPlayableItemForm;
-using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
 using WearWare.Services.QuickMedia;
-using WearWare.Services.StreamConverter;
 using WearWare.Utils;
 
 record QuickMediaDto(int ButtonNumber, PlayableItem Item);
@@ -18,15 +16,11 @@ public class QuickMediaService
     private readonly ILogger<QuickMediaService> _logger;
     private readonly string _logTag = "[QUICKMEDIA]";
     private static readonly string _configFileName = "quickmedia.json";
-    private readonly MatrixConfigService _matrixConfigService;
-    private readonly IStreamConverterService _streamConverterService;
     private readonly IOperationProgressService _operationProgress;
 
     public QuickMediaService(ILogger<QuickMediaService> logger,
         MediaControllerService mediaController, 
         IQuickMediaButtonFactory buttonFactory,
-        MatrixConfigService matrixConfigService,
-        IStreamConverterService streamConverterService,
         IOperationProgressService operationProgress
     )
     {
@@ -35,8 +29,6 @@ public class QuickMediaService
         _buttons = new IQuickMediaButton[_buttonPins.Count];
         _mediaController = mediaController;
         _buttonFactory = buttonFactory;
-        _matrixConfigService = matrixConfigService;
-        _streamConverterService = streamConverterService;
         _mediaController.StateChanged += OnMediaControllerStateChanged;
         _operationProgress = operationProgress;
         // Instantiate buttons
@@ -171,7 +163,7 @@ public class QuickMediaService
             }
             catch
             {
-                _operationProgress.CompleteOperation(opId, false, "Error copying stream file from library to Quick Media folder.");
+                _operationProgress.CompleteOperation(opId, false, "Error copying fseq file from library to Quick Media folder.");
                 return;
             }
         }

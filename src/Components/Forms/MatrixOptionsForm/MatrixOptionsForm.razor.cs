@@ -62,13 +62,6 @@ namespace WearWare.Components.Forms.MatrixOptionsForm
             InvokeAsync(StateHasChanged);
         }
 
-        private bool FieldHasErrors(string propertyName)
-        {
-            if (_editContext == null) return false;
-            var fi = new FieldIdentifier(Options, propertyName);
-            return _editContext.GetValidationMessages(fi).Any();
-        }
-
         public void Dispose()
         {
             if (_editContext != null)

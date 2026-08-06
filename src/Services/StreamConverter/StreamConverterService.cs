@@ -8,7 +8,6 @@ namespace WearWare.Services.StreamConverter
 {
     public class StreamConverterService : IStreamConverterService
     {
-        // private string _matrixOptions = "";
         private readonly MatrixConfigService _matrixConfigService;
         private readonly ILogger<StreamConverterService> _logger;
         private readonly string _logTag = "[STREAMCONVERTER]";
@@ -16,13 +15,6 @@ namespace WearWare.Services.StreamConverter
         {
             _logger = logger;
             _matrixConfigService = matrixConfigService;
-            matrixConfigService.OptionsChanged += OnMatrixOptionsChanged;
-            OnMatrixOptionsChanged();
-        }
-
-        private void OnMatrixOptionsChanged()
-        {
-            // _matrixOptions = _matrixConfigService.GetArgsString();
         }
 
         /// <summary>
@@ -66,7 +58,6 @@ namespace WearWare.Services.StreamConverter
             psi.ArgumentList.Add(toolPath);
             foreach (var a in argsList) psi.ArgumentList.Add(a);
 
-            int actualBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(matrixOptions.Brightness ?? 100, relativeBrightness);
             /*
             Note: If the code hangs here when running as a service, it's likely because the service does not have a path to the executable
             eg bash, sudo etc.
@@ -75,7 +66,7 @@ namespace WearWare.Services.StreamConverter
             */
             using var process = Process.Start(psi);
             if (process == null)
-                return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start frame-sequence-player.", Message = "Failed to start frame-sequence-player.", ActualBrightness = actualBrightness };
+                return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start frame-sequence-player.", Message = "Failed to start frame-sequence-player." };
 
             string output = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
@@ -99,15 +90,15 @@ namespace WearWare.Services.StreamConverter
                 {
                     // Clean up temp file on failure
                     try { if (File.Exists(tmpOutputPath)) File.Delete(tmpOutputPath); } catch {}
-                    return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "FSEQ conversion succeeded but failed to move temp file into place.", ActualBrightness = actualBrightness };
+                    return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "FSEQ conversion succeeded but failed to move temp file into place." };
                 }
-                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "FSEQ conversion successful.", ActualBrightness = actualBrightness };
+                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "FSEQ conversion successful." };
             }
             else
             {
                 // Clean up temp file on failure
                 try { if (File.Exists(tmpOutputPath)) File.Delete(tmpOutputPath); } catch {}
-                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = $"FSEQ conversion failed (exit code {exitCode})", ActualBrightness = actualBrightness };
+                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = $"FSEQ conversion failed (exit code {exitCode})" };
             }
         }
     }

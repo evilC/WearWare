@@ -4,7 +4,6 @@ using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
-using WearWare.Services.StreamConverter;
 using WearWare.Utils;
 
 namespace WearWare.Services.Playlist
@@ -13,7 +12,6 @@ namespace WearWare.Services.Playlist
     {
         private Dictionary<string, PlaylistItems> _playlists = new();
         private readonly MediaControllerService _mediaController;
-        private readonly IStreamConverterService _streamConverterService;
         public event Action? StateChanged;
         private readonly ILogger<PlaylistService> _logger;
         private static readonly string _logTag = "[PLAYLISTSERV]";
@@ -26,7 +24,6 @@ namespace WearWare.Services.Playlist
         public PlaylistService(
             ILogger<PlaylistService> logger,
             MediaControllerService mediaController,
-            IStreamConverterService streamConverterService,
             MatrixConfigService matrixConfigService,
             IOperationProgressService operationProgress,
             ILoggerFactory loggerFactory
@@ -44,7 +41,6 @@ namespace WearWare.Services.Playlist
             _config = config;
             _mediaController = mediaController;
             _mediaController.StateChanged += OnMediaControllerStateChanged;
-            _streamConverterService = streamConverterService;
             _matrixConfigService = matrixConfigService;
             _operationProgress = operationProgress;
         }

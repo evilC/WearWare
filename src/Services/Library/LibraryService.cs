@@ -1,6 +1,5 @@
 using WearWare.Utils;
 using WearWare.Services.MediaController;
-using WearWare.Services.MatrixConfig;
 using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Services.Library
@@ -20,20 +19,14 @@ namespace WearWare.Services.Library
 
         private readonly ILogger<LibraryService> _logger;
         private readonly MediaControllerService _mediaControllerService;
-        private readonly MatrixConfigService _matrixConfigService;
-        private readonly StreamConverter.IStreamConverterService _streamConverterService;
         private readonly OperationProgress.IOperationProgressService _operationProgress;
 
         public LibraryService(ILogger<LibraryService> logger,
             MediaControllerService mediaControllerService,
-            MatrixConfigService matrixConfigService,
-            StreamConverter.IStreamConverterService streamConverterService,
             OperationProgress.IOperationProgressService operationProgress)
         {
             _logger = logger;
             _mediaControllerService = mediaControllerService;
-            _matrixConfigService = matrixConfigService;
-            _streamConverterService = streamConverterService;
             _operationProgress = operationProgress;
             LoadLibraryItems();
             _logger.LogInformation("LibraryService initialized.");
@@ -125,7 +118,7 @@ namespace WearWare.Services.Library
                 }
                 catch (Exception ex)
                 {
-                    _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
+                    _operationProgress.CompleteOperation(opId, false, "Updated item, but failed to write JSON metadata: " + ex.Message);
                     return;
                 }
                 // Update the original item with data from the clone
