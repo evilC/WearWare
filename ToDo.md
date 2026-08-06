@@ -8,12 +8,7 @@
 - Remove all references to `led-image-viewer`  
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
-- Only relative brightness needs to be specified on import
-- MatrixOptions can be completely removed from PlaylistItem?
 - Replace all references to Stream with Fseq
-- ReConvert can be removed?
-- CurrentBrightness can be removed from PlaylistItem  
-- Replace Brightness on Library / Playlist pages with RelativeBrightness
 - Options Visibility can be removed
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
 
