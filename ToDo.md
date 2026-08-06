@@ -11,6 +11,7 @@
 - Replace all references to Stream with Fseq
 - Options Visibility can be removed
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
+- StreamConverterService can be removed in lots of places
 
 
 ## High Priority
