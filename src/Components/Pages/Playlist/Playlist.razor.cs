@@ -2,7 +2,6 @@ using WearWare.Components.Base;
 using WearWare.Components.Forms.AddCopyPlaylistForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
-using WearWare.Services.MatrixConfig;
 using WearWare.Services.Playlist;
 using WearWare.Utils;
 
@@ -14,7 +13,6 @@ namespace WearWare.Components.Pages.Playlist
         [Inject] public PlaylistService PlaylistService { get; set; } = null!;
         [Inject] public LibraryService LibraryService { get; set; } = null!;
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
-        [Inject] public MatrixConfigService _matrixConfigService { get; set; } = null!;
 
         private EditPlayableItemFormModel? _addFormModel = null;
         private EditPlayableItemFormModel? _editFormModel = null;
@@ -392,47 +390,6 @@ namespace WearWare.Components.Pages.Playlist
             {
                 DeletePlaylist();
             }
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All (Matrix) is clicked
-        /// </summary>
-        private void ShowReConvertAllMatrix()
-        {
-            // _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllMatrix;
-            // _showReConvertAllDialog = true;
-            _editFormModel = new EditPlayableItemFormModel()
-            {
-                FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
-                FormPage = EditPlayableItemFormPage.Playlist,
-                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
-            };
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All (Brightness) is clicked
-        /// </summary>
-        private void ShowReConvertAllBrightness()
-        {
-            // _reconvertAllMode = EditPlayableItemFormMode.ReConvertAllBrightness;
-            // _showReConvertAllDialog = true;
-            _editFormModel = new EditPlayableItemFormModel()
-            {
-                FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
-                FormPage = EditPlayableItemFormPage.Playlist,
-                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
-            };
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All form is submitted
-        /// </summary>
-        /// <param name="formModel"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll(EditPlayableItemFormModel formModel)
-        {
-            _editFormModel = null;
-            await PlaylistService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
-            await InvokeAsync(StateHasChanged);
         }
 
         private string BuildEditingImageURL(EditPlayableItemFormModel formModel){

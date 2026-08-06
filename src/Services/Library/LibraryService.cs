@@ -62,10 +62,6 @@ namespace WearWare.Services.Library
                 
                 if (libraryItem != null)
                 {
-                    // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
-                    if (libraryItem.MatrixOptions == null)
-                        libraryItem.MatrixOptions = _matrixConfigService.CloneOptions();
-
                     _items.Add(libraryItem.Name, libraryItem);
                 }
             }
@@ -119,24 +115,7 @@ namespace WearWare.Services.Library
             var opId = await _operationProgress.StartOperation("Updating Library Item");
             try
             {
-                if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem))
-                {
-                    _operationProgress.ReportProgress(opId, "Converting fseq...");
-                    var result = await _streamConverterService.ConvertToFseq(
-                        PathConfig.LibraryPath, 
-                        formModel.UpdatedItem.SourceFileName, 
-                        PathConfig.LibraryPath, 
-                        formModel.UpdatedItem.Name,
-                        formModel.UpdatedItem.RelativeBrightness, 
-                        formModel.UpdatedItem.MatrixOptions
-                    );
-                    if (result.ExitCode != 0)
-                    {
-                        _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                        return;
-                    }
-                    formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
-                }
+                formModel.UpdatedItem.CurrentBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness);
 
                 // Update metadata and save
                 try
@@ -162,68 +141,6 @@ namespace WearWare.Services.Library
                 _operationProgress.CompleteOperation(opId, false, ex.Message);
                 return;
             }
-        }
-
-        /// <summary>
-        /// Called when OK is clicked in the ReConvert All dialog.
-        /// </summary>
-        /// <param name="relativeBrightness"></param> The relative brightness to set for all items
-        public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options = null)
-        {
-            var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
-            int itemCount = 0;
-            foreach (var item in _items.Values)
-            {
-                itemCount++;
-            }
-            int currentItem = 0;
-            foreach (var originalItem in _items.Values)
-            {
-                var item = originalItem.Clone();
-                if (formMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-                {
-                    item.RelativeBrightness = relativeBrightness;
-                }
-                else if (formMode == EditPlayableItemFormMode.ReConvertAllMatrix && options != null)
-                {
-                    item.MatrixOptions = options;
-                }
-                currentItem++;
-                if (!originalItem.NeedsReConvert(item))
-                {
-                    continue;
-                }
-                _operationProgress.ReportProgress(opId, $"ReConverting {item.Name} ({currentItem} of {itemCount})");
-                var result = await _streamConverterService.ConvertToFseq(
-                    PathConfig.LibraryPath,
-                    item.SourceFileName,
-                    PathConfig.LibraryPath,
-                    item.Name,
-                    item.RelativeBrightness,
-                    item.MatrixOptions
-                );
-                if (result.ExitCode != 0)
-                {
-                    _operationProgress.CompleteOperation(opId, false, $"Failed to ReConvert item {item.Name}: " + result.Message + "\n" + result.Error);
-                    return;
-                }
-                // Update item's relative brightness and matrix options
-                item.CurrentBrightness = result.ActualBrightness;
-                // Save updated metadata
-                try
-                {
-                    var jsonPath = Path.Combine(PathConfig.LibraryPath, $"{item.Name}.json");
-                    JsonUtils.ToJsonFile(jsonPath, item);
-                }
-                catch (Exception ex)
-                {
-                    _operationProgress.CompleteOperation(opId, false, "ReConvert succeeded, but failed to write JSON metadata: " + ex.Message);
-                    return;
-                }
-                // Update the original item with data from the clone
-                originalItem.UpdateFromClone(item);
-            }
-            _operationProgress.CompleteOperation(opId, true, "Done");
         }
     }
 }

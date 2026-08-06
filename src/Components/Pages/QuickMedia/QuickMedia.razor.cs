@@ -1,7 +1,6 @@
 using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
-using WearWare.Services.MatrixConfig;
 using WearWare.Services.QuickMedia;
 
 namespace WearWare.Components.Pages.QuickMedia
@@ -12,7 +11,6 @@ namespace WearWare.Components.Pages.QuickMedia
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] private ILogger<QuickMedia> Logger { get; set; } = null!;
-        [Inject] private MatrixConfigService _matrixConfigService { get; set; } = null!;
 
         private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
         private IReadOnlyList<PlayableItem>? _libraryItems;
@@ -147,44 +145,6 @@ namespace WearWare.Components.Pages.QuickMedia
             {
                 DeleteQuickMediaButton(index);
             }
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All (Global) is clicked
-        /// </summary>
-        private void ShowReConvertAllGlobal()
-        {
-            _editFormModel = new EditPlayableItemFormModel()
-            {
-                FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
-                FormPage = EditPlayableItemFormPage.QuickMedia,
-                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
-            };
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All (Embedded) is clicked
-        /// </summary>
-        private void ShowReConvertAllEmbedded()
-        {
-            _editFormModel = new EditPlayableItemFormModel()
-            {
-                FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
-                FormPage = EditPlayableItemFormPage.QuickMedia,
-                UpdatedItem = PlayableItem.CreateDummyItem(_matrixConfigService.CloneOptions()),
-            };
-
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All form is submitted
-        /// </summary>
-        /// <param name="formModel"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll(EditPlayableItemFormModel formModel)
-        {
-            _editFormModel = null;
-            await QuickMediaService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
-            await InvokeAsync(StateHasChanged);
         }
 
         private string BuildEditingImageURL(EditPlayableItemFormModel formModel){

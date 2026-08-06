@@ -61,8 +61,7 @@ namespace WearWare.Services.Import
                     PlayMode.Forever,
                     1,
                     100,
-                    actual,
-                    _matrixConfigService.CloneOptions()
+                    actual
                 ));
             }
             return importItems;
@@ -122,7 +121,7 @@ namespace WearWare.Services.Import
                 PathConfig.LibraryPath, 
                 formModel.UpdatedItem.Name, 
                 formModel.UpdatedItem.RelativeBrightness, 
-                formModel.UpdatedItem.MatrixOptions
+                _matrixConfigService.CloneOptions()
             );
             if (result.ExitCode != 0)
             {
@@ -154,8 +153,7 @@ namespace WearWare.Services.Import
                 PlayMode.Forever,
                 0,
                 formModel.UpdatedItem.RelativeBrightness,
-                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness),
-                formModel.UpdatedItem.MatrixOptions
+                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness)
             );
             // Serialize item to JSON and write to libraryPath as name.json
             try

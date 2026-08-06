@@ -1,7 +1,6 @@
 using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
-using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Components.Pages.Library
 {
@@ -9,7 +8,6 @@ namespace WearWare.Components.Pages.Library
     {
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
-        [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
         private EditPlayableItemFormModel? _editFormModel;
         private IReadOnlyList<PlayableItem>? items;
         private bool _subscribed;
@@ -104,41 +102,5 @@ namespace WearWare.Components.Pages.Library
             await InvokeAsync(StateHasChanged);
         }
 
-        /// <summary>
-        /// Called when the Reconvert All (Global) is clicked
-        /// </summary>
-        private void ShowReConvertAllGlobal()
-        {
-            _editFormModel = new EditPlayableItemFormModel()
-            {
-                FormMode = EditPlayableItemFormMode.ReConvertAllMatrix,
-                FormPage = EditPlayableItemFormPage.Library,
-                UpdatedItem = PlayableItem.CreateDummyItem(MatrixConfigService.CloneOptions()),
-            };
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All (Embedded) is clicked
-        /// </summary>
-        private void ShowReConvertAllEmbedded()
-        {
-            _editFormModel = new EditPlayableItemFormModel()
-            {
-                FormMode = EditPlayableItemFormMode.ReConvertAllBrightness,
-                FormPage = EditPlayableItemFormPage.Library,
-                UpdatedItem = PlayableItem.CreateDummyItem(MatrixConfigService.CloneOptions()),
-            };
-        }
-
-        /// <summary>
-        /// Called when the Reconvert All form is submitted
-        /// </summary>
-        /// <param name="args"></param> The arguments containing the relative brightness, options and form mode
-        private async Task OnReconvertAll(EditPlayableItemFormModel formModel)
-        {
-            _editFormModel = null;
-            await LibraryService.ReConvertAllItems(formModel.FormMode, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
-            await InvokeAsync(StateHasChanged);
-        }
     }
 }

@@ -207,10 +207,6 @@ namespace WearWare.Services.Playlist
                         return false;
                     }
 
-                    // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
-                    if (item.MatrixOptions == null)
-                        item.MatrixOptions = matrixConfigService.CloneOptions();
-
                     return true;
                 })
                 .ToList();

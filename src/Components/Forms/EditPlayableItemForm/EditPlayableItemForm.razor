@@ -1,6 +1,5 @@
 @using WearWare.Common.Media
 @using WearWare.Common
-@using WearWare.Components.Forms.MatrixOptionsForm
 @using WearWare.Components.Shared
 @using WearWare.Components.Shared.PlayableItemCard
 @rendermode InteractiveServer
@@ -8,25 +7,7 @@
 @* Main Razor Markup: *@
 @if (FormModel is not null)
 {
-    @if (showMatrixOptionsForm && FormModel.UpdatedItem != null)
-    {
-        @* Matrix Options form *@
-        <MatrixOptionsForm
-            Options="FormModel.UpdatedItem.MatrixOptions"
-            Visibility="MatrixConfigService.Visibility"
-            RelativeBrightness="FormModel.UpdatedItem.RelativeBrightness"
-            HideRelativeBrightness="FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix"
-            OnValidSubmit="OnMatrixOptionsOk"
-            OnCancel="OnMatrixOptionsCancel"
-            Action="OK"
-            Title="@BuildMatrixOptionsTitle()"
-            ZIndex="@(ZIndex + 10)"
-        />
-    }
-    else
-    {
-        @* Regular view *@
-        <div class = "ww-modal" style="z-index:@(ZIndex)">
+    <div class = "ww-modal" style="z-index:@(ZIndex)">
             <div class="ww-modal-header text-center">
                 <h2>@BuildPageTitle()</h2>
             </div>
@@ -34,18 +15,6 @@
                 <EditForm Model="@(FormModel.UpdatedItem ?? (object)FormModel)" OnValidSubmit="SaveEdit">
                     <DataAnnotationsValidator />
                     @* Legend *@
-                    @if(FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
-                    {
-                        <div class="mb-3">
-                            <span>ReConverts all @FormModel.FormPage items with their Relative Brightness and the selected Matrix Options (Defaults to the Global Matrix options)</span>
-                        </div>
-                    }
-                    else if(FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-                    {
-                        <div class="mb-3">
-                            <span>ReConverts all @FormModel.FormPage items with a new Relative Brightness and their embedded Matrix Options</span>
-                        </div>
-                    }
                     @* -------------- Name (Only used in Import) -------------- *@
                     @if (FormModel.FormPage == EditPlayableItemFormPage.Import)
                     {
@@ -60,8 +29,7 @@
                             </div>
                         </div>
                     }
-                    @if (FormModel.FormPage != EditPlayableItemFormPage.Library && FormModel.FormPage != EditPlayableItemFormPage.Import && 
-                        FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix && FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
+                    @if (FormModel.FormPage != EditPlayableItemFormPage.Library && FormModel.FormPage != EditPlayableItemFormPage.Import)
                     {
                         <div class="d-flex justify-content-center mb-1">
                             <div class="w-auto text-danger text-center">
@@ -91,69 +59,50 @@
                         </div>
                     }
                     @* -------------- Preview Image -------------- *@
-                    @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllMatrix){
-                        @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness){
-                            <div class="d-flex justify-content-center mb-3">
-                                <div class="card bg-light align-items-center rounded-4 d-inline-flex flex-nowrap">
-                                    <div class="card-header w-100">
-                                        <div class="text-center text-6 mb-0">@(FormModel.FormPage == EditPlayableItemFormPage.Import ? "Preview" : "Current settings")</div>
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="card bg-light align-items-center rounded-4 d-inline-flex flex-nowrap">
+                            <div class="card-header w-100">
+                                <div class="text-center text-6 mb-0">@(FormModel.FormPage == EditPlayableItemFormPage.Import ? "Preview" : "Current settings")</div>
+                            </div>
+                            <div class="p-2">
+                                <PlayableItemCard
+                                    ImageSrc="@FormModel.ImageUrl"
+                                    FormPage="FormModel.FormPage"
+                                    FormMode="FormModel.FormMode"
+                                    Item="FormModel.OriginalItem"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="card rounded-4">
+                            <div class="card-header mb-3">
+                                <div class="text-center text-6 mb-0">Brightness</div>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div class="d-flex justify-content-center mb-0">
+                                    <div class="w-auto text-danger text-center">
+                                        <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
                                     </div>
-                                    <div class="p-2">
-                                        <PlayableItemCard
-                                            ImageSrc="@FormModel.ImageUrl"
-                                            FormPage="FormModel.FormPage"
-                                            FormMode="FormModel.FormMode"
-                                            Item="FormModel.OriginalItem"
-                                        />
-                                    </div>
+                                </div>
+                                <div class="input-group input-group-sm justify-content-center mb-3 px-3">
+                                    <span class="input-group-text w-50">Relative Brightness</span>
+                                    <EditboxNumberLiveUpdate class="text-7 text-center w-25 form-control" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
+                                        @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
+                                    />
+                                    <span class="input-group-text text-7 text-center">%</span>
                                 </div>
                             </div>
-                        }
-                        <div class="d-flex justify-content-center mb-3">
-                            <div class="card rounded-4">
-                                <div class="card-header mb-3">
-                                    <div class="text-center text-6 mb-0">Brightness</div>
-                                </div>
-                                @* -------------- Stream Current Brightness --------------
-                                <div class="input-group input-group-sm justify-content-center mb-3 px-3">
-                                    <span class="input-group-text w-50">Stream Current Brightness</span>
-                                    <input type="number" disabled class="text-7 text-center w-25 form-control" @bind="FormModel.UpdatedItem!.CurrentBrightness" @bind:event="oninput"/>
-                                    <span class="input-group-text text-7 text-center">%</span>
-
-                                </div>*@
-                                @* -------------- Relative Brightness -------------- *@
-                                    <div class="d-flex flex-column">
-                                        <div class="d-flex justify-content-center mb-0">
-                                            <div class="w-auto text-danger text-center">
-                                                <ValidationMessage For="@(() => FormModel.UpdatedItem!.RelativeBrightness)" />
-                                            </div>
-                                        </div>
-                                        <div class="input-group input-group-sm justify-content-center mb-3 px-3">
-                                            <span class="input-group-text w-50">Relative Brightness</span>
-                                            @* form-control *@
-                                            <EditboxNumberLiveUpdate class="text-7 text-center w-25 form-control" @bind-Value="FormModel.UpdatedItem!.RelativeBrightness"
-                                                @oninput="e => CalculateBrightness()" onfocus="this.select()" AddFocusGrabber="true"
-                                            />
-                                            <span class="input-group-text text-7 text-center">%</span>
-                                        </div>
-                                    </div>
-                                @* -------------- Adjusted Brightness -------------- *@
-                                <div class="input-group input-group-sm justify-content-center mb-3 px-3">
-                                    <span class="input-group-text w-50">Adjusted Brightness</span>
-                                    <input type="number" disabled class="text-7 text-center w-25 form-control" @bind="adjustedBrightness" @bind:event="oninput"/>
-                                    <span class="input-group-text text-7 text-center">%</span>
-                                </div>
-                            </div
+                            <div class="input-group input-group-sm justify-content-center mb-3 px-3">
+                                <span class="input-group-text w-50">Adjusted Brightness</span>
+                                <input type="number" disabled class="text-7 text-center w-25 form-control" @bind="adjustedBrightness" @bind:event="oninput"/>
+                                <span class="input-group-text text-7 text-center">%</span>
+                            </div>
                         </div>
-                    }
-                    @* -------------- Matrix Options + Footer Buttons ----------------*@
+                    </div>
+                    @* -------------- Footer Buttons ----------------*@
                     <div class="d-flex flex-column align-items-center">
                         <div class="d-inline-flex flex-column align-items-stretch">
-                            @if (FormModel.FormMode != EditPlayableItemFormMode.ReConvertAllBrightness)
-                            {
-                                <button type="button" class="btn btn-outline-secondary btn-large p-4 rounded-3 w-100 mb-3" @onclick="ShowMatrixOptions">Matrix Options</button>
-                            }
-
                             <div class="d-flex gap-3 justify-content-center">
                                 <button type="button" class="btn btn-outline-secondary btn-large p-4 rounded-3" @onclick="() => OnCancel.InvokeAsync(null)">Cancel</button>
                                 <button type="submit" class="btn btn-primary btn-large px-5 py-4 rounded-3">OK</button>
@@ -163,5 +112,4 @@
                 </EditForm>
             </div>
         </div>
-    }
 }

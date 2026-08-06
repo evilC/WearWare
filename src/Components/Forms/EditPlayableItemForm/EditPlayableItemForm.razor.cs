@@ -11,7 +11,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         private readonly string _logTag = "EditPlayableItemForm";
         [Inject] private ILogger<EditPlayableItemForm> _logger { get; set; } = null!;
         [Inject] private IJSRuntime JS { get; set; } = null!;
-        [Inject] private MatrixConfigService MatrixConfigService { get; set; } = null!;
 
         /// <summary> The z-index for this form </summary>
         [Parameter] public int ZIndex { get; set; } = 2000;
@@ -29,20 +28,12 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// Callback for clicking OK in regular Add / Edit mode
         /// </summary>
         [Parameter] public EventCallback<EditPlayableItemFormModel> OnSave { get; set; }
-        /// <summary>
-        /// Callback for clicking OK in ReConvert All mode
-        /// </summary>
-        [Parameter] public EventCallback<EditPlayableItemFormModel> OnReconvertAllOk { get; set; }
-        
+
         // === Form edited values ===
 
         // === Form readouts ===
-        // What the brightness WOULD BE if we reprocessed now with current matrix options and selected relative brightness
+        // What the brightness WOULD BE if we reprocessed now with current global brightness and selected relative brightness
         private int adjustedBrightness;
-
-        // === Misc ===
-        // True when the Matrix Options form is visible
-        private bool showMatrixOptionsForm = false;
 
         /// <summary>
         /// Called when the form opens
@@ -74,34 +65,10 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             }
         }
 
-        // Recalculates adjusted brightness based on current matrix options and selected relative brightness
+        // Recalculates adjusted brightness based on current global brightness and selected relative brightness
         private void CalculateBrightness()
         {
-            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(
-                FormModel.UpdatedItem.RelativeBrightness, FormModel.UpdatedItem.MatrixOptions.Brightness ?? 100
-            );
-        }
-
-        /// <summary>
-        /// Called after the user clicks OK in the Matrix Options form
-        /// </summary>
-        /// <param name="opts">The updated matrix options</param>
-        private async Task OnMatrixOptionsOk(LedMatrixOptionsConfig opts)
-        {
-            // selectedMatrixOptions = opts;
-            showMatrixOptionsForm = false;
-            CalculateBrightness();
-            await InvokeAsync(StateHasChanged);
-        }
-
-        /// <summary>
-        /// Called after the user clicks Cancel in the Matrix Options form
-        /// </summary>
-        private Task OnMatrixOptionsCancel()
-        {
-            showMatrixOptionsForm = false;
-            InvokeAsync(StateHasChanged);
-            return Task.CompletedTask;
+            adjustedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(100, FormModel.UpdatedItem.RelativeBrightness);
         }
 
         /// <summary>
@@ -114,21 +81,7 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
                 _logger.LogError($"{_logTag}: Cannot save PlayableItem; FormModel is null");
                 return;
             }
-            // If we're in a ReConvertAll mode, call the dedicated callback instead
-            if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-            {
-                OnReconvertAllOk.InvokeAsync(FormModel);
-                return;
-            }
             OnSave.InvokeAsync(FormModel);
-        }
-
-        /// <summary>
-        /// Called when user clicks Matrix Options button
-        /// </summary>
-        private void ShowMatrixOptions()
-        {
-            showMatrixOptionsForm = true;
         }
 
         /// <summary>
@@ -138,14 +91,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
         /// <returns>The page title</returns>
         public string BuildPageTitle()
         {
-            if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix)
-            {
-                return $"ReConvert {FormModel.FormPage} (Matrix Options)";
-            }
-            else if (FormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-            {
-                return $"ReConvert {FormModel.FormPage} (Brightness)";
-            }
             var title = FormModel.FormPage == EditPlayableItemFormPage.Import ? "" : $"{FormModel.FormMode} ";
             title += FormModel.FormPage.ToString();
             if (FormModel.FormPage == EditPlayableItemFormPage.QuickMedia)
@@ -159,19 +104,5 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
             return title;
         }
 
-        /// <summary>
-        /// Builds the title for the Matrix Options form based on item type
-        /// </summary>
-        /// <returns>The title for the matrix options form</returns>
-        private string BuildMatrixOptionsTitle()
-        {
-            return FormModel.FormPage switch
-            {
-                EditPlayableItemFormPage.Library => "Library Item Matrix Options",
-                EditPlayableItemFormPage.Playlist => "Playlist Item Matrix Options",
-                EditPlayableItemFormPage.QuickMedia => $"Button {FormModel.ItemIndex + 1} Matrix Options",
-                _ => "Matrix Options"
-            };
-        }
     }
 }
