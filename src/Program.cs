@@ -68,8 +68,8 @@ builder.Services.AddSingleton(sp =>{return new EnvironmentService(env);});  // A
 if (env == "Desktop")
 {
     // Desktop specific services (mocks)
-    builder.Services.AddSingleton<IStreamConverterService, MockStreamConverterService>();
-    builder.Services.AddSingleton<IStreamPlayer, MockStreamPlayer>();
+    builder.Services.AddSingleton<IMediaConverterService, MockMediaConverterService>();
+    builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
 }
@@ -80,8 +80,8 @@ else
     {
         Log.Warning("frame-sequence-player not found in tools folder! FSEQ conversion functionality will not work!");
     }
-    builder.Services.AddSingleton<IStreamConverterService, StreamConverterService>();
-    builder.Services.AddSingleton<IStreamPlayer, RpiStreamPlayer>();
+    builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
+    builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }

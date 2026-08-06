@@ -12,17 +12,17 @@ namespace WearWare.Services.Import
     {
         public event Action? StateChanged;
         private readonly MatrixConfigService _matrixConfigService;
-        private readonly IStreamConverterService _streamConverterService;
+        private readonly IMediaConverterService _mediaConverterService;
         private readonly LibraryService _libraryService;
         private readonly IOperationProgressService _operationProgress;
         public ImportService(MatrixConfigService matrixConfigService, 
-            IStreamConverterService streamConverterService,
+            IMediaConverterService mediaConverterService,
             LibraryService libraryService,
             IOperationProgressService operationProgress
         )
         {
             _matrixConfigService = matrixConfigService;
-            _streamConverterService = streamConverterService;
+            _mediaConverterService = mediaConverterService;
             _libraryService = libraryService;
             _operationProgress = operationProgress;
         }
@@ -100,7 +100,7 @@ namespace WearWare.Services.Import
             }
             formModel.UpdatedItem.Name = FilenameValidator.Sanitize(formModel.UpdatedItem.Name);
             _operationProgress.ReportProgress(opId, "Converting fseq...");
-            var result = await _streamConverterService.ConvertToFseq(
+            var result = await _mediaConverterService.ConvertToFseq(
                 PathConfig.IncomingPath, 
                 formModel.UpdatedItem.SourceFileName, 
                 PathConfig.LibraryPath, 
@@ -114,7 +114,7 @@ namespace WearWare.Services.Import
                 return;
             }
             _operationProgress.ReportProgress(opId, "Copying original file...");
-            // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
+            // Copy original file to library path and rename it to the updated item name plus original extension.
             var ext = Path.GetExtension(formModel.UpdatedItem.SourceFileName);
             var destPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.UpdatedItem.Name}{ext}");
             try {

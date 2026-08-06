@@ -5,7 +5,6 @@
   Change label of "Brightness" in Matrix Options GUI to "Max Brightness"?
 - Add brightness slider to options  
   Effect is live, but persists only on clicking Save?
-- Remove all references to `led-image-viewer`  
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
 - Replace all references to Stream with Fseq

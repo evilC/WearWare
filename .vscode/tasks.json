@@ -102,7 +102,7 @@
             "problemMatcher": []
         },
         {
-            // Copies the built led-image-viewer from the remote machine to the remote tools folder
+            // Copies the built frame-sequence-player from the remote machine to the remote tools folder
             "label": "copy-util-remote-to-remote",
             "type": "shell",
             "command": "ssh",

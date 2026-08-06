@@ -3,10 +3,10 @@ using WearWare.Services.MediaController;
 
 namespace WearWare.Services.Mocks
 {
-    public class MockStreamPlayer : IStreamPlayer
+    public class MockMediaPlayer : IMediaPlayer
     {
-        private readonly ILogger<MockStreamPlayer> _logger;
-        public MockStreamPlayer(ILogger<MockStreamPlayer> logger)
+        private readonly ILogger<MockMediaPlayer> _logger;
+        public MockMediaPlayer(ILogger<MockMediaPlayer> logger)
         {
             _logger = logger;
         }

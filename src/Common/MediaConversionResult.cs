@@ -1,6 +1,6 @@
 namespace WearWare.Common
 {
-    public class ReConvertTaskResult
+    public class MediaConversionResult
     {
         public int ExitCode { get; set; }
         public string Error { get; set; } = string.Empty;

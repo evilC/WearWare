@@ -1,7 +1,7 @@
 using WearWare.Common.Media;
 namespace WearWare.Services.MediaController
 {
-    public interface IStreamPlayer
+    public interface IMediaPlayer
     {
         /// <summary>
         /// Plays the given playable item fseq.

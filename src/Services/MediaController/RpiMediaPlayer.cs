@@ -7,19 +7,19 @@ using System.Threading;
 
 namespace WearWare.Services.MediaController
 {
-    public class RpiStreamPlayer : IStreamPlayer
+    public class RpiMediaPlayer : IMediaPlayer
     {
         private readonly object _matrixLock = new object();
         private RGBLedMatrix? _matrix;
         private RGBLedCanvas? _canvas;
-        private readonly ILogger<RpiStreamPlayer> _logger;
-        private readonly string _logTag = "[STREAMPLAYER]";
+        private readonly ILogger<RpiMediaPlayer> _logger;
+        private readonly string _logTag = "[MEDIAPLAYER]";
         private readonly MatrixConfigService _matrixConfigService;
         private readonly int[] _liveBrightness = [100];
         private volatile int _activeRelativeBrightness = 100;
         private volatile int _isPlaying;
 
-        public RpiStreamPlayer(ILogger<RpiStreamPlayer> logger, MatrixConfigService matrixConfigService)
+        public RpiMediaPlayer(ILogger<RpiMediaPlayer> logger, MatrixConfigService matrixConfigService)
         {
             _logger = logger;
             _matrixConfigService = matrixConfigService;

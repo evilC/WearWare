@@ -6,7 +6,7 @@ namespace WearWare.Services.MediaController
     public class MediaControllerService
     {
         public event Action? StateChanged;
-        private readonly IStreamPlayer _streamPlayer;
+        private readonly IMediaPlayer _mediaPlayer;
         private bool _running = false;
         private PlaylistItems? _playlist;
         private PlayableItem? _currentItem = null;
@@ -21,10 +21,10 @@ namespace WearWare.Services.MediaController
         private readonly ILogger<MediaControllerService> _logger;
         private readonly string _logTag = "[MEDIACONTROLLER]";
 
-        public MediaControllerService(ILogger<MediaControllerService> logger, IStreamPlayer streamPlayer)
+        public MediaControllerService(ILogger<MediaControllerService> logger, IMediaPlayer mediaPlayer)
         {
             _logger = logger;
-            _streamPlayer = streamPlayer;
+            _mediaPlayer = mediaPlayer;
             _logger.LogInformation("{tag} initialized.", _logTag);
         }
 
@@ -172,7 +172,7 @@ namespace WearWare.Services.MediaController
                         break;  // No more items in playlist
                     }
                     _currentItem = item;
-                    var success = _streamPlayer.PlayFseq(item, ct);
+                    var success = _mediaPlayer.PlayFseq(item, ct);
                     if (!success)
                     {
                         if (_currentItemIsQuickMedia){

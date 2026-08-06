@@ -6,12 +6,12 @@ using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Services.StreamConverter
 {
-    public class StreamConverterService : IStreamConverterService
+    public class FseqConverterService : IMediaConverterService
     {
         private readonly MatrixConfigService _matrixConfigService;
-        private readonly ILogger<StreamConverterService> _logger;
-        private readonly string _logTag = "[STREAMCONVERTER]";
-        public StreamConverterService(MatrixConfigService matrixConfigService, ILogger<StreamConverterService> logger)
+        private readonly ILogger<FseqConverterService> _logger;
+        private readonly string _logTag = "[FSEQCONVERTER]";
+        public FseqConverterService(MatrixConfigService matrixConfigService, ILogger<FseqConverterService> logger)
         {
             _logger = logger;
             _matrixConfigService = matrixConfigService;
@@ -20,22 +20,22 @@ namespace WearWare.Services.StreamConverter
         /// <summary>
         /// Converts the specified source media file to a .fseq file using frame-sequence-player.
         /// </summary>
-        public async Task<ReConvertTaskResult> ConvertToFseq(string sourcePath, string oldFileName, string destPath, string newFileNameNoExt, int relativeBrightness, LedMatrixOptionsConfig? options = null)
+        public async Task<MediaConversionResult> ConvertToFseq(string sourcePath, string sourceFileName, string destPath, string outputNameWithoutExtension, int relativeBrightness, LedMatrixOptionsConfig? options = null)
         {
-            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(oldFileName));
+            var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(sourceFileName));
             if (mediaType == null){
-                return new ReConvertTaskResult { ExitCode = -1, Error = "Unknown media type", Message = "FSEQ conversion failed - unknown media type." };
+                return new MediaConversionResult { ExitCode = -1, Error = "Unknown media type", Message = "FSEQ conversion failed - unknown media type." };
             }
             var toolPath = Path.Combine(PathConfig.ToolsPath, "frame-sequence-player");
             if (!File.Exists(toolPath))
             {
-                return new ReConvertTaskResult { ExitCode = -1, Error = $"Tool not found at {toolPath}", Message = "FSEQ conversion failed - missing tool." };
+                return new MediaConversionResult { ExitCode = -1, Error = $"Tool not found at {toolPath}", Message = "FSEQ conversion failed - missing tool." };
             }
-            var inputPath = Path.Combine(sourcePath, oldFileName);
-            var outputFile = $"{newFileNameNoExt}.fseq";
+            var inputPath = Path.Combine(sourcePath, sourceFileName);
+            var outputFile = $"{outputNameWithoutExtension}.fseq";
             var outputPath = Path.Combine(destPath, outputFile);
             // Write to a temporary file first, then atomically move into place to avoid read/write races
-            var tmpOutputFile = $"{newFileNameNoExt}.fseq.tmp";
+            var tmpOutputFile = $"{outputNameWithoutExtension}.fseq.tmp";
             var tmpOutputPath = Path.Combine(destPath, tmpOutputFile);
             var matrixOptions = options != null ? options : _matrixConfigService.CloneOptions();
 
@@ -44,7 +44,7 @@ namespace WearWare.Services.StreamConverter
             argsList.Add($"-O{tmpOutputPath}");
             var sudoPath = "/usr/bin/sudo";
             if (!File.Exists(sudoPath))            {
-                return new ReConvertTaskResult { ExitCode = -1, Error = "sudo not found at " + sudoPath, Message = "FSEQ conversion failed - server misconfiguration." };
+                return new MediaConversionResult { ExitCode = -1, Error = "sudo not found at " + sudoPath, Message = "FSEQ conversion failed - server misconfiguration." };
             }
             _logger.LogInformation("{LogTag} Executing frame-sequence-player with args: {args}", _logTag, string.Join(" ", argsList));
             var psi = new ProcessStartInfo {
@@ -66,7 +66,7 @@ namespace WearWare.Services.StreamConverter
             */
             using var process = Process.Start(psi);
             if (process == null)
-                return new ReConvertTaskResult { ExitCode = -1, Error = "Failed to start frame-sequence-player.", Message = "Failed to start frame-sequence-player." };
+                return new MediaConversionResult { ExitCode = -1, Error = "Failed to start frame-sequence-player.", Message = "Failed to start frame-sequence-player." };
 
             string output = await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
@@ -90,15 +90,15 @@ namespace WearWare.Services.StreamConverter
                 {
                     // Clean up temp file on failure
                     try { if (File.Exists(tmpOutputPath)) File.Delete(tmpOutputPath); } catch {}
-                    return new ReConvertTaskResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "FSEQ conversion succeeded but failed to move temp file into place." };
+                    return new MediaConversionResult { ExitCode = -1, Error = ex.Message + "\n" + error, Message = "FSEQ conversion succeeded but failed to move temp file into place." };
                 }
-                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = "FSEQ conversion successful." };
+                return new MediaConversionResult { ExitCode = exitCode, Error = error, Message = "FSEQ conversion successful." };
             }
             else
             {
                 // Clean up temp file on failure
                 try { if (File.Exists(tmpOutputPath)) File.Delete(tmpOutputPath); } catch {}
-                return new ReConvertTaskResult { ExitCode = exitCode, Error = error, Message = $"FSEQ conversion failed (exit code {exitCode})" };
+                return new MediaConversionResult { ExitCode = exitCode, Error = error, Message = $"FSEQ conversion failed (exit code {exitCode})" };
             }
         }
     }

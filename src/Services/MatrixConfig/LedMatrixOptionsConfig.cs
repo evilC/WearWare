@@ -2,9 +2,8 @@
 This class is a wrapper around RGBLedMatrixOptions to facilitate various things:
 1) Validation via DataAnnotations
 2) All fields are nullable, so that we can distinguish between "not set" and "set to default value"
-3) Conversion to command-line argument string for led-image-viewer
-4) Cloning capability - We want to be able to take a copy of the "Global" settings...
-    ... and modify them for a specific animation without changing the global settings.
+3) Conversion to command-line argument strings used by tooling (for example, frame-sequence-player)
+4) Cloning capability - we can take a copy of the global settings and modify that copy safely.
 */
 using System.ComponentModel.DataAnnotations;
 using RPiRgbLEDMatrix;
@@ -96,7 +95,7 @@ namespace WearWare.Services.MatrixConfig
         }
 
         /// <summary>
-        /// Converts the current options to a command-line argument string for led-image-viewer.
+        /// Converts the current options to a command-line argument string.
         /// </summary>
         /// <returns>Command-line argument string.</returns>
         public string ToArgsString(int relativeBrightness)
