@@ -1,13 +1,8 @@
 # ToDo list
 
 ## Fseq conversion
-- Add Max brightness setting to options  
-  Change label of "Brightness" in Matrix Options GUI to "Max Brightness"?
-- Add brightness slider to options  
-  Effect is live, but persists only on clicking Save?
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
-- Replace all references to Stream with Fseq
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
 
 
