@@ -15,6 +15,7 @@
 - CurrentBrightness can be removed from PlaylistItem  
 - Replace Brightness on Library / Playlist pages with RelativeBrightness
 - Options Visibility can be removed
+- LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
 
 
 ## High Priority
