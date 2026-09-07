@@ -9,9 +9,6 @@ namespace WearWare.Components.Forms.EditPlayableItemForm
     public enum EditPlayableItemFormMode
     {
         Add,
-        Edit,
-        // In this mode, the MatrixOptionsForm will be available
-        ReConvertAllMatrix,
-        ReConvertAllBrightness
+        Edit
     }
 }

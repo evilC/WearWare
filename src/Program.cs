@@ -16,6 +16,7 @@ using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
 using WearWare.Services.OperationProgress;
 using WearWare.Services.Environment;
+using WearWare.Services.Options;
 using WearWare.Services.TempMon;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -56,6 +57,7 @@ Log.Information("{sep} Starting on {Environment} {sep}", LogTools.HeaderHeadTail
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton(blazorInMemorySink);
+builder.Services.AddSingleton<AppOptionsService>();
 builder.Services.AddSingleton<MatrixConfigService>();
 builder.Services.AddSingleton<PlaylistService>();
 builder.Services.AddSingleton<InMemoryLogService>();
@@ -68,20 +70,20 @@ builder.Services.AddSingleton(sp =>{return new EnvironmentService(env);});  // A
 if (env == "Desktop")
 {
     // Desktop specific services (mocks)
-    builder.Services.AddSingleton<IStreamConverterService, MockStreamConverterService>();
-    builder.Services.AddSingleton<IStreamPlayer, MockStreamPlayer>();
+    builder.Services.AddSingleton<IMediaConverterService, MockMediaConverterService>();
+    builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
 }
 else
 {
     // RPi specific services
-    if (!File.Exists(Path.Combine(PathConfig.ToolsPath, "led-image-viewer")))
+    if (!File.Exists(Path.Combine(PathConfig.ToolsPath, "frame-sequence-player")))
     {
-        Log.Warning("led-image-viewer not found in tools folder! Stream conversion functionality will not work!");
+        Log.Warning("frame-sequence-player not found in tools folder! FSEQ conversion functionality will not work!");
     }
-    builder.Services.AddSingleton<IStreamConverterService, StreamConverterService>();
-    builder.Services.AddSingleton<IStreamPlayer, RpiStreamPlayer>();
+    builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
+    builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }

@@ -4,7 +4,6 @@ using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
-using WearWare.Services.StreamConverter;
 using WearWare.Utils;
 
 namespace WearWare.Services.Playlist
@@ -13,7 +12,6 @@ namespace WearWare.Services.Playlist
     {
         private Dictionary<string, PlaylistItems> _playlists = new();
         private readonly MediaControllerService _mediaController;
-        private readonly IStreamConverterService _streamConverterService;
         public event Action? StateChanged;
         private readonly ILogger<PlaylistService> _logger;
         private static readonly string _logTag = "[PLAYLISTSERV]";
@@ -26,7 +24,6 @@ namespace WearWare.Services.Playlist
         public PlaylistService(
             ILogger<PlaylistService> logger,
             MediaControllerService mediaController,
-            IStreamConverterService streamConverterService,
             MatrixConfigService matrixConfigService,
             IOperationProgressService operationProgress,
             ILoggerFactory loggerFactory
@@ -44,7 +41,6 @@ namespace WearWare.Services.Playlist
             _config = config;
             _mediaController = mediaController;
             _mediaController.StateChanged += OnMediaControllerStateChanged;
-            _streamConverterService = streamConverterService;
             _matrixConfigService = matrixConfigService;
             _operationProgress = operationProgress;
         }
@@ -203,17 +199,15 @@ namespace WearWare.Services.Playlist
             PlayableItem libraryItem,
             PlayMode playMode,
             int playModeValue,
-            int relativeBrightness,
-            int currentBrightness)
+            int relativeBrightness)
         {
             var restartMediaController = false;
             if (PlaylistIsPlaying(playlist))
             {
-                // Currently editing playlist and media controller is running, need to restart after adding item
                 _mediaController.Stop();
                 restartMediaController = true;
             }
-            // Create PlayableItem from LibraryItem
+
             var item = new PlayableItem(
                 name: libraryItem.Name,
                 parentFolder: Path.Combine(PathConfig.PlaylistFolder, playlist.Name),
@@ -221,21 +215,21 @@ namespace WearWare.Services.Playlist
                 sourceFileName: libraryItem.SourceFileName,
                 playMode: playMode,
                 playModeValue: playModeValue,
-                relativeBrightness: relativeBrightness,
-                currentBrightness: currentBrightness,
-                _matrixConfigService.CloneOptions()
-                );
-            
-            // Copy file from library to playlist folder
+                relativeBrightness: relativeBrightness
+            );
+
             var destPath = item.GetSourceFilePath();
-            if (!File.Exists(destPath)){
+            if (!File.Exists(destPath))
+            {
                 await FileUtils.CopyFileAsync(libraryItem.GetSourceFilePath(), destPath).ConfigureAwait(false);
             }
-            destPath = item.GetStreamFilePath();
-            if (!File.Exists(destPath)){
-                await FileUtils.CopyFileAsync(libraryItem.GetStreamFilePath(), destPath).ConfigureAwait(false);
+
+            destPath = item.GetFseqFilePath();
+            if (!File.Exists(destPath))
+            {
+                await FileUtils.CopyFileAsync(libraryItem.GetFseqFilePath(), destPath).ConfigureAwait(false);
             }
-            // ToDo: Check if playlist returns true
+
             playlist.AddItem(insertIndex, item);
             playlist.Serialize();
             if (restartMediaController)
@@ -272,33 +266,11 @@ namespace WearWare.Services.Playlist
                 formModel.UpdatedItem.ParentFolder = playlist.GetPlaylistRelativePath();
             }
 
-            if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem)){
-                _operationProgress.ReportProgress(opId, "Converting stream...");
-                // If the updated item needs re-conversion, do it now
-                var readFrom = formModel.FormMode == EditPlayableItemFormMode.Add
-                        ? PathConfig.LibraryPath                    // For ADD, source is library folder
-                        : playlist.GetPlaylistAbsolutePath();       // For EDIT, source is playlist folder
-                var writeTo = playlist.GetPlaylistAbsolutePath();   // For both ADD and EDIT, destination is playlist folder
-                var result = await _streamConverterService.ConvertToStream(readFrom, formModel.UpdatedItem.SourceFileName, writeTo, formModel.UpdatedItem.Name, formModel.UpdatedItem.RelativeBrightness, formModel.UpdatedItem.MatrixOptions);
-                if (result.ExitCode == 0)
-                {
-                    formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
-                }
-                else
-                {
-                    // Re-convert failed - show an alert and do not save changes
-                    //await JSRuntime.InvokeVoidAsync("alert", $"Re-conversion failed: {result.Error} - {result.Message}");
-                    // ToDo: Show error to user
-                    _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                    return;
-                }
-            }
-            else if (formModel.FormMode == EditPlayableItemFormMode.Add)
+            if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
-                _operationProgress.ReportProgress(opId, "Copying stream file...");
-                // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to playlist folder
-                var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
-                var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To playlist folder
+                _operationProgress.ReportProgress(opId, "Copying fseq file...");
+                var copyFrom = formModel.OriginalItem.GetFseqFilePath();
+                var copyTo = formModel.UpdatedItem.GetFseqFilePath();
                 await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
             }
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
@@ -312,7 +284,6 @@ namespace WearWare.Services.Playlist
                     await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
                 }
             }
-
             _operationProgress.ReportProgress(opId, "Updating playlist...");
             if (formModel.FormMode == EditPlayableItemFormMode.Add)
             {
@@ -345,59 +316,6 @@ namespace WearWare.Services.Playlist
             // return true;
         }
 
-        /// <summary>
-        /// Called when OK is clicked in the ReConvertAllPlayableItemsForm
-        /// </summary>
-        public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
-        {
-            var playlist = GetPlaylistBeingEdited();
-            if (playlist == null)
-                return;
-            var opId = await _operationProgress.StartOperation("Re-Converting all Playlist Items");
-            int itemIndex = 0;
-            foreach (var originalItem in playlist.GetPlaylistItems())
-            {
-                var item = originalItem.Clone();
-                if (formMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-                {
-                    item.RelativeBrightness = relativeBrightness;
-                }
-                else if (formMode == EditPlayableItemFormMode.ReConvertAllMatrix && options != null)
-                {
-                    item.MatrixOptions = options;
-                }
-                if (!originalItem.NeedsReConvert(item))
-                {
-                    continue;
-                }
-                _operationProgress.ReportProgress(opId, $"Re-Converting item {itemIndex + 1} of {playlist.GetPlaylistItems().Count}: {item.Name}");
-                if (formMode == EditPlayableItemFormMode.Edit && options != null)
-                {
-                    item.MatrixOptions = options;
-                }
-                var folder = playlist.GetPlaylistAbsolutePath();
-                var result = await _streamConverterService.ConvertToStream(
-                    folder,
-                    item.SourceFileName,
-                    folder,
-                    item.Name,
-                    item.RelativeBrightness,
-                    item.MatrixOptions);
-                if (result.ExitCode != 0)
-                {
-                    // Re-convert failed - show an alert and do not save changes
-                    _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                }
-                item.CurrentBrightness = result.ActualBrightness;
-                // Save updated metadata
-                originalItem.UpdateFromClone(item);
-                itemIndex++;
-            }
-            _operationProgress.ReportProgress(opId, "Saving playlist...");
-            playlist.Serialize();
-            _operationProgress.CompleteOperation(opId, true, "Done");
-        }    
-
         // ToDo: Should the bulk of this not be in PlaylistItems?
         /// <summary>
         /// Removes a playlist item from the playlist being edited
@@ -417,48 +335,28 @@ namespace WearWare.Services.Playlist
             var item = playlist.GetPlaylistItems()[removedIndex];
             if (item == null)
             {
-                // ToDo: log error
                 return false;
             }
-            // Check if any other items are using the same source file
-            int dupeCheckIndex = 0;
-            bool deleteFiles = true;
-            foreach (var playlistItem in playlist.GetPlaylistItems())
-            {
-                if (dupeCheckIndex != removedIndex && playlistItem.SourceFileName == item.SourceFileName)
-                {
-                    // Another item is using the same source file, do not delete
-                    deleteFiles = false;
-                    break;
-                }
-                dupeCheckIndex++;
-            }
-            if (deleteFiles)
-            {
-                var path = playlist.GetPlaylistAbsolutePath();
-                File.Delete(item.GetStreamFilePath());
-                File.Delete(item.GetSourceFilePath());
-            }
 
-            // Actually remove the item from the playlist
-            var removed = playlist.RemoveItem(removedIndex);
-            // ToDo: Check if removed
+            playlist.RemoveItem(removedIndex);
             playlist.Serialize();
 
-            // Restart media controller if there are still items to play
             if (restartMediaController && playlist.GetCurrentItem() != null)
             {
                 _mediaController.Start();
             }
-            return removed;
+
+            return true;
         }
 
         /// <summary>
-        /// Called when the editing playlist is changed from the UI
+        /// Sets the playlist currently being edited
         /// </summary>
-        /// <param name="playlistName"></param>
+        /// <param name="playlistName"></param> The playlist to edit
         public void OnEditingPlaylistChanged(string? playlistName)
         {
+            if (playlistName == "")
+                playlistName = null;
             _config.EditingPlaylist = playlistName;
             _config.Serialize();
         }

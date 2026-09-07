@@ -27,10 +27,10 @@
                 @* Type (Animation / Image) *@
                 <div class = "text-muted fs-6">@(MediaTypeMappings.GetMediaType(Path.GetExtension(Item.SourceFileName)) ?? MediaType.IMAGE)</div>
             }
-            if (FormPage != EditPlayableItemFormPage.Import)
+                if (FormPage != EditPlayableItemFormPage.Import)
             {
                 @* Brightness *@
-                <div class = "fs-6">Brightness: @Item.CurrentBrightness%</div>
+                    <div class = "fs-6">@((FormPage == EditPlayableItemFormPage.Playlist || FormPage == EditPlayableItemFormPage.QuickMedia) ? "Rel Brightness" : "Relative Brightness"): @Item.RelativeBrightness%</div>
             }
         }
     </div>

@@ -3,17 +3,17 @@ using WearWare.Services.MediaController;
 
 namespace WearWare.Services.Mocks
 {
-    public class MockStreamPlayer : IStreamPlayer
+    public class MockMediaPlayer : IMediaPlayer
     {
-        private readonly ILogger<MockStreamPlayer> _logger;
-        public MockStreamPlayer(ILogger<MockStreamPlayer> logger)
+        private readonly ILogger<MockMediaPlayer> _logger;
+        public MockMediaPlayer(ILogger<MockMediaPlayer> logger)
         {
             _logger = logger;
         }
 
-        public bool PlayStream(PlayableItem playableItem, CancellationToken ct)
+        public bool PlayFseq(PlayableItem playableItem, CancellationToken ct)
         {
-            _logger.LogInformation("[PLAYSTREAM MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
+            _logger.LogInformation("[PLAYFSEQ MOCK] Playing: {ItemName}. PlayMode: {PlayMode}, Value: {PlayModeValue}", playableItem.Name, playableItem.PlayMode, playableItem.PlayModeValue);
             long endTime = 0;
             if (playableItem.PlayMode == PlayMode.Duration)
             {

@@ -12,26 +12,19 @@ namespace WearWare.Services.Import
     {
         public event Action? StateChanged;
         private readonly MatrixConfigService _matrixConfigService;
-        private readonly IStreamConverterService _streamConverterService;
+        private readonly IMediaConverterService _mediaConverterService;
         private readonly LibraryService _libraryService;
         private readonly IOperationProgressService _operationProgress;
         public ImportService(MatrixConfigService matrixConfigService, 
-            IStreamConverterService streamConverterService,
+            IMediaConverterService mediaConverterService,
             LibraryService libraryService,
             IOperationProgressService operationProgress
         )
         {
             _matrixConfigService = matrixConfigService;
-            _matrixConfigService.OptionsChanged += OnMatrixOptionsChanged;
-            OnMatrixOptionsChanged();
-            _streamConverterService = streamConverterService;
+            _mediaConverterService = mediaConverterService;
             _libraryService = libraryService;
             _operationProgress = operationProgress;
-        }
-
-        private void OnMatrixOptionsChanged()
-        {
-            
         }
 
         public List<PlayableItem>? GetImportItems()
@@ -48,11 +41,8 @@ namespace WearWare.Services.Import
             List<PlayableItem> importItems = [];
             foreach (var fileName in files)
             {
-                var mediaType = MediaTypeMappings.GetMediaType(Path.GetExtension(fileName)) ?? MediaType.IMAGE;
                 var baseName = Path.GetFileNameWithoutExtension(fileName);
                 var sanitized = FilenameValidator.Sanitize(baseName);
-                var baseBrightness = _matrixConfigService.CloneOptions().Brightness ?? 100;
-                var actual = BrightnessCalculator.CalculateAbsoluteBrightness(baseBrightness, 100);
                 importItems.Add(new PlayableItem(
                     sanitized,
                     PathConfig.LibraryFolder,
@@ -60,9 +50,7 @@ namespace WearWare.Services.Import
                     fileName,
                     PlayMode.Forever,
                     1,
-                    100,
-                    actual,
-                    _matrixConfigService.CloneOptions()
+                    100
                 ));
             }
             return importItems;
@@ -100,10 +88,6 @@ namespace WearWare.Services.Import
         /// <summary>
         /// Called when the edit form is submitted in the Import page.
         /// </summary>
-        /// <param name="oldFileName"></param> The original filename in the incoming folder
-        /// <param name="newFileNameNoExt"></param> The new filename (without extension) to use in the library
-        /// <param name="relativeBrightness"></param> The relative brightness to set for the imported item
-        /// <param name="options"></param> The LED matrix options to use for the imported item
         /// <returns></returns>
         public async Task OnEditFormSubmit(EditPlayableItemFormModel formModel)
         {
@@ -115,14 +99,14 @@ namespace WearWare.Services.Import
                 return;
             }
             formModel.UpdatedItem.Name = FilenameValidator.Sanitize(formModel.UpdatedItem.Name);
-            _operationProgress.ReportProgress(opId, "Converting stream...");
-            var result = await _streamConverterService.ConvertToStream(
+            _operationProgress.ReportProgress(opId, "Converting fseq...");
+            var result = await _mediaConverterService.ConvertToFseq(
                 PathConfig.IncomingPath, 
                 formModel.UpdatedItem.SourceFileName, 
                 PathConfig.LibraryPath, 
                 formModel.UpdatedItem.Name, 
                 formModel.UpdatedItem.RelativeBrightness, 
-                formModel.UpdatedItem.MatrixOptions
+                _matrixConfigService.CloneOptions()
             );
             if (result.ExitCode != 0)
             {
@@ -130,7 +114,7 @@ namespace WearWare.Services.Import
                 return;
             }
             _operationProgress.ReportProgress(opId, "Copying original file...");
-            // Copy original file to library path, and rename source file to newFileNameNoExt + original extension
+            // Copy original file to library path and rename it to the updated item name plus original extension.
             var ext = Path.GetExtension(formModel.UpdatedItem.SourceFileName);
             var destPath = Path.Combine(PathConfig.LibraryPath, $"{formModel.UpdatedItem.Name}{ext}");
             try {
@@ -153,9 +137,7 @@ namespace WearWare.Services.Import
                 Path.GetFileName(destPath),  
                 PlayMode.Forever,
                 0,
-                formModel.UpdatedItem.RelativeBrightness,
-                BrightnessCalculator.CalculateAbsoluteBrightness(_matrixConfigService.CloneOptions().Brightness ?? 100, formModel.UpdatedItem.RelativeBrightness),
-                formModel.UpdatedItem.MatrixOptions
+                formModel.UpdatedItem.RelativeBrightness
             );
             // Serialize item to JSON and write to libraryPath as name.json
             try

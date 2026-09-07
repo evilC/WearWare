@@ -197,17 +197,20 @@ namespace WearWare.Services.Playlist
             {
                 return null;
             }
-            foreach (var item in items){
-                if (!File.Exists(item.GetStreamFilePath()))
-                {
-                    items.Remove(item);
-                    logger.LogWarning("{tag} Media file for item {item} does not exist in playlist {playlist}, removing item from playlist.", _logTag, item.Name, playlistName);
-                }
-                // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
-                if (item.MatrixOptions == null)
-                    item.MatrixOptions = matrixConfigService.CloneOptions();
 
-            }
+            items = items
+                .Where(item =>
+                {
+                    if (!File.Exists(item.GetFseqFilePath()))
+                    {
+                        logger.LogWarning("{tag} FSEQ file for item {item} does not exist in playlist {playlist}, removing item from playlist.", _logTag, item.Name, playlistName);
+                        return false;
+                    }
+
+                    return true;
+                })
+                .ToList();
+
             return new PlaylistItems(logger, playlistName, config, items);
         }
 

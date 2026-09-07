@@ -1,5 +1,11 @@
 # ToDo list
 
+## Fseq conversion
+- FSeq converter does not need to pass most parameters  
+  Only rows / cols / chain / parallel ?
+- LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
+
+
 ## High Priority
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Make line-endings consistent throughout the repo

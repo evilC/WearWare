@@ -1,15 +1,16 @@
 using WearWare.Common.Media;
 namespace WearWare.Services.MediaController
 {
-    public interface IStreamPlayer
+    public interface IMediaPlayer
     {
         /// <summary>
-        /// Plays the given playable item stream.
+        /// Plays the given playable item fseq.
         /// </summary>
-        /// <param name="playableItem"></param> The stream to play
+        /// <param name="playableItem"></param> The fseq to play
         /// <param name="ct"></param> Cancellation token to stop playback
         /// <returns>True if playback completed successfully, false otherwise.</returns>
-        bool PlayStream(PlayableItem playableItem, CancellationToken ct);
+        bool PlayFseq(PlayableItem playableItem, CancellationToken ct);
+
         void Clear();
     }
 }

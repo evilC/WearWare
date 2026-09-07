@@ -21,26 +21,13 @@
 }
 else if (_editFormModel is not null)
 {
-    @if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-    {
-        @* ReConvert All dialog *@
-        <EditPlayableItemForm
-            FormModel="_editFormModel"
-            OnReconvertAllOk="OnReconvertAll"
-            OnCancel="OnEditFormCancel"
-            ZIndex="2000"
-        />
-    }
-    else
-    {
-        @* Edit PlayableItem dialog*@
-        <EditPlayableItemForm
-            FormModel="_editFormModel"
-            OnSave="OnSavePlaylistItem"
-            OnCancel="OnEditFormCancel"
-            ZIndex="2000"
-        />
-    }
+    @* Edit PlayableItem dialog*@
+    <EditPlayableItemForm
+        FormModel="_editFormModel"
+        OnSave="OnSavePlaylistItem"
+        OnCancel="OnEditFormCancel"
+        ZIndex="2000"
+    />
 }
 else if (_addCopyPlaylistModel != null)
 {
@@ -97,9 +84,6 @@ else if (_addCopyPlaylistModel != null)
 @* Playlist Items *@
 @if (_playlist is not null && _items is not null)
 {
-    @* ReConvert buttons *@
-    <button class="btn btn-sm btn-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllMatrix()">ReConvert all with new Matrix Options</button>
-    <button class="btn btn-sm btn-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllBrightness()">ReConvert all with new Brightness</button>
     <div class="d-flex flex-column">
         @* Add at start *@
         <button class="btn btn-secondary btn-sm mb-4 rounded rounded-3" @onclick="() => OnAddDialogShow(0)">Add new item at start</button>

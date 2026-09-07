@@ -22,26 +22,13 @@
 }
 else if(_editFormModel is not null)
 {
-	@if (_editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllMatrix || _editFormModel.FormMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-	{
-		@* ReConvert All dialog *@
-		<EditPlayableItemForm
-			FormModel="_editFormModel"
-			OnReconvertAllOk="OnReconvertAll"
-			OnCancel="OnEditFormCancel"
-			ZIndex="2000"
-		/>
-	}
-	else
-	{
-		@* Edit PlayableItem dialog*@
-		<EditPlayableItemForm
-			FormModel="_editFormModel"
-			OnSave="OnSaveQuickMediaItem"
-			OnCancel="OnEditFormCancel"
-			ZIndex="2000"
-		/>
-	}
+	@* Edit PlayableItem dialog*@
+	<EditPlayableItemForm
+		FormModel="_editFormModel"
+		OnSave="OnSaveQuickMediaItem"
+		OnCancel="OnEditFormCancel"
+		ZIndex="2000"
+	/>
 }
 
 @* Regular QuickMedia view *@
@@ -51,8 +38,6 @@ else if(_editFormModel is not null)
 }
 else
 {
-	<button class="btn btn-sm btn-primary rounded rounded-3 w-100 mb-2" @onclick="() => ShowReConvertAllGlobal()">ReConvert all with new Matrix Options</button>
-	<button class="btn btn-sm btn-primary rounded rounded-3 w-100 mb-4" @onclick="() => ShowReConvertAllEmbedded()">ReConvert all with new Brightness</button>
 	<div class="d-flex flex-column">
 		@for (int i = 0; i < quickButtons.Count; i++)
 		{

@@ -1,9 +1,7 @@
 using WearWare.Components.Forms.EditPlayableItemForm;
-using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
 using WearWare.Services.QuickMedia;
-using WearWare.Services.StreamConverter;
 using WearWare.Utils;
 
 record QuickMediaDto(int ButtonNumber, PlayableItem Item);
@@ -18,15 +16,11 @@ public class QuickMediaService
     private readonly ILogger<QuickMediaService> _logger;
     private readonly string _logTag = "[QUICKMEDIA]";
     private static readonly string _configFileName = "quickmedia.json";
-    private readonly MatrixConfigService _matrixConfigService;
-    private readonly IStreamConverterService _streamConverterService;
     private readonly IOperationProgressService _operationProgress;
 
     public QuickMediaService(ILogger<QuickMediaService> logger,
         MediaControllerService mediaController, 
         IQuickMediaButtonFactory buttonFactory,
-        MatrixConfigService matrixConfigService,
-        IStreamConverterService streamConverterService,
         IOperationProgressService operationProgress
     )
     {
@@ -35,8 +29,6 @@ public class QuickMediaService
         _buttons = new IQuickMediaButton[_buttonPins.Count];
         _mediaController = mediaController;
         _buttonFactory = buttonFactory;
-        _matrixConfigService = matrixConfigService;
-        _streamConverterService = streamConverterService;
         _mediaController.StateChanged += OnMediaControllerStateChanged;
         _operationProgress = operationProgress;
         // Instantiate buttons
@@ -160,41 +152,18 @@ public class QuickMediaService
             formModel.UpdatedItem.ParentFolder = button.GetRelativePath();
         }
 
-        if (formModel.OriginalItem.NeedsReConvert(formModel.UpdatedItem)){
-            _operationProgress.ReportProgress(opId, "Converting stream");
-            // If the updated item needs re-conversion, do it now
-            var readFrom = formModel.FormMode == EditPlayableItemFormMode.Add
-                    ? PathConfig.LibraryPath                // For ADD, source is library folder
-                    : button.GetAbsolutePath();             // For EDIT, source is quickmedia folder
-            var writeTo = button.GetAbsolutePath();         // For both ADD and EDIT, destination is quickmedia folder
-            var result = await _streamConverterService.ConvertToStream(
-                readFrom, 
-                formModel.UpdatedItem.SourceFileName, 
-                writeTo, formModel.UpdatedItem.Name, 
-                formModel.UpdatedItem.RelativeBrightness, 
-                formModel.UpdatedItem.MatrixOptions
-            );
-            if (result.ExitCode != 0)
-            {
-                // Re-convert failed - show an alert and do not save changes
-                _operationProgress.CompleteOperation(opId, false, result.Message + "\n" + result.Error);
-                return;
-            }
-            formModel.UpdatedItem.CurrentBrightness = result.ActualBrightness;
-        }
-        else if (formModel.FormMode == EditPlayableItemFormMode.Add)
+        if (formModel.FormMode == EditPlayableItemFormMode.Add)
         {
             try
             {
-                _operationProgress.ReportProgress(opId, "Copying stream file");
-                // If in ADD mode but no re-convert needed, we still need to copy the .stream from library to quickmedia folder
-                var copyFrom = formModel.OriginalItem.GetStreamFilePath();    // From library folder
-                var copyTo = formModel.UpdatedItem.GetStreamFilePath();       // To quickmedia folder
+                _operationProgress.ReportProgress(opId, "Copying fseq file");
+                var copyFrom = formModel.OriginalItem.GetFseqFilePath();    // From library folder
+                var copyTo = formModel.UpdatedItem.GetFseqFilePath();       // To quickmedia folder
                 await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
             }
             catch
             {
-                _operationProgress.CompleteOperation(opId, false, "Error copying stream file from library to Quick Media folder.");
+                _operationProgress.CompleteOperation(opId, false, "Error copying fseq file from library to Quick Media folder.");
                 return;
             }
         }
@@ -238,61 +207,6 @@ public class QuickMediaService
         }
         _operationProgress.CompleteOperation(opId, true, "Done");
         StateChanged?.Invoke(); // Only used to notify the UI on the Mocks page
-    }
-
-    /// <summary>
-    /// Called when Re-Convert All is clicked in the QuickMedia page
-    /// </summary>
-    /// <param name="formMode"></param> The mode of the form (ReConvertAllGlobal or ReConvertAllEmbedded)
-    /// <param name="options"></param> The new matrix options to use if ReConvertAllGlobal
-    /// <returns></returns>
-    public async Task ReConvertAllItems(EditPlayableItemFormMode formMode, int relativeBrightness, LedMatrixOptionsConfig? options)
-    {
-        var opId = await _operationProgress.StartOperation("ReConverting All Library Items");
-        for (int i = 0; i < _buttonPins.Count; i++)
-        {
-            var button = _buttons[i];
-            if (button == null) continue;
-            var originalItem = button.Item;
-            if (originalItem == null) continue;
-            var item = originalItem.Clone();
-            if (formMode == EditPlayableItemFormMode.ReConvertAllBrightness)
-            {
-                item.RelativeBrightness = relativeBrightness;
-            }
-            else if (formMode == EditPlayableItemFormMode.ReConvertAllMatrix && options != null)
-            {
-                item.MatrixOptions = options;
-            }
-            if (!originalItem.NeedsReConvert(item))
-            {
-                continue;
-            }
-            _operationProgress.ReportProgress(opId, $"Re-converting Quick Media button {i+1}");
-            var folder = button.GetAbsolutePath();
-            var result = await _streamConverterService.ConvertToStream(
-                folder,
-                item.SourceFileName,
-                folder,
-                item.Name,
-                item.RelativeBrightness, 
-                item.MatrixOptions
-            );
-            if (result.ExitCode != 0)
-            {
-                _logger.LogError("{tag} Re-conversion failed for Quick Media button {buttonNumber}, item {itemName}: {error} - {message}", 
-                    _logTag, i, item.Name, result.Error, result.Message);
-                _operationProgress.ReportProgress(opId, $"Re-conversion failed for Quick Media button {i+1}: {result.Error} - {result.Message}");
-                continue;
-            }
-            // Update item's relative brightness and matrix options
-            item.CurrentBrightness = result.ActualBrightness;
-            // Save updated metadata
-            button.Item.UpdateFromClone(item);
-            // Serialize updated item
-            SerializeQuickMediaButton(button);
-        }
-        _operationProgress.CompleteOperation(opId, true, "Done");
     }
 
     public bool DeleteQuickMediaButton(int buttonNumber)
@@ -348,9 +262,6 @@ public class QuickMediaService
             var dto = JsonUtils.FromJson<QuickMediaDto>(json);
             if (dto == null) return null;
             var button = _buttonFactory.Create(_mediaController, dto.ButtonNumber, _buttonPins[dto.ButtonNumber], dto.Item);
-            // Older JSON may not include MatrixOptions; ensure it's initialized so code relying on it won't see null.
-            if (button.Item.MatrixOptions == null)
-                button.Item.MatrixOptions = _matrixConfigService.CloneOptions();
             return button;
         }
         catch (Exception ex)

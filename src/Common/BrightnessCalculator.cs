@@ -4,10 +4,13 @@ namespace WearWare.Common
     {
         public static int CalculateAbsoluteBrightness(int baseBrightness, int relativeBrightness)
         {
-            // Ensure relative brightness is between 0 and 100
+            // Ensure inputs are in valid ranges.
+            baseBrightness = Math.Clamp(baseBrightness, 1, 100);
             relativeBrightness = Math.Clamp(relativeBrightness, 0, 100);
-            // Calculate absolute brightness
-            return baseBrightness * relativeBrightness / 100;
+
+            // Enforce runtime brightness contract of 1..100.
+            var absoluteBrightness = baseBrightness * relativeBrightness / 100;
+            return Math.Clamp(absoluteBrightness, 1, 100);
         }
     }
 }

@@ -102,13 +102,13 @@
             "problemMatcher": []
         },
         {
-            // Copies the built led-image-viewer from the remote machine to the remote tools folder
+            // Copies the built frame-sequence-player from the remote machine to the remote tools folder
             "label": "copy-util-remote-to-remote",
             "type": "shell",
             "command": "ssh",
             "args": [
                 "${env:WEARWARE_REMOTE_MACHINE}",
-                "cp ${env:WEARWARE_REMOTE_LIB_DIR}/utils/led-image-viewer ${env:WEARWARE_REMOTE_DIR}/tools/"
+                "cp ${env:WEARWARE_REMOTE_LIB_DIR}/utils/frame-sequence-player ${env:WEARWARE_REMOTE_DIR}/tools/"
             ],
             "problemMatcher": []
         },
