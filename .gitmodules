@@ -1,4 +1,4 @@
 [submodule "rpi-rgb-led-matrix"]
 	path = rpi-rgb-led-matrix
 	url = https://github.com/evilC/rpi-rgb-led-matrix
-	branch = dynamic-brightness-02-01
+	branch = master
