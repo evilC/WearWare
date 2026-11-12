@@ -5,8 +5,13 @@
   Only rows / cols / chain / parallel ?
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
 
-
 ## High Priority
+- Add Preview page
+  Button to upload. File is instantly converted and played.  
+  Uploaded files are stored in separate folder, and do not overwrite incoming / library.  
+  Can upload numerous files for preview and quickly toggle between them.  
+  Each preview file has move button to move original to incoming, and converted file to library.  
+  Delete all button to remove all preview files when done.  
 - Error handling in Add / Edit (Copying files + converting stream)  
 - Make line-endings consistent throughout the repo
   - Massive mix of CRLF and LF, even among files of same file extension
