@@ -1,5 +1,9 @@
 # ToDo list
 
+## Post-hotspot changes
+- I no longer use hostapd (Pi now connects to phone's hotspot using NetworkManager)  
+  `resources\pi-scripts\wearware.service` still references it - should be removed?
+
 ## Fseq conversion
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
