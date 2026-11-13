@@ -4,6 +4,11 @@
 - I no longer use hostapd (Pi now connects to phone's hotspot using NetworkManager)  
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
+## I2C support
+- Allow buttons to be handled over I2C
+- Battery voltage monitoring / logging
+- Extra features - IMU (Gyro) for physics simulation
+
 ## Fseq conversion
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
