@@ -11,16 +11,21 @@ Software development occurs on a desktop computer (Windows PC) in VSCode.
 The Pi has buttons attached (Currently 4) via GPIO pins which can be pressed to trigger an animation and then return to the normal playlist ("QuickMedia" functionality).  
 The Pi is powered by 4x 6000mAh 21700 batteries and lasts for about 10-11 hours.  
 
+## Terminology
+In this file, “dev” means home development and testing, and “prod” / "production" means when the device is being worn and in active use at an event.  
+They refer to different contexts for the same Raspberry Pi, not separate devices or deployments.  
+A backup is typically taken of the Pi SD card prior to any dev session, to make recovery easier, but this is not a reason to take unnecessary risks.
+
 ## Real-world considerations  
-* Production ("prod") use is at nightclub events which typically last 8-10 hours, so there is not a huge amount of headroom in terms of battery life, dev use is at home and powered by a PSU.  
+* Prod use is at nightclub events which typically last 8-10 hours, so there is not a huge amount of headroom in terms of battery life, dev use is at home and powered by a PSU.  
 * Power (ie battery) consumption in prod is obviously an issue.  
 * Keyboard / normal (ie HDMI) display access to the Pi is not available in prod. Access to the Pi directly (ie not via the UI) is via SSH in dev and possible but undesirable in prod.  
 * In dev, networking is via LAN. In prod, networking is via WiFi (Typically the pi is connected to an Android phone's hotspot).  
 * Anything which could cause the Playlist / QuickMedia functionality to stop working whilst in prod is considered a disaster, and should be avoided. The main playback loop needs to be robust. Losing access to the UI would be considered an annoyance, but not as disastrous.  
-* Whilst in prod, the user may be intoxicated and is on a night out having fun, so any action which may need to be taken at that point (eg connecting a phone to the UI, acessing the UI, configuring what the tshirt is showing etc) should be simple - eg minimize typing, avoid the need for SSH etc in prod if at all possible.  
+* Whilst in prod, the user may be intoxicated and is on a night out having fun, so any action which may need to be taken at that point (eg connecting a phone to the UI, accessing the UI, configuring what the tshirt is showing etc) should be simple - eg minimize typing, avoid the need for SSH etc in prod if at all possible.  
 
 ## Software considerations  
-* Modification of the underlying rpi-rgb-led-matrix submodule is a possibility, but should never happen without warning the author.  
+* Modification of the underlying rpi-rgb-led-matrix submodule is a possibility, but should never happen without confirming with the author.  
   If changes are made, he would generally be seeking to raise a PR once it is working.  
 * Try and stick to existing conventions, libraries etc where at all possible.  
 * Try to avoid complexity. If the author asks if something is feasible - temper your response in terms of these considerations and challenge whether the complexity or change to existing implementation is worth it.  
@@ -28,6 +33,8 @@ The Pi is powered by 4x 6000mAh 21700 batteries and lasts for about 10-11 hours.
 * If you remove some code, do not leave comments saying that you removed it. Same applies for changing code.  
   Explanations of why the code is doing what it is doing are fine. If code does something a little unusual, or to work around an issue, it is also acceptable to put in the comments why it is, or has to be, that way.  
 * Avoid code duplication wherever reasonably possible
-* If something has changed, and existing documentation / ToDo lists reference it, then warn the author. Do not update it yourself however until directed, but if you see the author finishing one task and moving onto another, flag it as being out of date.  
+* If something has changed, and existing project-level documentation / ToDo lists reference it, then warn the author. Do not update it yourself however until directed, but if you see the author finishing one task and moving onto another, flag it as being out of date.  
 * Keep your responses fairly terse. Unless discussing what code would look like, avoid adding code blocks to your responses.  
   Summarize, lots of TLDRs, and let the author ask if he wants clarification.  
+* In dev, the author can remotely interactively debug, and when the session has suitable tools and connectivity you should be capable of connecting to the Pi via SSH and executing commands, building code, deploying things via SFTP, looking at logs, even deploying and running builds. Obviously, you cannot verify GPIO, LED output etc. Assume passwordless SSH/SFTP is available in this mode. Assume the account to connect to is root.
+* Preference should be given to cross-platform building on the desktop, and deploying to the Pi via SSH / SFTP. There are a number of build tasks in existence which help facilitate this.
