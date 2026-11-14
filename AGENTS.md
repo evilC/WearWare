@@ -38,3 +38,6 @@ A backup is typically taken of the Pi SD card prior to any dev session, to make 
   Summarize, lots of TLDRs, and let the author ask if he wants clarification.  
 * In dev, the author can remotely interactively debug, and when the session has suitable tools and connectivity you should be capable of connecting to the Pi via SSH and executing commands, building code, deploying things via SFTP, looking at logs, even deploying and running builds. Obviously, you cannot verify GPIO, LED output etc. Assume passwordless SSH/SFTP is available in this mode. Assume the account to connect to is root.
 * Preference should be given to cross-platform building on the desktop, and deploying to the Pi via SSH / SFTP. There are a number of build tasks in existence which help facilitate this.
+
+# Additional context
+Proposed functionality is documented in `plans/`. Read only notes relevant to the current task.
