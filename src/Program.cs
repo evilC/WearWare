@@ -63,6 +63,7 @@ builder.Services.AddSingleton<PlaylistService>();
 builder.Services.AddSingleton<InMemoryLogService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddSingleton<LibraryService>();
+builder.Services.AddSingleton<QuickMediaButtonsConfigService>();
 
 var env = builder.Environment.EnvironmentName;
 builder.Services.AddSingleton(sp =>{return new EnvironmentService(env);});  // Allow Nav Menu to detect if running on Desktop or RPi
@@ -84,6 +85,16 @@ else
     }
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
+    builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
+    {
+        var config = sp.GetRequiredService<QuickMediaButtonsConfigService>().Config;
+        return config.Provider switch
+        {
+            "PiGpio" => new PiGpioButtonProvider(config.ButtonPins ?? []),
+            "Mcp23017" => new AdafruitMcp23017GpioProvider(config.ButtonPins ?? [], config.InterruptPins ?? [null, null]),
+            _ => throw new InvalidOperationException($"Unsupported button provider '{config.Provider}'.")
+        };
+    });
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }

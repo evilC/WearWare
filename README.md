@@ -98,15 +98,46 @@ It should work fine on any OS
 ### Hardware notes
 
 #### Physical buttons
-
 This app supports playing media on press of a button.  
-Buttons are wired via free GPIO pins.  
-Pull-up / pull-down resitors are not required, as the button handler will ignore all input for 100ms after initialization to allow for the voltage level to settle.  
-There is currently no UI to configure which pins are used, instead `config/buttonpins.json` is used.  
-This will be created on startup if it does not exist, or you can create it yourself. Format is eg `[2, 3, 16, 14]`  
-If using an Electrodragon Active-3 matrix driver board, channel 3 can be disabled by desoldering the chip next to channel 3, freeing up 6 GPIO pins - 2, 3, 14, 16, 21 + 26  
-If also using a Petrockblock Powerblock (ATX power switch), ** DO NOT ** try and use pins 2 and 3 for the PowerBlock! It will shut down as soon as it starts up (Because these pins default to high). Recommend using pins 21 (Status) and 26 (Shutdown)  
-In this manner, you can have two panels, four buttons, and an ATX style power switch.  
+Buttons can be connected via either the Pi's normal GPIO pins, or via an I2C GPIO expander.  
+Currently, only the Adafruit MCP23017 is supported as an I2C expander, but more could be easily added.  
+Button hardware is configured in `config/buttonsconfig.json`, which defaults to an empty `PiGpio` configuration. WearWare creates the same default if the file is absent. Configure the provider and `buttonPins` before using QuickMedia. The list order maps pins to QuickMedia slots, starting at slot 0.  
+
+##### Via Pi GPIO
+For Raspberry Pi GPIO, `buttonPins` contains BCM GPIO numbers. Use only pins that are available with the installed matrix HAT and other peripherals. With I2C enabled, set `excludeI2cPins` to `true` to reject a config that includes GPIO2 or GPIO3. The pins are not remapped. For example, with an Electrodragon Active-3 matrix driver board that has channel 3 disabled, and I2C is disabled:  
+
+```json
+{
+  "provider": "PiGpio",
+  "buttonPins": [2, 3, 14, 16, 21, 26],
+  "excludeI2cPins": false
+}
+```
+
+With an Electrodragon Active-3 matrix driver board that has channel 3 disabled, and I2C is enabled (Being used for something other than buttons):  
+
+```json
+{
+  "provider": "PiGpio",
+  "buttonPins": [14, 16, 21, 26],
+  "excludeI2cPins": true
+}
+```
+
+##### Via I2C
+For an Adafruit MCP23017, the I2C bus is fixed to bus 1 and address `0x20`. Button pin numbers are MCP23017 driver pin numbers: 0-6 for A0-A6 and 8-14 for B0-B6. Pins 7 and 15 are kept as outputs. `interruptPins` has exactly two entries in IA, IB order; use `null` for an unconnected line:
+
+```json
+{
+  "provider": "Mcp23017",
+  "buttonPins": [0, 1],
+  "interruptPins": [14, null]
+}
+```
+
+Connect normally open buttons between A0/A1 and GND, and connect IA to Pi GPIO14 (physical header pin 8). Enable I2C on the Pi. The expander inputs use internal pull-ups.
+
+Button events are ignored for 100ms after each handler is created to allow the input voltage to settle, and use 200ms debounce.
 
 ## Using the app
 
@@ -115,4 +146,4 @@ In this manner, you can have two panels, four buttons, and an ATX style power sw
 - Go to the Options page, click the `Matrix Options` button and set the matrix options for your panel (You may need to restart the app after)  
 - Go to the `Import` page and import files into the library. This will convert them to a stream
 - Go to the `Playlist` page, create a playlist, and add items to it from the library
-- Optionally, go to the `QuickMedia` page and assign items to the buttons (You may need to edit `ButtonPins.cs` to set which pins your buttons are connected to)
+- Optionally, go to the `QuickMedia` page and assign items to the configured button slots.
