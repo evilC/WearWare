@@ -172,6 +172,7 @@ namespace WearWare.Services.Simulations.Fluid
             Array.Fill(_cellHeads, -1);
             for (var i = 0; i < _positions.Length; i++)
             {
+                _neighbors[i].Clear();
                 var cellX = Math.Clamp((int)(_positions[i].X / _supportRadius), 0, _gridWidth - 1);
                 var cellY = Math.Clamp((int)(_positions[i].Y / _supportRadius), 0, _gridHeight - 1);
                 var cell = cellY * _gridWidth + cellX;
@@ -183,7 +184,6 @@ namespace WearWare.Services.Simulations.Fluid
             for (var i = 0; i < _positions.Length; i++)
             {
                 var neighbors = _neighbors[i];
-                neighbors.Clear();
                 var cellX = Math.Clamp((int)(_positions[i].X / _supportRadius), 0, _gridWidth - 1);
                 var cellY = Math.Clamp((int)(_positions[i].Y / _supportRadius), 0, _gridHeight - 1);
                 for (var y = Math.Max(0, cellY - 1); y <= Math.Min(_gridHeight - 1, cellY + 1); y++)
@@ -192,9 +192,10 @@ namespace WearWare.Services.Simulations.Fluid
                     {
                         for (var other = _cellHeads[y * _gridWidth + x]; other >= 0; other = _next[other])
                         {
-                            if (other != i && Vector2.DistanceSquared(_positions[i], _positions[other]) < supportSquared)
+                            if (other > i && Vector2.DistanceSquared(_positions[i], _positions[other]) < supportSquared)
                             {
                                 neighbors.Add(other);
+                                _neighbors[other].Add(i);
                             }
                         }
                     }
