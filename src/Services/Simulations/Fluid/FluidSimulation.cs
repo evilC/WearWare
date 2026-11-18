@@ -59,6 +59,7 @@ namespace WearWare.Services.Simulations.Fluid
                 spacing *= 1.1f;
             } while (true);
 
+            rows = Math.Max(1, (rows + 1) / 2);
             _spacing = spacing;
             _supportRadius = spacing * 2;
             _paddingX = paddingX;
