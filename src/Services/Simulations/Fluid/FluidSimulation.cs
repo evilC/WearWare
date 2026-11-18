@@ -27,6 +27,7 @@ namespace WearWare.Services.Simulations.Fluid
         private readonly float[] _lambdas;
         private readonly Vector2[] _wallOffsets;
         private readonly List<int>[] _neighbors;
+        private readonly List<Vector2>[] _gradients;
         private readonly int[] _cellHeads;
         private readonly int[] _next;
         private readonly int _gridWidth;
@@ -73,6 +74,7 @@ namespace WearWare.Services.Simulations.Fluid
             _lambdas = new float[count];
             _wallOffsets = new Vector2[count];
             _neighbors = new List<int>[count];
+            _gradients = new List<Vector2>[count];
             _next = new int[count];
             _gridWidth = Math.Max(1, (int)Math.Ceiling(width / (double)_supportRadius));
             _gridHeight = Math.Max(1, (int)Math.Ceiling(height / (double)_supportRadius));
@@ -90,6 +92,7 @@ namespace WearWare.Services.Simulations.Fluid
                 _wallOffsets[i] = maxWallOffset * ((hash >> 8) / 16777216f);
                 _positions[i] = Constrain(new Vector2(paddingX + column * spacing, height - 1 - paddingY - row * spacing), i);
                 _neighbors[i] = new List<int>(16);
+                _gradients[i] = new List<Vector2>(16);
             }
         }
 
@@ -206,9 +209,12 @@ namespace WearWare.Services.Simulations.Fluid
                 var density = 1f;
                 var gradientSum = Vector2.Zero;
                 var squaredGradients = 0f;
+                var gradients = _gradients[i];
+                gradients.Clear();
                 foreach (var neighbor in _neighbors[i])
                 {
                     var gradient = Gradient(i, neighbor, out var distance);
+                    gradients.Add(gradient);
                     density += Kernel(distance / _supportRadius);
                     gradientSum += gradient;
                     squaredGradients += gradient.LengthSquared();
@@ -226,11 +232,14 @@ namespace WearWare.Services.Simulations.Fluid
             for (var i = 0; i < _positions.Length; i++)
             {
                 var correction = Vector2.Zero;
-                foreach (var neighbor in _neighbors[i])
+                var neighbors = _neighbors[i];
+                var gradients = _gradients[i];
+                for (var n = 0; n < neighbors.Count; n++)
                 {
+                    var neighbor = neighbors[n];
                     var lambda = _lambdas[i] + _lambdas[neighbor];
                     if (lambda == 0) continue;
-                    var pair = lambda * Gradient(i, neighbor, out _);
+                    var pair = lambda * gradients[n];
                     var difference = _positions[i] - _positions[neighbor];
                     var across = Math.Abs(Vector2.Dot(difference, lateral));
                     var along = Math.Abs(Vector2.Dot(difference, axis));
