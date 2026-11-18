@@ -8,7 +8,7 @@ namespace WearWare.Services.MatrixConfig
     {
         private LedMatrixOptionsConfig _options;
         private readonly AppOptionsService _appOptionsService;
-        private int _currentBrightness;
+        private volatile int _currentBrightness;
         private static readonly string ConfigFilePath = Path.Combine(PathConfig.ConfigPath, "matrixconfig.json");
 
         public event Action? OptionsChanged;

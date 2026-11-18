@@ -21,8 +21,8 @@ using WearWare.Services.TempMon;
 using WearWare.Services.Imu;
 using WearWare.Services.Imu.Sensors;
 using WearWare.Services.Matrix;
+using WearWare.Services.Mode;
 
-#if NORMAL_PLAYBACK
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
 builder.Services.AddHostedService<ShutdownService>();
@@ -94,6 +94,7 @@ else
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
     builder.Services.AddSingleton<MatrixService>();
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
+    builder.Services.AddSingleton<IPhysicsRenderer, ImuTiltDiagnostic>();
     builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
     {
         var config = sp.GetRequiredService<QuickMediaButtonsConfigService>().Config;
@@ -108,6 +109,13 @@ else
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
 builder.Services.AddSingleton<MediaControllerService>();
+builder.Services.AddSingleton(sp => new ModeService(
+    sp.GetRequiredService<MediaControllerService>(),
+    sp.GetRequiredService<ImuService>(),
+    sp.GetService<IPhysicsRenderer>(),
+    sp.GetRequiredService<IHostApplicationLifetime>(),
+    sp.GetRequiredService<ILogger<ModeService>>()));
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeService>());
 builder.Services.AddSingleton<QuickMediaService>();
 builder.Services.AddSingleton<IOperationProgressService, OperationProgressService>();
 
@@ -168,6 +176,3 @@ var quickMediaService = app.Services.GetRequiredService<QuickMediaService>();
 quickMediaService.Initialize();
 
 app.Run();
-#else
-await ImuTiltDiagnostic.RunAsync();
-#endif

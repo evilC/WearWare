@@ -1,0 +1,59 @@
+@page "/mode"
+@rendermode InteractiveServer
+@implements IDisposable
+@using WearWare.Services.Mode
+@inject ModeService ModeService
+
+<PageTitle>WearWare Mode</PageTitle>
+
+<h1>Mode</h1>
+
+<p>Current mode: <strong>@ModeService.State.Mode</strong></p>
+
+<div class="d-flex gap-2 mb-3">
+    <button class="btn @(ModeService.State.Mode == DisplayMode.Playlist ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || ModeService.State.Mode == DisplayMode.Playlist)"
+            @onclick="() => ChangeMode(DisplayMode.Playlist)">Playlist</button>
+    <button class="btn @(ModeService.State.Mode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || ModeService.State.Mode == DisplayMode.Physics)"
+            @onclick="() => ChangeMode(DisplayMode.Physics)">Physics</button>
+</div>
+
+<p>Physics currently shows the tilt diagnostic. QuickMedia is ignored in Physics mode.</p>
+
+@if (ModeService.State.Message is { } message)
+{
+    <div class="alert alert-warning" role="alert">@message</div>
+}
+
+@code {
+    private bool _changing;
+
+    protected override void OnInitialized()
+    {
+        ModeService.StateChanged += OnStateChanged;
+    }
+
+    private void OnStateChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ChangeMode(DisplayMode mode)
+    {
+        _changing = true;
+        try
+        {
+            await ModeService.SetModeAsync(mode);
+        }
+        finally
+        {
+            _changing = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        ModeService.StateChanged -= OnStateChanged;
+    }
+}

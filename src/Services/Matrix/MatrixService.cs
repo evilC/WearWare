@@ -7,7 +7,7 @@ namespace WearWare.Services.Matrix
     {
         private readonly object _matrixLock = new object();
         private readonly ILogger<MatrixService> _logger;
-        private readonly MatrixConfigService? _config;
+        private readonly MatrixConfigService _config;
         private RGBLedMatrix? _matrix;
         private RGBLedCanvas? _canvas;
         private bool _disposed;
@@ -18,12 +18,6 @@ namespace WearWare.Services.Matrix
             _config = config;
             _config.OptionsChanged += MatrixOptionsChanged;
             MatrixOptionsChanged();
-        }
-
-        internal MatrixService(ILogger<MatrixService> logger, LedMatrixOptionsConfig options)
-        {
-            _logger = logger;
-            ReplaceMatrix(options);
         }
 
         private void MatrixOptionsChanged()
@@ -37,7 +31,7 @@ namespace WearWare.Services.Matrix
 
                 try
                 {
-                    ReplaceMatrix(_config!.CloneOptions());
+                    ReplaceMatrix(_config.CloneOptions());
                 }
                 catch (Exception ex)
                 {
@@ -120,10 +114,7 @@ namespace WearWare.Services.Matrix
 
         public void Dispose()
         {
-            if (_config != null)
-            {
-                _config.OptionsChanged -= MatrixOptionsChanged;
-            }
+            _config.OptionsChanged -= MatrixOptionsChanged;
 
             lock (_matrixLock)
             {

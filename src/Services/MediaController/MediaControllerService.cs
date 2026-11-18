@@ -7,7 +7,10 @@ namespace WearWare.Services.MediaController
     {
         public event Action? StateChanged;
         private readonly IMediaPlayer _mediaPlayer;
-        private bool _running = false;
+        private readonly object _controlLock = new object();
+        private volatile bool _running = false;
+        private bool _suspended;
+        private bool _playlistRequested;
         private PlaylistItems? _playlist;
         private PlayableItem? _currentItem = null;
         private bool _currentItemIsQuickMedia = false;
@@ -34,7 +37,10 @@ namespace WearWare.Services.MediaController
         /// </summary>
         public void LoadPlaylist(PlaylistItems playlist)
         {
-            _playlist = playlist;
+            lock (_controlLock)
+            {
+                _playlist = playlist;
+            }
         }
 
         /// <summary>
@@ -71,6 +77,18 @@ namespace WearWare.Services.MediaController
         /// </summary>
         public void Start()
         {
+            lock (_controlLock)
+            {
+                _playlistRequested = true;
+                if (!_suspended)
+                {
+                    StartPlayback();
+                }
+            }
+        }
+
+        private void StartPlayback()
+        {
             if (_running)
             {
                 _logger.LogWarning("{tag} Start called but playback is already running.", _logTag);
@@ -86,10 +104,13 @@ namespace WearWare.Services.MediaController
             {
                 try {
                     _cts = new CancellationTokenSource();
-                    _playTask = Task.Run(() => PlayLoop(_cts.Token));
+                    var ct = _cts.Token;
+                    _running = true;
+                    _playTask = Task.Run(() => PlayLoop(ct));
                 }
                 catch (Exception ex)
                 {
+                    _running = false;
                     _cts?.Dispose();
                     _cts = null;
                     _logger.LogError(ex, "{tag} Exception starting PlayLoop task: {message}", _logTag, ex.Message);
@@ -101,6 +122,38 @@ namespace WearWare.Services.MediaController
         /// Stops playback of the current playlist or quick media item.
         /// </summary>
         public void Stop()
+        {
+            lock (_controlLock)
+            {
+                _playlistRequested = false;
+                StopPlayback();
+            }
+        }
+
+        internal void SuspendForPhysics()
+        {
+            lock (_controlLock)
+            {
+                _suspended = true;
+                StopPlayback();
+                _quickMediaItem = null;
+                _interruptedQuickMediaForeverItem = null;
+            }
+        }
+
+        internal void ResumeFromPhysics()
+        {
+            lock (_controlLock)
+            {
+                _suspended = false;
+                if (_playlistRequested)
+                {
+                    StartPlayback();
+                }
+            }
+        }
+
+        private void StopPlayback()
         {
             _running = false;
             _currentItem = null;
@@ -133,7 +186,6 @@ namespace WearWare.Services.MediaController
             try
             {
                 var resuming = true;
-                _running = true;
                 while ((_playlist != null || _quickMediaItem != null || _interruptedQuickMediaForeverItem != null) && _running)
                 {
                     PlayableItem? item;
@@ -173,7 +225,7 @@ namespace WearWare.Services.MediaController
                     }
                     _currentItem = item;
                     var success = _mediaPlayer.PlayFseq(item, ct);
-                    if (!success)
+                    if (!success && !ct.IsCancellationRequested)
                     {
                         if (_currentItemIsQuickMedia){
                             _logger.LogError("{tag} Playback failed for quickmedia item {item}.", _logTag, item.Name);
@@ -182,7 +234,7 @@ namespace WearWare.Services.MediaController
                         {
                             _logger.LogError("{tag} Playback failed for playlist item {item}. Disabling item.", _logTag, item.Name);
                             // Playback failed - disable item.
-                            _currentItem.Enabled = false;
+                            item.Enabled = false;
                             // Notify any listeners (eg PlaylistService and QuickMediaService) that state has changed
                             // They will then raise their own StateChanged events to update UIs etc.
                             StateChanged?.Invoke();
@@ -194,6 +246,10 @@ namespace WearWare.Services.MediaController
             {
                 _logger.LogError(ex, "{tag} Exception in PlayLoop: {message}", _logTag, ex.Message);
             }
+            finally
+            {
+                _running = false;
+            }
         }
 
         /// <summary>
@@ -203,33 +259,40 @@ namespace WearWare.Services.MediaController
         /// </summary>
         internal void PlayQuickMedia(PlayableItem item)
         {
-            if (item.PlayMode == PlayMode.Forever)
+            lock (_controlLock)
             {
-                // Requested item to play in FOREVER mode
-                if (item == _currentItem)
+                if (_suspended)
                 {
-                    // Currently playing this item, so stop it
-                    _quickMediaItem = null;
+                    return;
+                }
+                if (item.PlayMode == PlayMode.Forever)
+                {
+                    // Requested item to play in FOREVER mode
+                    if (item == _currentItem)
+                    {
+                        // Currently playing this item, so stop it
+                        _quickMediaItem = null;
+                    }
+                    else
+                    {
+                        // Request play of new FOREVER quickmedia item - replace existing one
+                        _quickMediaItem = item;
+                    }
                 }
                 else
                 {
-                    // Request play of new FOREVER quickmedia item - replace existing one
+                    // Requested play of item in LOOP or DURATION mode
+                    if (_currentItemIsQuickMedia && _currentItem != null && _currentItem.PlayMode == PlayMode.Forever)
+                    {
+                        // Currently playing a different quickmedia item in FOREVER mode.
+                        // Push it to _interruptedQuickMediaForeverItem so we can resume it later.
+                        _interruptedQuickMediaForeverItem = _currentItem;
+                    }
                     _quickMediaItem = item;
                 }
+                StopPlayback();
+                StartPlayback();
             }
-            else
-            {
-                // Requested play of item in LOOP or DURATION mode
-                if (_currentItemIsQuickMedia && _currentItem != null && _currentItem.PlayMode == PlayMode.Forever)
-                {
-                    // Currently playing a different quickmedia item in FOREVER mode.
-                    // Push it to _interruptedQuickMediaForeverItem so we can resume it later.
-                    _interruptedQuickMediaForeverItem = _currentItem;
-                }
-                _quickMediaItem = item;
-            }
-            Stop();
-            Start();
         }
     }
 }
