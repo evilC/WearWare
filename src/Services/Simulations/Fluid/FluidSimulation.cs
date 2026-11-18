@@ -70,7 +70,8 @@ namespace WearWare.Services.Simulations.Fluid
                 spacing *= 1.1f;
             } while (true);
 
-            rows = Math.Max(1, (rows + 1) / 2);
+            // rows = Math.Max(1, (rows + 1) / 2) - Original code - existing rows value compensates for margin bodge
+            rows = Math.Min(rows, (rows + 1) / 2 + 1);
             _spacing = spacing;
             _supportRadius = spacing * 2;
             _margin = spacing * 2;
