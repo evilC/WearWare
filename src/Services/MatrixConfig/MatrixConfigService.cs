@@ -1,4 +1,3 @@
-using RPiRgbLEDMatrix;
 using WearWare.Config;
 using WearWare.Services.Options;
 using WearWare.Utils;
@@ -81,11 +80,6 @@ namespace WearWare.Services.MatrixConfig
             var clamped = Math.Clamp(currentBrightness, 1, cap);
             _currentBrightness = clamped;
             BrightnessChanged?.Invoke(_currentBrightness);
-        }
-
-        internal RGBLedMatrixOptions GetRGBLedMatrixOptions()
-        {
-            return _options.ToRGBLedMatrixOptions();
         }
     }
 }

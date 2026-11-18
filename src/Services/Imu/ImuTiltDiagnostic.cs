@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using RPiRgbLEDMatrix;
 using WearWare.Services.Imu.Sensors;
+using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.Options;
 using WearWare.Utils;
@@ -39,9 +40,8 @@ namespace WearWare.Services.Imu
                     ? JsonUtils.FromJsonFile<AppOptions>(appOptionsPath)
                         ?? throw new InvalidOperationException($"App options are null: {appOptionsPath}")
                     : new AppOptions();
-                var matrixOptions = options.ToRGBLedMatrixOptions();
                 var brightnessCap = options.Brightness ?? 100;
-                matrixOptions.Brightness = Math.Clamp(appOptions.CurrentBrightness ?? brightnessCap, 1, brightnessCap);
+                options.Brightness = Math.Clamp(appOptions.CurrentBrightness ?? brightnessCap, 1, brightnessCap);
 
                 using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
                 using var imu = new ImuService(loggerFactory.CreateLogger<ImuService>(), () => new Mpu6050Sensor());
@@ -60,8 +60,7 @@ namespace WearWare.Services.Imu
                     }
 
                     GetReading(imu);
-                    using var matrix = new RGBLedMatrix(matrixOptions);
-                    var canvas = matrix.CreateOffscreenCanvas();
+                    using var matrixService = new MatrixService(loggerFactory.CreateLogger<MatrixService>(), options);
                     Console.WriteLine("IMU tilt diagnostic running. Press Ctrl+C to stop.");
                     try
                     {
@@ -70,19 +69,22 @@ namespace WearWare.Services.Imu
                             var frameStart = Stopwatch.GetTimestamp();
                             var reading = GetReading(imu);
                             var radians = reading.FilteredTiltDegrees * Math.PI / 180;
-                            var centerX = (canvas.Width - 1) / 2.0;
-                            var centerY = (canvas.Height - 1) / 2.0;
-                            var radius = (Math.Min(canvas.Width, canvas.Height) - 1) / 2.0;
-                            var dx = radius * Math.Cos(radians);
-                            var dy = -radius * Math.Sin(radians);
+                            matrixService.WithMatrix((matrix, canvas) =>
+                            {
+                                var centerX = (canvas.Width - 1) / 2.0;
+                                var centerY = (canvas.Height - 1) / 2.0;
+                                var radius = (Math.Min(canvas.Width, canvas.Height) - 1) / 2.0;
+                                var dx = radius * Math.Cos(radians);
+                                var dy = -radius * Math.Sin(radians);
 
-                            canvas.Clear();
-                            canvas.DrawLine(
-                                (int)Math.Round(centerX - dx), (int)Math.Round(centerY - dy),
-                                (int)Math.Round(centerX + dx), (int)Math.Round(centerY + dy),
-                                new Color(255, 255, 255));
-                            matrix.SwapOnVsync(canvas);
-                            Console.WriteLine($"[IMU] Left/right tilt (deg, +right/-left): {reading.FilteredTiltDegrees:F1} (raw: {reading.RawTiltDegrees:F1})");
+                                canvas.Clear();
+                                canvas.DrawLine(
+                                    (int)Math.Round(centerX - dx), (int)Math.Round(centerY - dy),
+                                    (int)Math.Round(centerX + dx), (int)Math.Round(centerY + dy),
+                                    new Color(255, 255, 255));
+                                matrix.SwapOnVsync(canvas);
+                            });
+                            // Console.WriteLine($"[IMU] Left/right tilt (deg, +right/-left): {reading.FilteredTiltDegrees:F1} (raw: {reading.RawTiltDegrees:F1})");
                             var remaining = FrameInterval - Stopwatch.GetElapsedTime(frameStart);
                             if (remaining > TimeSpan.Zero)
                             {
@@ -92,8 +94,10 @@ namespace WearWare.Services.Imu
                     }
                     finally
                     {
-                        canvas.Clear();
-                        matrix.SwapOnVsync(canvas);
+                        if (!matrixService.Clear())
+                        {
+                            throw new InvalidOperationException("Matrix is not initialized.");
+                        }
                     }
                 }
                 finally

@@ -20,6 +20,7 @@ using WearWare.Services.Options;
 using WearWare.Services.TempMon;
 using WearWare.Services.Imu;
 using WearWare.Services.Imu.Sensors;
+using WearWare.Services.Matrix;
 
 #if NORMAL_PLAYBACK
 var builder = WebApplication.CreateBuilder(args);
@@ -91,6 +92,7 @@ else
         Log.Warning("frame-sequence-player not found in tools folder! FSEQ conversion functionality will not work!");
     }
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
+    builder.Services.AddSingleton<MatrixService>();
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
     builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
     {
