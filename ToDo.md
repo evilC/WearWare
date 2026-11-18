@@ -13,7 +13,12 @@
 
 ## Physics sims
 - Physics sims will need pitch of display to calculate real-world fall rate
-- Config options for each sim? eg number of particles for fluid
+- Config options for each sim?
+  - Fluid:
+    - Particle spacing: Smaller gives finer detail and potentially less rounding, but uses more particles and CPU
+    - Particle count: More particles at the same pool depth can give finer detail and less rounding, but increase CPU usage
+    - Pool depth. Deeper uses more particles and leaves less room to slosh
+    - Solver iterations: More can reduce wall buildup, but costs CPU
 
 ## Fseq conversion
 - `frame-sequence-player.cc` width / height calculation is wrong - does not take into account pixel mapping.
