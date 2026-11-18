@@ -11,6 +11,9 @@
 ## IMU
 - Config file
 
+## Physics sims
+- Physics sims will need pitch of display to calculate real-world fall rate
+
 ## Fseq conversion
 - `frame-sequence-player.cc` width / height calculation is wrong - does not take into account pixel mapping.
   RGBLedMatrix defines width and height, I think this should be used instead.  
