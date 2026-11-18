@@ -20,6 +20,7 @@
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
 
 ## High Priority
+- Lots of edge cases with start/stop/quickmedia forever items etc. Whole system needs refactoring
 - Add Preview page
   Button to upload. File is instantly converted and played.  
   Uploaded files are stored in separate folder, and do not overwrite incoming / library.  
