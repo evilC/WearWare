@@ -15,6 +15,7 @@
 - Physics sims will need pitch of display to calculate real-world fall rate
 - Config options for each sim?
   - Fluid:
+    - See ToDo about Margin bodge
     - Particle spacing: Smaller gives finer detail and potentially less rounding, but uses more particles and CPU
     - Particle count: More particles at the same pool depth can give finer detail and less rounding, but increase CPU usage
     - Pool depth. Deeper uses more particles and leaves less room to slosh

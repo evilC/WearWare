@@ -1,3 +1,13 @@
+/*
+Fluid simulation using Position-Based Fluids (PBF) method.
+ToDo: Simulation currently has a "Margin"
+ie the simulation exists outside the visible canvas area.
+This is to work around an issue where particles near the edges of the canvas may not behave correctly.
+Repro:
+Tilt the sensor left.
+Start tilting the sensor back to flat, notice how a column of particles at the edge of the screen "stack" in a column vertically.
+This can also be reprodueced with particles at the bottom of the screen
+*/
 using System.Numerics;
 
 namespace WearWare.Services.Simulations.Fluid
@@ -16,6 +26,7 @@ namespace WearWare.Services.Simulations.Fluid
         private readonly int _height;
         private readonly float _spacing;
         private readonly float _supportRadius;
+        private readonly float _margin;
         private readonly float _restDensity;
         private readonly float _paddingX;
         private readonly float _paddingY;
@@ -62,6 +73,7 @@ namespace WearWare.Services.Simulations.Fluid
             rows = Math.Max(1, (rows + 1) / 2);
             _spacing = spacing;
             _supportRadius = spacing * 2;
+            _margin = spacing * 2;
             _paddingX = paddingX;
             _paddingY = paddingY;
             // Density of a regular square lattice at the chosen support radius.
@@ -77,8 +89,8 @@ namespace WearWare.Services.Simulations.Fluid
             _neighbors = new List<int>[count];
             _gradients = new List<Vector2>[count];
             _next = new int[count];
-            _gridWidth = Math.Max(1, (int)Math.Ceiling(width / (double)_supportRadius));
-            _gridHeight = Math.Max(1, (int)Math.Ceiling(height / (double)_supportRadius));
+            _gridWidth = Math.Max(1, (int)Math.Ceiling((width + 2.0 * _margin) / _supportRadius));
+            _gridHeight = Math.Max(1, (int)Math.Ceiling((height + 2.0 * _margin) / _supportRadius));
             _cellHeads = new int[checked(_gridWidth * _gridHeight)];
 
             var maxWallOffset = new Vector2(
@@ -174,8 +186,8 @@ namespace WearWare.Services.Simulations.Fluid
             for (var i = 0; i < _positions.Length; i++)
             {
                 _neighbors[i].Clear();
-                var cellX = Math.Clamp((int)(_positions[i].X / _supportRadius), 0, _gridWidth - 1);
-                var cellY = Math.Clamp((int)(_positions[i].Y / _supportRadius), 0, _gridHeight - 1);
+                var cellX = Math.Clamp((int)((_positions[i].X + _margin) / _supportRadius), 0, _gridWidth - 1);
+                var cellY = Math.Clamp((int)((_positions[i].Y + _margin) / _supportRadius), 0, _gridHeight - 1);
                 var cell = cellY * _gridWidth + cellX;
                 _next[i] = _cellHeads[cell];
                 _cellHeads[cell] = i;
@@ -185,8 +197,8 @@ namespace WearWare.Services.Simulations.Fluid
             for (var i = 0; i < _positions.Length; i++)
             {
                 var neighbors = _neighbors[i];
-                var cellX = Math.Clamp((int)(_positions[i].X / _supportRadius), 0, _gridWidth - 1);
-                var cellY = Math.Clamp((int)(_positions[i].Y / _supportRadius), 0, _gridHeight - 1);
+                var cellX = Math.Clamp((int)((_positions[i].X + _margin) / _supportRadius), 0, _gridWidth - 1);
+                var cellY = Math.Clamp((int)((_positions[i].Y + _margin) / _supportRadius), 0, _gridHeight - 1);
                 for (var y = Math.Max(0, cellY - 1); y <= Math.Min(_gridHeight - 1, cellY + 1); y++)
                 {
                     for (var x = Math.Max(0, cellX - 1); x <= Math.Min(_gridWidth - 1, cellX + 1); x++)
@@ -287,8 +299,8 @@ namespace WearWare.Services.Simulations.Fluid
         }
 
         private Vector2 Constrain(Vector2 position, int index) => new Vector2(
-            Math.Clamp(position.X, _paddingX + _wallOffsets[index].X, _width - 1 - _paddingX - _wallOffsets[index].X),
-            Math.Clamp(position.Y, _paddingY + _wallOffsets[index].Y, _height - 1 - _paddingY - _wallOffsets[index].Y));
+            Math.Clamp(position.X, _paddingX + _wallOffsets[index].X - _margin, _width - 1 - _paddingX - _wallOffsets[index].X + _margin),
+            Math.Clamp(position.Y, _paddingY + _wallOffsets[index].Y - _margin, _height - 1 - _paddingY - _wallOffsets[index].Y + _margin));
 
         public void WriteDensity(Span<float> density)
         {
