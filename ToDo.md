@@ -12,6 +12,9 @@
 - Config file
 
 ## Fseq conversion
+- `frame-sequence-player.cc` width / height calculation is wrong - does not take into account pixel mapping.
+  RGBLedMatrix defines width and height, I think this should be used instead.  
+  https://github.com/hzeller/rpi-rgb-led-matrix/issues/1918
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
 - LedMatrixOptionsConfig no longer needs Relative Brightness in ToArgsString / ToArgsList ?
