@@ -28,11 +28,9 @@ namespace WearWare.Services.Imu
                 {
                     var acceleration = sensor.GetAccelerometer();
                     var gyroscope = sensor.GetGyroscopeReading();
-                    var tilt = Math.Atan2(
-                        -acceleration.X,
-                        Math.Sqrt(acceleration.Y * acceleration.Y + acceleration.Z * acceleration.Z)) * 180 / Math.PI;
+                    var tilt = ImuTilt.CalculateDegrees(acceleration);
                     Console.WriteLine(
-                        $"[IMU] Acceleration (g): X={acceleration.X:F3}, Y={acceleration.Y:F3}, Z={acceleration.Z:F3}; " +
+                        $"[IMU] Acceleration (m/s^2): X={acceleration.X:F3}, Y={acceleration.Y:F3}, Z={acceleration.Z:F3}; " +
                         $"Gyroscope (deg/s): X={gyroscope.X:F3}, Y={gyroscope.Y:F3}, Z={gyroscope.Z:F3}; " +
                         $"Left/right tilt (deg, +right/-left): {tilt:F1}");
 

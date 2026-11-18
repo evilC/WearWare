@@ -20,6 +20,7 @@ using WearWare.Services.Options;
 using WearWare.Services.TempMon;
 using WearWare.Services.Imu;
 
+#if NORMAL_PLAYBACK
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
 builder.Services.AddHostedService<ShutdownService>();
@@ -161,3 +162,6 @@ var quickMediaService = app.Services.GetRequiredService<QuickMediaService>();
 quickMediaService.Initialize();
 
 app.Run();
+#else
+await ImuTiltDiagnostic.RunAsync();
+#endif
