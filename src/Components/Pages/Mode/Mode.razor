@@ -12,12 +12,17 @@
 
 <div class="d-flex gap-2 mb-3">
     <button class="btn @(ModeService.State.Mode == DisplayMode.Playlist ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || ModeService.State.Mode == DisplayMode.Playlist)"
+            disabled="@(_changing || (ModeService.State.Mode == DisplayMode.Playlist && ModeService.State.PreferredMode == DisplayMode.Playlist))"
             @onclick="() => ChangeMode(DisplayMode.Playlist)">Playlist</button>
     <button class="btn @(ModeService.State.Mode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || ModeService.State.Mode == DisplayMode.Physics)"
+            disabled="@(_changing || (ModeService.State.Mode == DisplayMode.Physics && ModeService.State.PreferredMode == DisplayMode.Physics))"
             @onclick="() => ChangeMode(DisplayMode.Physics)">Physics</button>
 </div>
+
+@if (ModeService.State.Mode != ModeService.State.PreferredMode)
+{
+    <p>Saved mode: @ModeService.State.PreferredMode (will be retried on startup).</p>
+}
 
 <div class="mb-3">
     <label for="physics-mode" class="form-label">Physics simulation</label>

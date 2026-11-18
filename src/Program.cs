@@ -112,11 +112,13 @@ else
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
 builder.Services.AddSingleton<MediaControllerService>();
+builder.Services.AddSingleton<ModeConfigService>();
 builder.Services.AddSingleton(sp => new ModeService(
     sp.GetRequiredService<MediaControllerService>(),
     sp.GetRequiredService<ImuService>(),
     sp.GetService<ImuTiltDiagnostic>(),
     sp.GetService<BallPhysicsRenderer>(),
+    sp.GetRequiredService<ModeConfigService>(),
     sp.GetRequiredService<IHostApplicationLifetime>(),
     sp.GetRequiredService<ILogger<ModeService>>()));
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeService>());
