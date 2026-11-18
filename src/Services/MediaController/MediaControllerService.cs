@@ -130,18 +130,28 @@ namespace WearWare.Services.MediaController
             }
         }
 
-        internal void SuspendForPhysics()
+        /// <summary>
+        /// Suspends playback, typically for entering a different mode such as Physics.
+        /// </summary>
+        internal void Suspend()
         {
             lock (_controlLock)
             {
                 _suspended = true;
+                if (_currentItemIsQuickMedia && _currentItem?.PlayMode == PlayMode.Forever)
+                {
+                    // If Suspended while playing a Forever quick media item, remember it to resume later.
+                    _interruptedQuickMediaForeverItem = _currentItem;
+                }
                 StopPlayback();
                 _quickMediaItem = null;
-                _interruptedQuickMediaForeverItem = null;
             }
         }
 
-        internal void ResumeFromPhysics()
+        /// <summary>
+        /// Resumes playback after being suspended.
+        /// </summary>
+        internal void Resume()
         {
             lock (_controlLock)
             {

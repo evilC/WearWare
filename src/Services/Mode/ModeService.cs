@@ -77,7 +77,7 @@ namespace WearWare.Services.Mode
                     var error = await StopPhysicsAsync();
                     if (!_stopping)
                     {
-                        _mediaController.ResumeFromPhysics();
+                        _mediaController.Resume();
                     }
                     SetState(new ModeState(DisplayMode.Playlist, error));
                     return;
@@ -93,7 +93,7 @@ namespace WearWare.Services.Mode
                     return;
                 }
 
-                _mediaController.SuspendForPhysics();
+                _mediaController.Suspend();
                 if (_stopping)
                 {
                     return;
@@ -113,7 +113,7 @@ namespace WearWare.Services.Mode
                     _logger.LogError(ex, "Failed to start physics.");
                     if (!_stopping)
                     {
-                        _mediaController.ResumeFromPhysics();
+                        _mediaController.Resume();
                     }
                     SetState(new ModeState(DisplayMode.Playlist, "Could not start Physics."));
                     return;
@@ -195,7 +195,7 @@ namespace WearWare.Services.Mode
                 _physicsTask = null;
                 _physicsCancellation?.Dispose();
                 _physicsCancellation = null;
-                _mediaController.ResumeFromPhysics();
+                _mediaController.Resume();
                 SetState(new ModeState(DisplayMode.Playlist, "Physics failed. Returned to Playlist."));
             }
             finally
