@@ -21,14 +21,15 @@ public class QuickMediaService
     public QuickMediaService(ILogger<QuickMediaService> logger,
         MediaControllerService mediaController, 
         IQuickMediaButtonFactory buttonFactory,
-        IOperationProgressService operationProgress
+        IOperationProgressService operationProgress,
+        QuickMediaButtonsConfigService buttonsConfig
     )
     {
         _logger = logger;
-        _buttonPins = GetButtonPins();
+        _buttonFactory = buttonFactory;
+        _buttonPins = buttonsConfig.Config.ButtonPins ?? [];
         _buttons = new IQuickMediaButton[_buttonPins.Count];
         _mediaController = mediaController;
-        _buttonFactory = buttonFactory;
         _mediaController.StateChanged += OnMediaControllerStateChanged;
         _operationProgress = operationProgress;
         // Instantiate buttons
@@ -45,31 +46,6 @@ public class QuickMediaService
         }
         
         _logger.LogInformation("{tag} Initialized.", _logTag);
-    }
-
-    /// <summary>
-    /// Loads the button pin configuration from file, or creates a new one with an empty list if it doesn't exist, or is invalid
-    /// </summary>
-    /// <returns>A list of button pins</returns>
-    private IReadOnlyList<int> GetButtonPins()
-    {
-        IReadOnlyList<int> buttonPins;
-        var configFilePath = Path.Combine(PathConfig.ConfigPath, "buttonpins.json");
-        if (File.Exists(configFilePath)){
-            try
-            {
-                buttonPins = JsonUtils.FromJsonFile<IReadOnlyList<int>>(configFilePath) ?? [];
-                if (buttonPins != null) return buttonPins;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{tag} Error reading button pins configuration from file {filename}: {message}", _logTag, configFilePath, ex.Message);
-            }
-        }
-        // My default: 2, 3, 16, 14
-        buttonPins = [];
-        JsonUtils.ToJsonFile(configFilePath, buttonPins);
-        return buttonPins;
     }
 
     /// <summary>

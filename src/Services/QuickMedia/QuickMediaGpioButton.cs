@@ -7,7 +7,6 @@ namespace WearWare.Services.QuickMedia
     public class QuickMediaGpioButton : IQuickMediaButton
     {
         private MediaControllerService _mediaController;
-        private GpioController _controller;
         private GpioButton _button;
         public int ButtonNumber { get; }
         public PlayableItem Item { get; }
@@ -21,11 +20,10 @@ namespace WearWare.Services.QuickMedia
         public QuickMediaGpioButton(MediaControllerService mediaController, GpioController controller, int buttonNumber, int pinNumber, PlayableItem item)
         {
             _mediaController = mediaController;
-            _controller = controller;
             ButtonNumber = buttonNumber;
             Item = item;
 
-            _button = new GpioButton(buttonPin: pinNumber, isPullUp: true, hasExternalResistor: false, gpio: _controller, shouldDispose: true, debounceTime: new TimeSpan(0, 0, 0, 0, 200));
+            _button = new GpioButton(buttonPin: pinNumber, isPullUp: true, hasExternalResistor: false, gpio: controller, shouldDispose: false, debounceTime: new TimeSpan(0, 0, 0, 0, 200));
             _button.ButtonDown += (sender, e) =>
             {
                 if (!_initialized) return;

@@ -5,7 +5,6 @@
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
 ## I2C support
-- Allow buttons to be handled over I2C
 - Battery voltage monitoring / logging
 - Extra features - IMU (Gyro) for physics simulation
 
