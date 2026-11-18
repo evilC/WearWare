@@ -19,7 +19,16 @@
             @onclick="() => ChangeMode(DisplayMode.Physics)">Physics</button>
 </div>
 
-<p>Physics currently shows the tilt diagnostic. QuickMedia is ignored in Physics mode.</p>
+<div class="mb-3">
+    <label for="physics-mode" class="form-label">Physics simulation</label>
+    <select id="physics-mode" class="form-select" value="@ModeService.State.Physics"
+            disabled="@_changing" @onchange="ChangePhysicsMode">
+        <option value="@PhysicsMode.TiltDiagnostic">Tilt diagnostic</option>
+        <option value="@PhysicsMode.Ball">Ball</option>
+    </select>
+</div>
+
+<p>QuickMedia is ignored in Physics mode.</p>
 
 @if (ModeService.State.Message is { } message)
 {
@@ -45,6 +54,24 @@
         try
         {
             await ModeService.SetModeAsync(mode);
+        }
+        finally
+        {
+            _changing = false;
+        }
+    }
+
+    private async Task ChangePhysicsMode(ChangeEventArgs args)
+    {
+        if (!Enum.TryParse<PhysicsMode>(args.Value?.ToString(), out var mode))
+        {
+            throw new InvalidOperationException("Invalid physics simulation selected.");
+        }
+
+        _changing = true;
+        try
+        {
+            await ModeService.SetPhysicsModeAsync(mode);
         }
         finally
         {

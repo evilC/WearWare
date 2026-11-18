@@ -9,17 +9,24 @@ namespace WearWare.Services.Mode
         Physics
     }
 
-    public sealed record ModeState(DisplayMode Mode, string? Message);
+    public enum PhysicsMode
+    {
+        TiltDiagnostic,
+        Ball
+    }
+
+    public sealed record ModeState(DisplayMode Mode, PhysicsMode Physics, string? Message);
 
     public sealed class ModeService : IHostedService
     {
         private readonly SemaphoreSlim _transition = new SemaphoreSlim(1, 1);
         private readonly MediaControllerService _mediaController;
         private readonly ImuService _imu;
-        private readonly IPhysicsRenderer? _renderer;
+        private readonly IPhysicsRenderer? _tiltRenderer;
+        private readonly IPhysicsRenderer? _ballRenderer;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<ModeService> _logger;
-        private ModeState _state = new ModeState(DisplayMode.Playlist, null);
+        private ModeState _state = new ModeState(DisplayMode.Playlist, PhysicsMode.Ball, null);
         private CancellationTokenSource? _physicsCancellation;
         private Task? _physicsTask;
         private volatile bool _stopping;
@@ -27,12 +34,14 @@ namespace WearWare.Services.Mode
         public event Action? StateChanged;
         public ModeState State => Volatile.Read(ref _state);
 
-        public ModeService(MediaControllerService mediaController, ImuService imu, IPhysicsRenderer? renderer,
+        public ModeService(MediaControllerService mediaController, ImuService imu,
+            IPhysicsRenderer? tiltRenderer, IPhysicsRenderer? ballRenderer,
             IHostApplicationLifetime lifetime, ILogger<ModeService> logger)
         {
             _mediaController = mediaController;
             _imu = imu;
-            _renderer = renderer;
+            _tiltRenderer = tiltRenderer;
+            _ballRenderer = ballRenderer;
             _lifetime = lifetime;
             _logger = logger;
         }
@@ -57,43 +66,93 @@ namespace WearWare.Services.Mode
             }
         }
 
-        public async Task SetModeAsync(DisplayMode mode)
+        public Task SetModeAsync(DisplayMode mode)
         {
             if (mode != DisplayMode.Playlist && mode != DisplayMode.Physics)
             {
                 throw new ArgumentOutOfRangeException(nameof(mode));
             }
+            return ChangeModeAsync(mode, null);
+        }
 
+        public Task SetPhysicsModeAsync(PhysicsMode mode)
+        {
+            if (mode != PhysicsMode.TiltDiagnostic && mode != PhysicsMode.Ball)
+            {
+                throw new ArgumentOutOfRangeException(nameof(mode));
+            }
+            return ChangeModeAsync(null, mode);
+        }
+
+        private async Task ChangeModeAsync(DisplayMode? requestedMode, PhysicsMode? requestedPhysics)
+        {
             await _transition.WaitAsync();
             try
             {
-                if (_stopping || mode == State.Mode)
+                var previous = State;
+                var mode = requestedMode ?? previous.Mode;
+                var physics = requestedPhysics ?? previous.Physics;
+                if (_stopping || (mode == previous.Mode && physics == previous.Physics))
                 {
                     return;
                 }
 
                 if (mode == DisplayMode.Playlist)
                 {
-                    var error = await StopPhysicsAsync();
-                    if (!_stopping)
+                    string? error = null;
+                    if (previous.Mode == DisplayMode.Physics)
                     {
-                        _mediaController.Resume();
+                        error = await StopPhysicsAsync();
+                        if (!_stopping)
+                        {
+                            _mediaController.Resume();
+                        }
                     }
-                    SetState(new ModeState(DisplayMode.Playlist, error));
+                    SetState(new ModeState(DisplayMode.Playlist, physics, error));
                     return;
                 }
 
-                var imuStatus = _imu.State.Status;
-                if (_renderer == null || imuStatus != ImuStatus.Available)
+                IPhysicsRenderer? renderer = physics switch
                 {
-                    var message = _renderer == null
+                    PhysicsMode.TiltDiagnostic => _tiltRenderer,
+                    PhysicsMode.Ball => _ballRenderer,
+                    _ => throw new ArgumentOutOfRangeException(nameof(requestedPhysics))
+                };
+                var imuStatus = _imu.State.Status;
+                if (renderer == null || imuStatus != ImuStatus.Available)
+                {
+                    var message = renderer == null
                         ? "Physics is unavailable on this device."
                         : $"Physics is unavailable: IMU status is {imuStatus}.";
-                    SetState(new ModeState(DisplayMode.Playlist, message));
+                    if (previous.Mode == DisplayMode.Physics)
+                    {
+                        await StopPhysicsAsync();
+                        if (!_stopping)
+                        {
+                            _mediaController.Resume();
+                        }
+                    }
+                    SetState(new ModeState(DisplayMode.Playlist, physics, message));
                     return;
                 }
 
-                _mediaController.Suspend();
+                if (previous.Mode == DisplayMode.Physics)
+                {
+                    var error = await StopPhysicsAsync();
+                    if (error != null)
+                    {
+                        if (!_stopping)
+                        {
+                            _mediaController.Resume();
+                        }
+                        SetState(new ModeState(DisplayMode.Playlist, physics, error));
+                        return;
+                    }
+                }
+                else
+                {
+                    _mediaController.Suspend();
+                }
                 if (_stopping)
                 {
                     return;
@@ -105,7 +164,7 @@ namespace WearWare.Services.Mode
                 {
                     cancellation = new CancellationTokenSource();
                     var token = cancellation.Token;
-                    task = Task.Run(() => _renderer.RunAsync(token));
+                    task = Task.Run(() => renderer.RunAsync(token));
                 }
                 catch (Exception ex)
                 {
@@ -115,13 +174,13 @@ namespace WearWare.Services.Mode
                     {
                         _mediaController.Resume();
                     }
-                    SetState(new ModeState(DisplayMode.Playlist, "Could not start Physics."));
+                    SetState(new ModeState(DisplayMode.Playlist, physics, "Could not start Physics."));
                     return;
                 }
 
                 _physicsCancellation = cancellation;
                 _physicsTask = task;
-                SetState(new ModeState(DisplayMode.Physics, null));
+                SetState(new ModeState(DisplayMode.Physics, physics, null));
                 _ = ObservePhysicsAsync(task, cancellation.Token);
             }
             finally
@@ -196,7 +255,7 @@ namespace WearWare.Services.Mode
                 _physicsCancellation?.Dispose();
                 _physicsCancellation = null;
                 _mediaController.Resume();
-                SetState(new ModeState(DisplayMode.Playlist, "Physics failed. Returned to Playlist."));
+                SetState(new ModeState(DisplayMode.Playlist, State.Physics, "Physics failed. Returned to Playlist."));
             }
             finally
             {

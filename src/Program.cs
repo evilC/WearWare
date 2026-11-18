@@ -94,7 +94,8 @@ else
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
     builder.Services.AddSingleton<MatrixService>();
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
-    builder.Services.AddSingleton<IPhysicsRenderer, ImuTiltDiagnostic>();
+    builder.Services.AddSingleton<ImuTiltDiagnostic>();
+    builder.Services.AddSingleton<BallPhysicsRenderer>();
     builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
     {
         var config = sp.GetRequiredService<QuickMediaButtonsConfigService>().Config;
@@ -112,7 +113,8 @@ builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton(sp => new ModeService(
     sp.GetRequiredService<MediaControllerService>(),
     sp.GetRequiredService<ImuService>(),
-    sp.GetService<IPhysicsRenderer>(),
+    sp.GetService<ImuTiltDiagnostic>(),
+    sp.GetService<BallPhysicsRenderer>(),
     sp.GetRequiredService<IHostApplicationLifetime>(),
     sp.GetRequiredService<ILogger<ModeService>>()));
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeService>());
