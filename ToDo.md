@@ -13,6 +13,7 @@
 
 ## Physics sims
 - Physics sims will need pitch of display to calculate real-world fall rate
+- Config options for each sim? eg number of particles for fluid
 
 ## Fseq conversion
 - `frame-sequence-player.cc` width / height calculation is wrong - does not take into account pixel mapping.
