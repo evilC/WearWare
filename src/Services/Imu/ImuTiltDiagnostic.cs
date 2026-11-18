@@ -12,6 +12,7 @@ namespace WearWare.Services.Imu
     internal static class ImuTiltDiagnostic
     {
         private static readonly TimeSpan FrameInterval = TimeSpan.FromSeconds(1.0 / 30);
+        private const double TiltSmoothingSeconds = 0.15;
 
         public static async Task RunAsync()
         {
@@ -63,10 +64,22 @@ namespace WearWare.Services.Imu
                     Console.WriteLine("IMU tilt diagnostic running. Press Ctrl+C to stop.");
                     try
                     {
+                        double? filteredTilt = null;
+                        long previousFrameStart = 0;
                         while (!cancellation.IsCancellationRequested)
                         {
                             var frameStart = Stopwatch.GetTimestamp();
-                            var tilt = ImuTilt.CalculateDegrees(sensor.GetAccelerometer());
+                            var rawTilt = ImuTilt.CalculateDegrees(sensor.GetAccelerometer());
+                            var tilt = rawTilt;
+                            if (filteredTilt.HasValue)
+                            {
+                                var elapsed = Stopwatch.GetElapsedTime(previousFrameStart, frameStart).TotalSeconds;
+                                var weight = 1 - Math.Exp(-elapsed / TiltSmoothingSeconds);
+                                tilt = filteredTilt.Value + weight * (rawTilt - filteredTilt.Value);
+                            }
+                            filteredTilt = tilt;
+                            previousFrameStart = frameStart;
+
                             var radians = tilt * Math.PI / 180;
                             var centerX = (canvas.Width - 1) / 2.0;
                             var centerY = (canvas.Height - 1) / 2.0;
@@ -80,7 +93,7 @@ namespace WearWare.Services.Imu
                                 (int)Math.Round(centerX + dx), (int)Math.Round(centerY + dy),
                                 new Color(255, 255, 255));
                             matrix.SwapOnVsync(canvas);
-                            Console.WriteLine($"[IMU] Left/right tilt (deg, +right/-left): {tilt:F1}");
+                            Console.WriteLine($"[IMU] Left/right tilt (deg, +right/-left): {tilt:F1} (raw: {rawTilt:F1})");
 
                             var remaining = FrameInterval - Stopwatch.GetElapsedTime(frameStart);
                             if (remaining > TimeSpan.Zero)
