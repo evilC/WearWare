@@ -1,9 +1,9 @@
 using RPiRgbLEDMatrix;
+using WearWare.Services.Imu;
 using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
-using WearWare.Services.Mode;
 
-namespace WearWare.Services.Imu
+namespace WearWare.Services.Simulations.TiltDiagnostic
 {
     public sealed class ImuTiltDiagnostic : PhysicsRenderer
     {

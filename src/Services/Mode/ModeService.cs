@@ -1,5 +1,6 @@
 using WearWare.Services.Imu;
 using WearWare.Services.MediaController;
+using WearWare.Services.Simulations;
 
 namespace WearWare.Services.Mode
 {

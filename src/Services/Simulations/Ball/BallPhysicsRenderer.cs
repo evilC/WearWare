@@ -3,7 +3,7 @@ using WearWare.Services.Imu;
 using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Services.Mode
+namespace WearWare.Services.Simulations.Ball
 {
     public sealed class BallPhysicsRenderer : PhysicsRenderer
     {

@@ -22,6 +22,8 @@ using WearWare.Services.Imu;
 using WearWare.Services.Imu.Sensors;
 using WearWare.Services.Matrix;
 using WearWare.Services.Mode;
+using WearWare.Services.Simulations.Ball;
+using WearWare.Services.Simulations.TiltDiagnostic;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second

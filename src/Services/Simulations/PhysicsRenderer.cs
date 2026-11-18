@@ -4,7 +4,7 @@ using WearWare.Services.Imu;
 using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Services.Mode
+namespace WearWare.Services.Simulations
 {
     public abstract class PhysicsRenderer : IPhysicsRenderer
     {

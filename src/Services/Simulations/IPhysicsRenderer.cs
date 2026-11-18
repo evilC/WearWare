@@ -1,4 +1,4 @@
-namespace WearWare.Services.Mode
+namespace WearWare.Services.Simulations
 {
     public interface IPhysicsRenderer
     {
