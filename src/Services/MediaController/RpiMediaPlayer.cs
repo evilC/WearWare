@@ -51,7 +51,7 @@ namespace WearWare.Services.MediaController
         {
             try
             {
-                return _matrixService.WithMatrix((matrix, _) =>
+                return _matrixService.WithMatrix((matrix, canvas) =>
                 {
                     var fseqPath = GetFseqPath(playableItem);
                     if (!File.Exists(fseqPath))
@@ -62,9 +62,7 @@ namespace WearWare.Services.MediaController
 
                     try
                     {
-                        var (width, height) = _matrixService.GetDimensions();
-
-                        using var sequence = new FrameSequence(width, height);
+                        using var sequence = new FrameSequence(canvas.Width, canvas.Height);
                         sequence.ReadFromFile(fseqPath);
 
                         var combinedBrightness = BrightnessCalculator.CalculateAbsoluteBrightness(_currentBrightness, playableItem.RelativeBrightness);

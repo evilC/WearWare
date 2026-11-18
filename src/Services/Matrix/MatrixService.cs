@@ -61,16 +61,6 @@ namespace WearWare.Services.Matrix
             }
         }
 
-        public (int Width, int Height) GetDimensions()
-        {
-            lock (_matrixLock)
-            {
-                ObjectDisposedException.ThrowIf(_disposed, this);
-                var canvas = _canvas ?? throw new InvalidOperationException("Matrix is not initialized.");
-                return (canvas.Width, canvas.Height);
-            }
-        }
-
         // The callback must complete synchronously and must not retain either reference.
         public T WithMatrix<T>(Func<RGBLedMatrix, RGBLedCanvas, T> action)
         {
