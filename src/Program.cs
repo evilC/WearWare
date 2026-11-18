@@ -23,7 +23,8 @@ using WearWare.Services.Imu.Sensors;
 using WearWare.Services.Matrix;
 using WearWare.Services.Mode;
 using WearWare.Services.Simulations.Ball;
-using WearWare.Services.Simulations.TiltDiagnostic;
+using WearWare.Services.Simulations.Fluid;
+using WearWare.Services.Simulations.ImuTest;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -96,8 +97,9 @@ else
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
     builder.Services.AddSingleton<MatrixService>();
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
-    builder.Services.AddSingleton<ImuTiltDiagnostic>();
+    builder.Services.AddSingleton<ImuTestRenderer>();
     builder.Services.AddSingleton<BallPhysicsRenderer>();
+    builder.Services.AddSingleton<FluidRenderer>();
     builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
     {
         var config = sp.GetRequiredService<QuickMediaButtonsConfigService>().Config;
@@ -116,8 +118,9 @@ builder.Services.AddSingleton<ModeConfigService>();
 builder.Services.AddSingleton(sp => new ModeService(
     sp.GetRequiredService<MediaControllerService>(),
     sp.GetRequiredService<ImuService>(),
-    sp.GetService<ImuTiltDiagnostic>(),
+    sp.GetService<ImuTestRenderer>(),
     sp.GetService<BallPhysicsRenderer>(),
+    sp.GetService<FluidRenderer>(),
     sp.GetRequiredService<ModeConfigService>(),
     sp.GetRequiredService<IHostApplicationLifetime>(),
     sp.GetRequiredService<ILogger<ModeService>>()));

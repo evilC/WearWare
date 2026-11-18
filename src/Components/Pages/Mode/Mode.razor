@@ -28,8 +28,9 @@
     <label for="physics-mode" class="form-label">Physics simulation</label>
     <select id="physics-mode" class="form-select" value="@ModeService.State.Physics"
             disabled="@_changing" @onchange="ChangePhysicsMode">
-        <option value="@PhysicsMode.TiltDiagnostic">Tilt diagnostic</option>
+        <option value="@PhysicsMode.ImuTest">IMU Test</option>
         <option value="@PhysicsMode.Ball">Ball</option>
+        <option value="@PhysicsMode.Fluid">Fluid</option>
     </select>
 </div>
 

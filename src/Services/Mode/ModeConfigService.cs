@@ -19,8 +19,8 @@ namespace WearWare.Services.Mode
             _logger = logger;
             Mode = Load(_modePath, new ModeConfig { Mode = nameof(DisplayMode.Playlist) },
                 config => config.Mode, DisplayMode.Playlist);
-            Simulation = Load(_simulationPath, new SimulationConfig { Simulation = nameof(PhysicsMode.Ball) },
-                config => config.Simulation, PhysicsMode.Ball);
+            Simulation = Load(_simulationPath, new SimulationConfig { Simulation = nameof(PhysicsMode.ImuTest) },
+                config => config.Simulation, PhysicsMode.ImuTest, "TiltDiagnostic");
         }
 
         public bool SaveMode(DisplayMode mode) => Save(_modePath, new ModeConfig { Mode = mode.ToString() });
@@ -28,7 +28,8 @@ namespace WearWare.Services.Mode
         public bool SaveSimulation(PhysicsMode simulation) =>
             Save(_simulationPath, new SimulationConfig { Simulation = simulation.ToString() });
 
-        private TEnum Load<TConfig, TEnum>(string path, TConfig defaults, Func<TConfig, string?> getName, TEnum fallback)
+        private TEnum Load<TConfig, TEnum>(string path, TConfig defaults, Func<TConfig, string?> getName, TEnum fallback,
+            string? legacyName = null)
             where TConfig : class
             where TEnum : struct, Enum
         {
@@ -46,6 +47,14 @@ namespace WearWare.Services.Mode
                 var config = JsonUtils.FromJsonFile<TConfig>(path)
                     ?? throw new JsonException("Configuration contains null.");
                 var name = getName(config);
+                if (legacyName != null && name == legacyName)
+                {
+                    if (!Save(path, defaults))
+                    {
+                        LoadError = "Could not update simulation configuration. See the log for details.";
+                    }
+                    return fallback;
+                }
                 if (name == null || !Enum.TryParse<TEnum>(name, out var value) ||
                     !Enum.IsDefined(value) || name != value.ToString())
                 {

@@ -12,8 +12,9 @@ namespace WearWare.Services.Mode
 
     public enum PhysicsMode
     {
-        TiltDiagnostic,
-        Ball
+        ImuTest,
+        Ball,
+        Fluid
     }
 
     public sealed record ModeState(DisplayMode Mode, PhysicsMode Physics, string? Message, DisplayMode PreferredMode);
@@ -23,8 +24,9 @@ namespace WearWare.Services.Mode
         private readonly SemaphoreSlim _transition = new SemaphoreSlim(1, 1);
         private readonly MediaControllerService _mediaController;
         private readonly ImuService _imu;
-        private readonly IPhysicsRenderer? _tiltRenderer;
+        private readonly IPhysicsRenderer? _imuTestRenderer;
         private readonly IPhysicsRenderer? _ballRenderer;
+        private readonly IPhysicsRenderer? _fluidRenderer;
         private readonly ModeConfigService _config;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<ModeService> _logger;
@@ -38,14 +40,15 @@ namespace WearWare.Services.Mode
         public ModeState State => Volatile.Read(ref _state);
 
         public ModeService(MediaControllerService mediaController, ImuService imu,
-            IPhysicsRenderer? tiltRenderer, IPhysicsRenderer? ballRenderer,
+            IPhysicsRenderer? imuTestRenderer, IPhysicsRenderer? ballRenderer, IPhysicsRenderer? fluidRenderer,
             ModeConfigService config,
             IHostApplicationLifetime lifetime, ILogger<ModeService> logger)
         {
             _mediaController = mediaController;
             _imu = imu;
-            _tiltRenderer = tiltRenderer;
+            _imuTestRenderer = imuTestRenderer;
             _ballRenderer = ballRenderer;
+            _fluidRenderer = fluidRenderer;
             _config = config;
             _lifetime = lifetime;
             _logger = logger;
@@ -92,7 +95,7 @@ namespace WearWare.Services.Mode
 
         public Task SetPhysicsModeAsync(PhysicsMode mode)
         {
-            if (mode != PhysicsMode.TiltDiagnostic && mode != PhysicsMode.Ball)
+            if (mode != PhysicsMode.ImuTest && mode != PhysicsMode.Ball && mode != PhysicsMode.Fluid)
             {
                 throw new ArgumentOutOfRangeException(nameof(mode));
             }
@@ -197,8 +200,9 @@ namespace WearWare.Services.Mode
 
                 IPhysicsRenderer? renderer = physics switch
                 {
-                    PhysicsMode.TiltDiagnostic => _tiltRenderer,
+                    PhysicsMode.ImuTest => _imuTestRenderer,
                     PhysicsMode.Ball => _ballRenderer,
+                    PhysicsMode.Fluid => _fluidRenderer,
                     _ => throw new ArgumentOutOfRangeException(nameof(requestedPhysics))
                 };
                 var imuStatus = _imu.State.Status;

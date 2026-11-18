@@ -3,11 +3,11 @@ using WearWare.Services.Imu;
 using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Services.Simulations.TiltDiagnostic
+namespace WearWare.Services.Simulations.ImuTest
 {
-    public sealed class ImuTiltDiagnostic : PhysicsRenderer
+    public sealed class ImuTestRenderer : PhysicsRenderer
     {
-        public ImuTiltDiagnostic(ImuService imu, MatrixService matrix, MatrixConfigService config, ILogger<ImuTiltDiagnostic> logger)
+        public ImuTestRenderer(ImuService imu, MatrixService matrix, MatrixConfigService config, ILogger<ImuTestRenderer> logger)
             : base(imu, matrix, config, logger)
         {
         }
