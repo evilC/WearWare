@@ -18,6 +18,7 @@ using WearWare.Services.OperationProgress;
 using WearWare.Services.Environment;
 using WearWare.Services.Options;
 using WearWare.Services.TempMon;
+using WearWare.Services.Imu;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -97,6 +98,7 @@ else
     });
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
+    builder.Services.AddHostedService<Mpu6050MonitorService>();
 }
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<QuickMediaService>();

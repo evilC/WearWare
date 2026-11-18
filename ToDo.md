@@ -8,6 +8,9 @@
 - Battery voltage monitoring / logging
 - Extra features - IMU (Gyro) for physics simulation
 
+## IMU
+- Config file
+
 ## Fseq conversion
 - FSeq converter does not need to pass most parameters  
   Only rows / cols / chain / parallel ?
