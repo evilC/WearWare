@@ -19,6 +19,7 @@ using WearWare.Services.Environment;
 using WearWare.Services.Options;
 using WearWare.Services.TempMon;
 using WearWare.Services.Imu;
+using WearWare.Services.Imu.Sensors;
 
 #if NORMAL_PLAYBACK
 var builder = WebApplication.CreateBuilder(args);
@@ -69,6 +70,10 @@ builder.Services.AddSingleton<QuickMediaButtonsConfigService>();
 
 var env = builder.Environment.EnvironmentName;
 builder.Services.AddSingleton(sp =>{return new EnvironmentService(env);});  // Allow Nav Menu to detect if running on Desktop or RPi
+builder.Services.AddSingleton(sp => new ImuService(
+    sp.GetRequiredService<ILogger<ImuService>>(),
+    env == "Desktop" ? null : () => new Mpu6050Sensor()));
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ImuService>());
 
 if (env == "Desktop")
 {
@@ -99,7 +104,6 @@ else
     });
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
-    builder.Services.AddHostedService<Mpu6050MonitorService>();
 }
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<QuickMediaService>();

@@ -1,8 +1,7 @@
-using System.Device.I2c;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Iot.Device.Imu;
 using RPiRgbLEDMatrix;
+using WearWare.Services.Imu.Sensors;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.Options;
 using WearWare.Utils;
@@ -12,7 +11,6 @@ namespace WearWare.Services.Imu
     internal static class ImuTiltDiagnostic
     {
         private static readonly TimeSpan FrameInterval = TimeSpan.FromSeconds(1.0 / 30);
-        private const double TiltSmoothingSeconds = 0.15;
 
         public static async Task RunAsync()
         {
@@ -45,42 +43,33 @@ namespace WearWare.Services.Imu
                 var brightnessCap = options.Brightness ?? 100;
                 matrixOptions.Brightness = Math.Clamp(appOptions.CurrentBrightness ?? brightnessCap, 1, brightnessCap);
 
-                var i2cDevice = I2cDevice.Create(new I2cConnectionSettings(1, Mpu6050.DefaultI2cAddress));
-                Mpu6050 sensor;
+                using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+                using var imu = new ImuService(loggerFactory.CreateLogger<ImuService>(), () => new Mpu6050Sensor());
+                await imu.StartAsync(cancellation.Token);
                 try
                 {
-                    sensor = new Mpu6050(i2cDevice);
-                }
-                catch
-                {
-                    i2cDevice.Dispose();
-                    throw;
-                }
+                    var startupTime = Stopwatch.GetTimestamp();
+                    while (imu.State.Status == ImuStatus.Starting)
+                    {
+                        if (Stopwatch.GetElapsedTime(startupTime) > TimeSpan.FromSeconds(5))
+                        {
+                            throw new TimeoutException("Timed out waiting for the IMU sensor.");
+                        }
 
-                using (sensor)
-                using (var matrix = new RGBLedMatrix(matrixOptions))
-                {
+                        await Task.Delay(50, cancellation.Token);
+                    }
+
+                    GetReading(imu);
+                    using var matrix = new RGBLedMatrix(matrixOptions);
                     var canvas = matrix.CreateOffscreenCanvas();
                     Console.WriteLine("IMU tilt diagnostic running. Press Ctrl+C to stop.");
                     try
                     {
-                        double? filteredTilt = null;
-                        long previousFrameStart = 0;
                         while (!cancellation.IsCancellationRequested)
                         {
                             var frameStart = Stopwatch.GetTimestamp();
-                            var rawTilt = ImuTilt.CalculateDegrees(sensor.GetAccelerometer());
-                            var tilt = rawTilt;
-                            if (filteredTilt.HasValue)
-                            {
-                                var elapsed = Stopwatch.GetElapsedTime(previousFrameStart, frameStart).TotalSeconds;
-                                var weight = 1 - Math.Exp(-elapsed / TiltSmoothingSeconds);
-                                tilt = filteredTilt.Value + weight * (rawTilt - filteredTilt.Value);
-                            }
-                            filteredTilt = tilt;
-                            previousFrameStart = frameStart;
-
-                            var radians = tilt * Math.PI / 180;
+                            var reading = GetReading(imu);
+                            var radians = reading.FilteredTiltDegrees * Math.PI / 180;
                             var centerX = (canvas.Width - 1) / 2.0;
                             var centerY = (canvas.Height - 1) / 2.0;
                             var radius = (Math.Min(canvas.Width, canvas.Height) - 1) / 2.0;
@@ -93,8 +82,7 @@ namespace WearWare.Services.Imu
                                 (int)Math.Round(centerX + dx), (int)Math.Round(centerY + dy),
                                 new Color(255, 255, 255));
                             matrix.SwapOnVsync(canvas);
-                            Console.WriteLine($"[IMU] Left/right tilt (deg, +right/-left): {tilt:F1} (raw: {rawTilt:F1})");
-
+                            Console.WriteLine($"[IMU] Left/right tilt (deg, +right/-left): {reading.FilteredTiltDegrees:F1} (raw: {reading.RawTiltDegrees:F1})");
                             var remaining = FrameInterval - Stopwatch.GetElapsedTime(frameStart);
                             if (remaining > TimeSpan.Zero)
                             {
@@ -107,6 +95,11 @@ namespace WearWare.Services.Imu
                         canvas.Clear();
                         matrix.SwapOnVsync(canvas);
                     }
+                }
+                finally
+                {
+                    using var stopTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+                    await imu.StopAsync(stopTimeout.Token);
                 }
             }
             catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
@@ -121,6 +114,17 @@ namespace WearWare.Services.Imu
             {
                 Console.CancelKeyPress -= cancelHandler;
             }
+        }
+
+        private static ImuReading GetReading(ImuService imu)
+        {
+            var state = imu.State;
+            if (state.Status != ImuStatus.Available || state.Reading == null)
+            {
+                throw new InvalidOperationException($"IMU reading unavailable: {state.Status}.");
+            }
+
+            return state.Reading;
         }
     }
 }
