@@ -1,12 +1,12 @@
 # I2C
 
-Status: Partially implemented. MCP23017 support for configurable Raspberry Pi QuickMedia buttons is implemented; other I2C devices remain future work.
+Status: Partially implemented. MCP23017 QuickMedia buttons and MPU-6050 motion sensing are implemented; battery monitoring remains future work.
 
 ## Goals
 
 - Add I2C devices to the existing Raspberry Pi setup, starting with a GPIO expander for QuickMedia buttons. Configure one active button provider at a time.
 - Configure hardware through files so users do not need to modify code.
-- Allow for battery monitoring and motion sensing later. See [buttons](buttons.md), [battery monitoring](battery-monitoring.md), and [motion playback](motion-playback.md).
+- Support motion sensing and consider battery monitoring. See [buttons](buttons.md), [battery monitoring](battery-monitoring.md), and [motion playback](motion-playback.md).
 - Protect playlist and QuickMedia reliability. Hardware is optional and sensor failures must not stop playback.
 
 ## Proposed approach
@@ -16,6 +16,7 @@ Status: Partially implemented. MCP23017 support for configurable Raspberry Pi Qu
 - The project references `Iot.Device.Bindings` and `System.Device.Gpio` 4.2.0.
 - Multiple devices can share the physical bus, but each needs its own address and device instance. Default addresses for the intended devices do not conflict: MCP23017 `0x20`, INA219 `0x40`, MPU-6050 `0x68`.
 - `buttonsconfig.json` selects either `PiGpio` or `Mcp23017`. For the MCP23017, I2C bus 1 and address `0x20` are fixed; the two interrupt pins are configured in IA, IB order.
+- The MPU-6050 uses I2C bus 1 and default address `0x68`. Its mounting orientation is configurable, but the sensor model and address are not yet configurable.
 - Preserve desktop development and mocks. Validate configuration and report problems clearly without overwriting user configuration or preventing the playlist from running.
 
 ## Hardware and reliability

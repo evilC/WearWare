@@ -1,22 +1,26 @@
 # Motion-driven playback
 
-Status: Future idea, not implemented. See also [I2C](i2c.md).
+Status: IMU sensing and a separate Physics mode are implemented. Simulation tuning and hardware testing remain ongoing. See also [I2C](i2c.md).
 
-## Goals
+## Current implementation
 
-- Use an Adafruit MPU-6050 accelerometer and gyroscope for future graphical physics simulations, such as a ball responding to movement of the matrix panel.
-- Explore additional playlist and QuickMedia modes without compromising normal media playback.
-- Configure the device through files. The existing `Iot.Device.Bindings` package includes an MPU-6050 binding.
+- The MPU-6050 uses the `Iot.Device.Bindings` driver on I2C bus 1 at the default address `0x68`. The service polls at approximately 30 Hz; it does not use a sensor interrupt.
+- Raw acceleration and gyroscope readings are retained alongside mounting-adjusted readings. Tilt is calculated from adjusted acceleration and smoothed; acceleration includes movement as well as gravity.
+- The Mode page switches between Playlist and Physics, with IMU Test, Ball and Fluid simulations. Physics suspends media playback and ignores QuickMedia triggers; returning to Playlist resumes media playback.
+- The selected mode and simulation are saved in `config/modeconfig.json` and `config/simulationconfig.json`. A saved Physics mode is retried at startup.
+- An unavailable, stale or failed IMU prevents Physics from running. If Physics fails while running, WearWare returns to Playlist and reports the failure. A sensor failure is logged and monitoring does not automatically retry.
 
-## Considerations
+## Mounting orientation
 
-- Polling the sensor is a possible approach and does not require an additional interrupt GPIO. Choose a suitable sample rate based on responsiveness, bus load and power use.
-- Mounting orientation, calibration and filtering will affect how motion maps to the display.
-- Sensor errors or unavailable hardware must not stop ordinary playback. A shared I2C bus fault could also affect buttons.
+- `config/imuconfig.json` is created on startup if missing, with `x`, `y` and `z` all set to `1`. Changes take effect after restarting WearWare.
+- Each axis must be `1` or `-1`, with zero or two axes inverted. The signs apply to both acceleration and gyroscope readings. They support axis-aligned 180-degree rotations, not axis swaps or arbitrary rotations.
+- For the author's inward-facing mount, the intended setting is `x: -1`, `y: 1`, `z: -1`. Confirm the direction on the mounted shirt.
+- Invalid configuration is logged and disables IMU monitoring rather than overwriting the file. Playlist playback remains available.
 
-## Open questions
+## Remaining work
 
-- How simulations fit into the existing player and playlist/QuickMedia model, and what should happen when the sensor is unavailable.
-- Sensor configuration, sampling rate, calibration and user-facing controls.
+- Configure the sensor model and address, and consider calibration or additional filtering if needed.
+- Consider display pitch when calculating the real-world fall rate, and configuration options for the simulations. The fluid simulation currently uses an off-screen margin to reduce wall-sticking artefacts, with trade-offs in visible pool depth and splashing.
+- Verify mounting directions, simulation behaviour and performance on the shirt. A shared I2C bus fault can also affect buttons.
 
 Reference: [Adafruit MPU-6050 pinout](https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro/pinouts).
