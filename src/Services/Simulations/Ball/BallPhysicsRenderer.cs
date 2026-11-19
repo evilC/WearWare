@@ -18,7 +18,7 @@ namespace WearWare.Services.Simulations.Ball
 
         protected override void DrawFrame(RGBLedCanvas canvas, ImuReading reading, double elapsedSeconds)
         {
-            _ball.Update(reading.Acceleration, elapsedSeconds, canvas.Width, canvas.Height);
+            _ball.Update(reading.MountedAcceleration, elapsedSeconds, canvas.Width, canvas.Height);
             DrawRamps(canvas, _ball.RampRadius);
             var centerX = (int)Math.Round(_ball.X);
             var centerY = (int)Math.Round(_ball.Y);

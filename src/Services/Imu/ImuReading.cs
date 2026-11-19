@@ -3,10 +3,13 @@ using System.Numerics;
 
 namespace WearWare.Services.Imu
 {
-    /// <summary>Acceleration is in m/s^2 and gyroscope values are in degrees per second, in sensor axes.</summary>
+    /// <summary>Acceleration is in m/s^2 and gyroscope values are in degrees per second.</summary>
     public sealed record ImuReading(
-        Vector3 Acceleration,
-        Vector3 Gyroscope,
+        // Raw sensor axes, followed by axes adjusted for the sensor's mounting orientation.
+        Vector3 Acceleration,           // Raw accelerometer reading
+        Vector3 Gyroscope,              // Raw gyroscope reading
+        Vector3 MountedAcceleration,    // Accelerometer reading adjusted for sensor mounting orientation
+        Vector3 MountedGyroscope,       // Gyroscope reading adjusted for sensor mounting orientation
         double RawTiltDegrees,
         double FilteredTiltDegrees,
         DateTimeOffset Timestamp,

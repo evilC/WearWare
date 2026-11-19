@@ -38,7 +38,7 @@ namespace WearWare.Services.Simulations.Fluid
                 _pixels = new Color[_density.Length];
             }
 
-            _fluid.Update(reading.Acceleration, elapsedSeconds);
+            _fluid.Update(reading.MountedAcceleration, elapsedSeconds);
             _fluid.WriteDensity(_density);
             var water = new Color(0, 100, 255);
             for (var i = 0; i < _pixels.Length; i++)

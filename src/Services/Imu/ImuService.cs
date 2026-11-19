@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using WearWare.Config;
 using WearWare.Services.Imu.Sensors;
 
 namespace WearWare.Services.Imu
@@ -33,14 +34,18 @@ namespace WearWare.Services.Imu
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (_sensorFactory == null)
-            {
-                return;
-            }
-
             await Task.Yield();
+            var orientationPath = Path.Combine(PathConfig.ConfigPath, "imuconfig.json");
             try
             {
+                var orientation = ImuOrientationConfig.Load(orientationPath);
+                _logger.LogInformation("IMU orientation from {path}: X={x}, Y={y}, Z={z}.",
+                    orientationPath, orientation.X, orientation.Y, orientation.Z);
+                if (_sensorFactory == null)
+                {
+                    return;
+                }
+
                 using var sensor = _sensorFactory();
                 _logger.LogInformation("IMU sensor initialized.");
                 double? filteredTilt = null;
@@ -51,7 +56,9 @@ namespace WearWare.Services.Imu
                     var frameStart = Stopwatch.GetTimestamp();
                     var (acceleration, gyroscope) = sensor.Read();
                     var timestampTicks = Stopwatch.GetTimestamp();
-                    var rawTilt = CalculateTiltDegrees(acceleration);
+                    var mountedAcceleration = orientation.Apply(acceleration);
+                    var mountedGyroscope = orientation.Apply(gyroscope);
+                    var rawTilt = CalculateTiltDegrees(mountedAcceleration);
                     var tilt = rawTilt;
                     if (filteredTilt.HasValue)
                     {
@@ -62,7 +69,8 @@ namespace WearWare.Services.Imu
 
                     filteredTilt = tilt;
                     previousSample = timestampTicks;
-                    var reading = new ImuReading(acceleration, gyroscope, rawTilt, tilt, DateTimeOffset.UtcNow, timestampTicks);
+                    var reading = new ImuReading(acceleration, gyroscope, mountedAcceleration, mountedGyroscope,
+                        rawTilt, tilt, DateTimeOffset.UtcNow, timestampTicks);
                     Volatile.Write(ref _state, new ImuState(ImuStatus.Available, reading));
 
                     var remaining = SampleInterval - Stopwatch.GetElapsedTime(frameStart);
@@ -78,7 +86,8 @@ namespace WearWare.Services.Imu
             catch (Exception ex)
             {
                 Volatile.Write(ref _state, new ImuState(ImuStatus.Failed, null));
-                _logger.LogError(ex, "IMU monitoring stopped after an initialization or read error.");
+                _logger.LogError(ex, "IMU monitoring stopped after a configuration, initialization or read error. Configuration: {path}.",
+                    orientationPath);
                 return;
             }
 
