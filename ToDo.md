@@ -9,7 +9,7 @@
 - Extra features - IMU (Gyro) for physics simulation
 
 ## IMU
-- Config file
+- Config file for sensor model and address
 
 ## Physics sims
 - Physics sims will need pitch of display to calculate real-world fall rate
