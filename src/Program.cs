@@ -25,6 +25,7 @@ using WearWare.Services.Mode;
 using WearWare.Services.Simulations.Ball;
 using WearWare.Services.Simulations.Fluid;
 using WearWare.Services.Simulations.ImuTest;
+using WearWare.Architecture.Display;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -86,6 +87,8 @@ if (env == "Desktop")
     builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
     builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
+    builder.Services.AddSingleton<MatrixService>();
+    builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixService>());
 }
 else
 {
@@ -96,6 +99,10 @@ else
     }
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
     builder.Services.AddSingleton<MatrixService>();
+    builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixService>());
+    builder.Services.AddSingleton<IMatrixController>(sp => new MatrixController(
+        sp.GetRequiredService<IMatrixDisplay>(),
+        sp.GetRequiredService<ILogger<MatrixController>>()));
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
     builder.Services.AddSingleton<ImuTestRenderer>();
     builder.Services.AddSingleton<BallPhysicsRenderer>();
@@ -113,6 +120,10 @@ else
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
+
+builder.Services.AddSingleton<IMatrixController>(sp => new MatrixController(
+    sp.GetRequiredService<IMatrixDisplay>(),
+    sp.GetRequiredService<ILogger<MatrixController>>()));
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<ModeConfigService>();
 builder.Services.AddSingleton(sp => new ModeService(

@@ -1,9 +1,10 @@
 using RPiRgbLEDMatrix;
 using WearWare.Services.MatrixConfig;
+using WearWare.Architecture.Display;
 
 namespace WearWare.Services.Matrix
 {
-    public sealed class MatrixService : IDisposable
+    public sealed class MatrixService : IMatrixDisplay, IDisposable
     {
         private readonly object _matrixLock = new object();
         private readonly ILogger<MatrixService> _logger;
