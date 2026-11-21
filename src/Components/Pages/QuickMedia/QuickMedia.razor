@@ -42,33 +42,34 @@ else
 		@for (int i = 0; i < _quickMediaItems.Count; i++)
 		{
 			var item = _quickMediaItems[i];
-			var index = i;  // Need to preserve index for lambda capture, else lambda always gets last value of i
+			var buttonNumber = _quickMediaButtonNumbers[i];
+			var index = i;
 			<div class="col-12 mb-3">
 				<div class="card h-100 shadow-sm bg-light">
 					<div class="card-body p-0">
 						<div class="d-flex align-items-center gap-3 p-2">
 							<div class="d-flex align-items-center">
-								<span class="text-7">B@(i + 1)</span>
+								<span class="text-7">B@(buttonNumber)</span>
 							</div>
 							<div class="d-flex flex-column justify-content-between me-2 gap-2">
 								@if (item is null)
 								{
-									<button class="btn btn-sm btn-outline-primary" @onclick="() => OnAddDialogShow(index)">Add</button>
+									<button class="btn btn-sm btn-outline-primary" @onclick="() => OnAddDialogShow(buttonNumber)">Add</button>
 								}
 								else
 								{    
-									<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(item, index)">Edit</button>
+									<button class="btn btn-sm btn-outline-primary" @onclick="() => OnEditQuickMediaItem(item, buttonNumber)">Edit</button>
 								}
 								@if (item is not null)
 								{
-									<button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteQuickMediaButton(index)">Delete</button>
+									<button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDeleteQuickMediaButton(buttonNumber)">Delete</button>
 								}
 							</div>
 							@if (item is not null)
 							{
 								<div class="flex-grow-1">
 									<PlayableItemCard
-										ImageSrc="@($"/quickmedia-images/{index}/{item.SourceFileName}")"
+										ImageSrc="@($"/quickmedia-images/{buttonNumber}/{item.SourceFileName}")"
 										FormPage="EditPlayableItemFormPage.QuickMedia"
 										FormMode="EditPlayableItemFormMode.Edit"
 										Item="item"

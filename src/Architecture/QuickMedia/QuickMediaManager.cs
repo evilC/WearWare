@@ -1,6 +1,7 @@
 using WearWare.Common.Media;
-using WearWare.Services.QuickMedia;
 using WearWare.Utils;
+using WearWare.Architecture.Button;
+using System.Device.Gpio;
 
 namespace WearWare.Architecture.QuickMedia
 {
@@ -9,46 +10,49 @@ namespace WearWare.Architecture.QuickMedia
     {
         private readonly ILogger<QuickMediaManager> _logger;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly ButtonManager _buttonManager;
         private readonly string _logTag = "[QUICKMEDIAMANAGER]";
 
-        private Dictionary<int, PlayableItem?> _buttonItems = [];
-        private int _activeButtonNumber = 0;
-        private IReadOnlyList<int> _buttonPins = [];
+        private Dictionary<int, QuickMediaItem?> _buttonSlotItems = [];
+        private int _activeButtonSlot = 0;
         private QuickMediaStateConfig _stateConfig;
 
         public event Action? StateChanged;
 
-        public int ActiveButtonNumber => _activeButtonNumber;
-        public PlayableItem? ActiveButtonItem => _buttonItems.TryGetValue(_activeButtonNumber, out var item) ? item : null;
+        public int ActiveButtonSlot => _activeButtonSlot;
+        public QuickMediaItem? ActiveButtonItem => _buttonSlotItems.TryGetValue(_activeButtonSlot, out var item) ? item : null;
 
-        public QuickMediaManager(ILogger<QuickMediaManager> logger, ILoggerFactory loggerFactory, QuickMediaButtonsConfigService buttonsConfig)
+        public QuickMediaManager(ILogger<QuickMediaManager> logger, ILoggerFactory loggerFactory, ButtonManager buttonManager)
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
-            _buttonPins = buttonsConfig.Config.ButtonPins ?? [];
+            _buttonManager = buttonManager;
             _stateConfig = QuickMediaStateConfig.Deserialize() ?? new QuickMediaStateConfig();
-            _activeButtonNumber = _stateConfig.ActiveButtonNumber;
+            _activeButtonSlot = _stateConfig.ActiveSlotNumber;
             _stateConfig.Serialize();
-            _logger.LogInformation("{tag} initialized with {count} buttons. Active button: {button}.", _logTag, _buttonPins.Count, _activeButtonNumber);
+            _logger.LogInformation("{tag} initialized. Active button slot: {slot}.", _logTag, _activeButtonSlot);
         }
 
         /// <summary>
-        /// Loads quick media items for all buttons from disk
+        /// Loads quick media items for all quickmedia buttons from disk.
+        /// Button slots are determined by which buttons are assigned to QuickMedia function.
         /// </summary>
         public void LoadAllItems()
         {
             try
             {
-                _buttonItems.Clear();
+                _buttonSlotItems.Clear();
                 _logger.LogInformation("{tag} Loading quick media items from {path}...", _logTag, PathConfig.QuickMediaPath);
 
-                for (int i = 0; i < _buttonPins.Count; i++)
+                var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
+                foreach (var button in quickMediaButtons)
                 {
-                    var item = LoadButtonItem(i);
-                    _buttonItems[i] = item;
+                    var buttonNumber = button.Index + 1;
+                    var item = LoadButtonItem(buttonNumber);
+                    _buttonSlotItems[buttonNumber] = item;
                 }
 
-                _logger.LogInformation("{tag} Loaded {count} quick media items.", _logTag, _buttonItems.Count);
+                _logger.LogInformation("{tag} Loaded {count} quick media items for {buttonCount} buttons.", _logTag, _buttonSlotItems.Count, quickMediaButtons.Count);
                 StateChanged?.Invoke();
             }
             catch (Exception ex)
@@ -58,165 +62,207 @@ namespace WearWare.Architecture.QuickMedia
         }
 
         /// <summary>
-        /// Loads a single quick media item by button number
+        /// Loads a single quick media item by button slot number (1-indexed).
         /// </summary>
-        public PlayableItem? LoadButtonItem(int buttonNumber)
+        public QuickMediaItem? LoadButtonItem(int buttonSlot)
         {
             try
             {
-                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString());
+                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonSlot.ToString());
                 if (!Directory.Exists(buttonPath))
                 {
-                    _logger.LogWarning("{tag} Quick media folder for button {button} not found.", _logTag, buttonNumber);
-                    _buttonItems[buttonNumber] = null;
+                    _logger.LogWarning("{tag} Quick media folder for slot {slot} not found.", _logTag, buttonSlot);
+                    _buttonSlotItems[buttonSlot] = null;
                     return null;
                 }
 
                 var configFile = Path.Combine(buttonPath, "quickmedia.json");
                 if (!File.Exists(configFile))
                 {
-                    _logger.LogWarning("{tag} Quick media config for button {button} not found.", _logTag, buttonNumber);
-                    _buttonItems[buttonNumber] = null;
+                    _logger.LogWarning("{tag} Quick media config for slot {slot} not found.", _logTag, buttonSlot);
+                    _buttonSlotItems[buttonSlot] = null;
                     return null;
                 }
 
                 var json = File.ReadAllText(configFile);
-                var dto = JsonUtils.FromJson<QuickMediaDto>(json);
-                if (dto == null)
+                
+                QuickMediaItem? item = null;
+                try
                 {
-                    _logger.LogWarning("{tag} Failed to deserialize quick media item for button {button}.", _logTag, buttonNumber);
-                    _buttonItems[buttonNumber] = null;
+                    var dto = JsonUtils.FromJson<QuickMediaDto>(json);
+                    if (dto?.Item != null)
+                    {
+                        item = QuickMediaItem.FromPlayableItem(dto.Item);
+                        _logger.LogInformation("{tag} Loaded quick media item for slot {slot}.", _logTag, buttonSlot);
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("{tag} Failed to deserialize quick media item for slot {slot}.", _logTag, buttonSlot);
+                    _buttonSlotItems[buttonSlot] = null;
                     return null;
                 }
 
-                var item = dto.Item;
-                _buttonItems[buttonNumber] = item;
-                _logger.LogInformation("{tag} Loaded quick media item for button {button}: {name}.", _logTag, buttonNumber, item.Name);
+                if (item == null)
+                {
+                    _logger.LogWarning("{tag} Quick media item for slot {slot} is null.", _logTag, buttonSlot);
+                    _buttonSlotItems[buttonSlot] = null;
+                    return null;
+                }
+
+                _buttonSlotItems[buttonSlot] = item;
+                _logger.LogInformation("{tag} Loaded quick media item for slot {slot}: {name}.", _logTag, buttonSlot, item.Name);
                 return item;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{tag} Error loading quick media item for button {button}.", _logTag, buttonNumber);
-                _buttonItems[buttonNumber] = null;
+                _logger.LogError(ex, "{tag} Error loading quick media item for slot {slot}.", _logTag, buttonSlot);
+                _buttonSlotItems[buttonSlot] = null;
                 return null;
             }
         }
 
         /// <summary>
-        /// Sets the active button (which item is currently playing)
+        /// Sets the active button slot (which item is currently playing).
         /// </summary>
-        public bool SetActiveButton(int buttonNumber)
+        public bool SetActiveButton(int buttonSlot)
         {
-            if (buttonNumber < 0 || buttonNumber >= _buttonPins.Count)
+            var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
+            if (buttonSlot < 1 || buttonSlot > quickMediaButtons.Count)
             {
-                _logger.LogWarning("{tag} Cannot set active button: {button} out of range.", _logTag, buttonNumber);
+                _logger.LogWarning("{tag} Cannot set active button: slot {slot} out of range.", _logTag, buttonSlot);
                 return false;
             }
 
-            if (!_buttonItems.ContainsKey(buttonNumber) || _buttonItems[buttonNumber] == null)
+            if (!_buttonSlotItems.ContainsKey(buttonSlot) || _buttonSlotItems[buttonSlot] == null)
             {
-                _logger.LogWarning("{tag} Cannot set active button: button {button} has no item loaded.", _logTag, buttonNumber);
+                _logger.LogWarning("{tag} Cannot set active button: slot {slot} has no item loaded.", _logTag, buttonSlot);
                 return false;
             }
 
-            _activeButtonNumber = buttonNumber;
-            _stateConfig.ActiveButtonNumber = buttonNumber;
+            _activeButtonSlot = buttonSlot;
+            _stateConfig.ActiveSlotNumber = buttonSlot;
             _stateConfig.Serialize();
-            _logger.LogInformation("{tag} Active button set to {button}.", _logTag, buttonNumber);
+            _logger.LogInformation("{tag} Active button slot set to {slot}.", _logTag, buttonSlot);
             StateChanged?.Invoke();
             return true;
         }
 
         /// <summary>
-        /// Gets the item for a specific button
+        /// Gets the item for a specific button slot.
         /// </summary>
-        public PlayableItem? GetButtonItem(int buttonNumber)
+        public PlayableItem? GetButtonItem(int buttonSlot)
         {
-            if (!_buttonItems.ContainsKey(buttonNumber))
+            if (!_buttonSlotItems.ContainsKey(buttonSlot))
                 return null;
-            return _buttonItems[buttonNumber];
+            var item = _buttonSlotItems[buttonSlot];
+            return item?.ToPlayableItem();
         }
 
         /// <summary>
-        /// Gets all button numbers that have items loaded
+        /// Gets all button slots that have items loaded.
         /// </summary>
-        public List<int> GetLoadedButtonNumbers()
+        public List<int> GetLoadedButtonSlots()
         {
-            return _buttonItems.Where(kvp => kvp.Value != null).Select(kvp => kvp.Key).ToList();
+            return _buttonSlotItems.Where(kvp => kvp.Value != null).Select(kvp => kvp.Key).ToList();
         }
 
         /// <summary>
-        /// Gets the total number of buttons
+        /// Gets the total number of quickmedia buttons configured.
         /// </summary>
-        public int GetButtonCount() => _buttonPins.Count;
+        public int GetButtonCount()
+        {
+            var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
+            return quickMediaButtons.Count;
+        }
 
         /// <summary>
-        /// Updates or adds a quick media item for a button
+        /// Gets the button numbers assigned to QuickMedia function.
         /// </summary>
-        public bool UpsertButtonItem(int buttonNumber, PlayableItem item)
+        public List<int> GetQuickMediaButtonNumbers()
         {
-            if (buttonNumber < 0 || buttonNumber >= _buttonPins.Count)
+            var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
+            return quickMediaButtons.Select(b => b.Index + 1).ToList();
+        }
+
+        /// <summary>
+        /// Updates or adds a quick media item for a button slot.
+        /// </summary>
+        public bool UpsertButtonItem(int buttonSlot, PlayableItem item)
+        {
+            var quickMediaItem = QuickMediaItem.FromPlayableItem(item);
+            var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
+            var validButtonNumbers = quickMediaButtons.Select(b => b.Index + 1).ToList();
+            
+            if (!validButtonNumbers.Contains(buttonSlot))
             {
-                _logger.LogWarning("{tag} Cannot upsert item: button {button} out of range.", _logTag, buttonNumber);
+                _logger.LogWarning("{tag} Cannot upsert item: button {button} is not assigned to QuickMedia.", _logTag, buttonSlot);
                 return false;
             }
 
             try
             {
-                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString());
+                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonSlot.ToString());
                 Directory.CreateDirectory(buttonPath);
 
+                // Update the item's ParentFolder to the full path
+                item.ParentFolder = buttonPath;
+
                 var configFile = Path.Combine(buttonPath, "quickmedia.json");
-                var dto = new QuickMediaDto(buttonNumber, item);
+                // Save in the standard QuickMedia format
+                var dto = new QuickMediaDto(buttonSlot, item);
                 JsonUtils.ToJsonFile(configFile, dto);
 
-                _buttonItems[buttonNumber] = item;
-                _logger.LogInformation("{tag} Upserted quick media item for button {button}.", _logTag, buttonNumber);
+                _buttonSlotItems[buttonSlot] = quickMediaItem;
+                _logger.LogInformation("{tag} Upserted quick media item for slot {slot}.", _logTag, buttonSlot);
                 StateChanged?.Invoke();
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{tag} Error upserting quick media item for button {button}.", _logTag, buttonNumber);
+                _logger.LogError(ex, "{tag} Error upserting quick media item for slot {slot}.", _logTag, buttonSlot);
                 return false;
             }
         }
 
         /// <summary>
-        /// Deletes the quick media item for a button
+        /// Deletes the quick media item for a button slot.
         /// </summary>
-        public bool DeleteButtonItem(int buttonNumber)
+        public bool DeleteButtonItem(int buttonSlot)
         {
-            if (buttonNumber < 0 || buttonNumber >= _buttonPins.Count)
+            var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
+            var validButtonNumbers = quickMediaButtons.Select(b => b.Index + 1).ToList();
+            
+            if (!validButtonNumbers.Contains(buttonSlot))
             {
-                _logger.LogWarning("{tag} Cannot delete item: button {button} out of range.", _logTag, buttonNumber);
+                _logger.LogWarning("{tag} Cannot delete item: button {button} is not assigned to QuickMedia.", _logTag, buttonSlot);
                 return false;
             }
 
             try
             {
-                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString());
+                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonSlot.ToString());
                 if (Directory.Exists(buttonPath))
                 {
                     Directory.Delete(buttonPath, recursive: true);
                 }
 
-                _buttonItems[buttonNumber] = null;
+                _buttonSlotItems[buttonSlot] = null;
 
-                if (_activeButtonNumber == buttonNumber)
+                if (_activeButtonSlot == buttonSlot)
                 {
-                    _activeButtonNumber = 0;
-                    _stateConfig.ActiveButtonNumber = 0;
+                    _activeButtonSlot = 0;
+                    _stateConfig.ActiveSlotNumber = 0;
                     _stateConfig.Serialize();
                 }
 
-                _logger.LogInformation("{tag} Deleted quick media item for button {button}.", _logTag, buttonNumber);
+                _logger.LogInformation("{tag} Deleted quick media item for slot {slot}.", _logTag, buttonSlot);
                 StateChanged?.Invoke();
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{tag} Error deleting quick media item for button {button}.", _logTag, buttonNumber);
+                _logger.LogError(ex, "{tag} Error deleting quick media item for slot {slot}.", _logTag, buttonSlot);
                 return false;
             }
         }

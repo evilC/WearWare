@@ -9,6 +9,7 @@ namespace WearWare.Architecture.Button
     {
         private readonly ILogger<ButtonManager> _logger;
         private readonly QuickMediaButtonsConfigService _configService;
+        private readonly ButtonFunctionMappingService _mappingService;
         private IButtonGpioProvider? _provider;
 
         /// <summary>
@@ -17,10 +18,11 @@ namespace WearWare.Architecture.Button
         /// </summary>
         public IButtonGpioProvider? Provider => _provider;
 
-        public ButtonManager(ILogger<ButtonManager> logger, QuickMediaButtonsConfigService configService)
+        public ButtonManager(ILogger<ButtonManager> logger, QuickMediaButtonsConfigService configService, ButtonFunctionMappingService mappingService)
         {
             _logger = logger;
             _configService = configService;
+            _mappingService = mappingService;
         }
 
         /// <summary>
@@ -107,6 +109,28 @@ namespace WearWare.Architecture.Button
                 int pinNumber = _provider.GetButtonPinNumber(i);
                 string pinName = _provider.GetPinName(pinNumber);
                 yield return new ButtonInfo(i, pinNumber, pinName);
+            }
+        }
+
+        /// <summary>
+        /// Gets all buttons assigned to a specific function.
+        /// </summary>
+        /// <param name="function">The function name (e.g., "QuickMedia", "None").</param>
+        /// <returns>Enumerable of ButtonInfo for buttons assigned to this function.</returns>
+        public IEnumerable<ButtonInfo> GetButtonsForFunction(string function)
+        {
+            var allButtons = GetAllButtons().ToList();
+            if (!allButtons.Any())
+            {
+                yield break;
+            }
+
+            foreach (var button in allButtons)
+            {
+                if (_mappingService.GetFunctionForPin(button.PinName) == function)
+                {
+                    yield return button;
+                }
             }
         }
 

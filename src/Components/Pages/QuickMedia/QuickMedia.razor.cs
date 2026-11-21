@@ -19,6 +19,7 @@ namespace WearWare.Components.Pages.QuickMedia
         [Inject] private IOperationProgressService OperationProgress { get; set; } = null!;
 
         private List<PlayableItem?> _quickMediaItems = [];
+        private List<int> _quickMediaButtonNumbers = [];
         private IReadOnlyList<PlayableItem>? _libraryItems;
         private EditPlayableItemFormModel? _addFormModel = null;
         private EditPlayableItemFormModel? _editFormModel = null;
@@ -39,9 +40,10 @@ namespace WearWare.Components.Pages.QuickMedia
         private void LoadQuickMediaItems()
         {
             _quickMediaItems = new List<PlayableItem?>();
-            for (int i = 0; i < QuickMediaManager.GetButtonCount(); i++)
+            _quickMediaButtonNumbers = QuickMediaManager.GetQuickMediaButtonNumbers();
+            foreach (var buttonNumber in _quickMediaButtonNumbers)
             {
-                _quickMediaItems.Add(QuickMediaManager.GetButtonItem(i));
+                _quickMediaItems.Add(QuickMediaManager.GetButtonItem(buttonNumber));
             }
         }
 
@@ -180,17 +182,17 @@ namespace WearWare.Components.Pages.QuickMedia
             if (currentItem == null) return;
             
             bool wasPlaying = QuickMediaHandler.State == HandlerState.Running && 
-                              QuickMediaManager.ActiveButtonNumber == index;
+                              QuickMediaManager.ActiveButtonSlot == index;
             
             QuickMediaManager.DeleteButtonItem(index);
             
             if (wasPlaying)
             {
                 QuickMediaHandler.Stop();
-                var loadedButtons = QuickMediaManager.GetLoadedButtonNumbers();
-                if (loadedButtons.Count > 0)
+                var loadedSlots = QuickMediaManager.GetLoadedButtonSlots();
+                if (loadedSlots.Count > 0)
                 {
-                    QuickMediaManager.SetActiveButton(loadedButtons[0]);
+                    QuickMediaManager.SetActiveButton(loadedSlots[0]);
                     QuickMediaHandler.Start();
                 }
             }

@@ -133,15 +133,15 @@ builder.Services.AddSingleton<IMatrixController>(sp => new MatrixController(
     sp.GetRequiredService<ILogger<MatrixController>>()));
 builder.Services.AddSingleton<PlaylistHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<PlaylistHandler>());
+builder.Services.AddSingleton<ButtonManager>();
+builder.Services.AddSingleton<ButtonFunctionMappingService>();
+builder.Services.AddHostedService<ButtonManagerInitializer>();
 builder.Services.AddSingleton<QuickMediaHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<QuickMediaHandler>());
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<ModeManager>();
 builder.Services.AddSingleton<ModeHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeHandler>());
-builder.Services.AddSingleton<ButtonManager>();
-builder.Services.AddSingleton<ButtonFunctionMappingService>();
-builder.Services.AddHostedService<ButtonManagerInitializer>();
 builder.Services.AddSingleton<IOperationProgressService, OperationProgressService>();
 
 // Add services to the container.
