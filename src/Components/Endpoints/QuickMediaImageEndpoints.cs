@@ -5,7 +5,7 @@ public static class QuickMediaImageEndpoints
 {
     public static void MapEndpoints(WebApplication app)
     {
-        app.MapGet("/quickmedia-images/{buttonNumber}/{sourceFileName}", (int buttonNumber, string sourceFileName, QuickMediaService quickMediaService) =>
+        app.MapGet("/quickmedia-images/{buttonNumber}/{sourceFileName}", (int buttonNumber, string sourceFileName) =>
         {
             var imagePath = Path.Combine(PathConfig.QuickMediaPath, buttonNumber.ToString(), sourceFileName);
             if (!File.Exists(imagePath))

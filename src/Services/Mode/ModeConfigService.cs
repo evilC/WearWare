@@ -2,6 +2,9 @@ using System.Text.Json;
 using WearWare.Config;
 using WearWare.Utils;
 
+/*
+Disabled: ModeService is currently replaced by ModeManager + ModeHandler.
+*/
 namespace WearWare.Services.Mode
 {
     public sealed class ModeConfigService

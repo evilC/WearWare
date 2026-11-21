@@ -3,7 +3,6 @@ using WearWare.Components.Endpoints;
 using WearWare.Services.Import;
 using WearWare.Services.Library;
 using WearWare.Services.MediaController;
-using WearWare.Services.Playlist;
 using WearWare.Services.QuickMedia;
 using WearWare.Services.Mocks;
 using System.Net;
@@ -21,12 +20,13 @@ using WearWare.Services.TempMon;
 using WearWare.Services.Imu;
 using WearWare.Services.Imu.Sensors;
 using WearWare.Services.Matrix;
-using WearWare.Services.Mode;
 using WearWare.Services.Simulations.Ball;
 using WearWare.Services.Simulations.Fluid;
 using WearWare.Services.Simulations.ImuTest;
 using WearWare.Architecture.Display;
 using WearWare.Architecture.Playlist;
+using WearWare.Architecture.QuickMedia;
+using WearWare.Architecture.Mode;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -68,13 +68,12 @@ builder.Services.AddHttpClient();
 builder.Services.AddSingleton(blazorInMemorySink);
 builder.Services.AddSingleton<AppOptionsService>();
 builder.Services.AddSingleton<MatrixConfigService>();
-// DISABLED: PlaylistService replaced by PlaylistManager + PlaylistHandler
-// builder.Services.AddSingleton<PlaylistService>();
 builder.Services.AddSingleton<InMemoryLogService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddSingleton<LibraryService>();
 builder.Services.AddSingleton<QuickMediaButtonsConfigService>();
 builder.Services.AddSingleton<PlaylistManager>();
+builder.Services.AddSingleton<QuickMediaManager>();
 
 var env = builder.Environment.EnvironmentName;
 builder.Services.AddSingleton(sp =>{return new EnvironmentService(env);});  // Allow Nav Menu to detect if running on Desktop or RPi
@@ -129,20 +128,12 @@ builder.Services.AddSingleton<IMatrixController>(sp => new MatrixController(
     sp.GetRequiredService<ILogger<MatrixController>>()));
 builder.Services.AddSingleton<PlaylistHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<PlaylistHandler>());
+builder.Services.AddSingleton<QuickMediaHandler>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<QuickMediaHandler>());
 builder.Services.AddSingleton<MediaControllerService>();
-builder.Services.AddSingleton<ModeConfigService>();
-builder.Services.AddSingleton(sp => new ModeService(
-    // ToDo: Do all of these need to be services?
-    sp.GetRequiredService<MediaControllerService>(),
-    sp.GetRequiredService<ImuService>(),
-    sp.GetService<ImuTestRenderer>(),
-    sp.GetService<BallPhysicsRenderer>(),
-    sp.GetService<FluidRenderer>(),
-    sp.GetRequiredService<ModeConfigService>(),
-    sp.GetRequiredService<IHostApplicationLifetime>(),
-    sp.GetRequiredService<ILogger<ModeService>>()));
-builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeService>());
-builder.Services.AddSingleton<QuickMediaService>();
+builder.Services.AddSingleton<ModeManager>();
+builder.Services.AddSingleton<ModeHandler>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeHandler>());
 builder.Services.AddSingleton<IOperationProgressService, OperationProgressService>();
 
 // Add services to the container.
@@ -161,18 +152,6 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 // app.UseHttpsRedirection();
 
-/*
-Old Blazor 8 code. May not be compatible
-if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Desktop")
-{
-    app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Error");
-    // app.UseHsts(); // Not needed if you never use HTTPS
-}
-*/
 app.UseAntiforgery();
 
 
@@ -188,19 +167,5 @@ QuickMediaImageEndpoints.MapEndpoints(app);
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-
-// Load the playlist and initialize the MediaControllerService
-// This will cause the MediaController to start playing the playlist
-// If we do not do this, then the MediaControllerSercie will not start playing until we visit the Playlist page
-// DISABLED: Using new PlaylistHandler instead
-//var playlistService = app.Services.GetRequiredService<PlaylistService>();
-//playlistService.Initialize();
-
-// Initialize the QuickMedia buttons
-// Without this, QuickMedia buttons will not be enabled until we visit the QuickMedia page
-// DISABLED: Testing new PlaylistHandler
-//var quickMediaService = app.Services.GetRequiredService<QuickMediaService>();
-//quickMediaService.Initialize();
 
 app.Run();

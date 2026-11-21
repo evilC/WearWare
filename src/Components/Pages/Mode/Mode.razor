@@ -1,42 +1,30 @@
 @page "/mode"
 @rendermode InteractiveServer
 @implements IDisposable
-@using WearWare.Services.Mode
-@inject ModeService ModeService
+@using WearWare.Architecture.Mode
+@inject ModeHandler ModeHandler
 
 <PageTitle>WearWare Mode</PageTitle>
 
 <h1>Mode</h1>
 
-<p>Current mode: <strong>@ModeService.State.Mode</strong></p>
+<p>Current mode: <strong>@ModeHandler.State.Mode</strong></p>
 
 <div class="d-flex gap-2 mb-3">
-    <button class="btn @(ModeService.State.Mode == DisplayMode.Playlist ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || (ModeService.State.Mode == DisplayMode.Playlist && ModeService.State.PreferredMode == DisplayMode.Playlist))"
+    <button class="btn @(ModeHandler.State.Mode == DisplayMode.Playlist ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.Playlist && ModeHandler.State.PreferredMode == DisplayMode.Playlist))"
             @onclick="() => ChangeMode(DisplayMode.Playlist)">Playlist</button>
-    <button class="btn @(ModeService.State.Mode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || (ModeService.State.Mode == DisplayMode.Physics && ModeService.State.PreferredMode == DisplayMode.Physics))"
-            @onclick="() => ChangeMode(DisplayMode.Physics)">Physics</button>
+    <button class="btn @(ModeHandler.State.Mode == DisplayMode.QuickMedia ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.QuickMedia && ModeHandler.State.PreferredMode == DisplayMode.QuickMedia))"
+            @onclick="() => ChangeMode(DisplayMode.QuickMedia)">QuickMedia</button>
 </div>
 
-@if (ModeService.State.Mode != ModeService.State.PreferredMode)
+@if (ModeHandler.State.Mode != ModeHandler.State.PreferredMode)
 {
-    <p>Saved mode: @ModeService.State.PreferredMode (will be retried on startup).</p>
+    <p>Saved mode: @ModeHandler.State.PreferredMode (will be retried on startup).</p>
 }
 
-<div class="mb-3">
-    <label for="physics-mode" class="form-label">Physics simulation</label>
-    <select id="physics-mode" class="form-select" value="@ModeService.State.Physics"
-            disabled="@_changing" @onchange="ChangePhysicsMode">
-        <option value="@PhysicsMode.ImuTest">IMU Test</option>
-        <option value="@PhysicsMode.Ball">Ball</option>
-        <option value="@PhysicsMode.Fluid">Fluid</option>
-    </select>
-</div>
-
-<p>QuickMedia is ignored in Physics mode.</p>
-
-@if (ModeService.State.Message is { } message)
+@if (ModeHandler.State.Message is { } message)
 {
     <div class="alert alert-warning" role="alert">@message</div>
 }
@@ -46,7 +34,7 @@
 
     protected override void OnInitialized()
     {
-        ModeService.StateChanged += OnStateChanged;
+        ModeHandler.StateChanged += OnStateChanged;
     }
 
     private void OnStateChanged()
@@ -59,25 +47,7 @@
         _changing = true;
         try
         {
-            await ModeService.SetModeAsync(mode);
-        }
-        finally
-        {
-            _changing = false;
-        }
-    }
-
-    private async Task ChangePhysicsMode(ChangeEventArgs args)
-    {
-        if (!Enum.TryParse<PhysicsMode>(args.Value?.ToString(), out var mode))
-        {
-            throw new InvalidOperationException("Invalid physics simulation selected.");
-        }
-
-        _changing = true;
-        try
-        {
-            await ModeService.SetPhysicsModeAsync(mode);
+            await ModeHandler.SetModeAsync(mode);
         }
         finally
         {
@@ -87,6 +57,6 @@
 
     public void Dispose()
     {
-        ModeService.StateChanged -= OnStateChanged;
+        ModeHandler.StateChanged -= OnStateChanged;
     }
 }

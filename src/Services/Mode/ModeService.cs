@@ -2,6 +2,9 @@ using WearWare.Services.Imu;
 using WearWare.Services.MediaController;
 using WearWare.Services.Simulations;
 
+/*
+Disabled: ModeService is currently replaced by ModeManager + ModeHandler.
+*/
 namespace WearWare.Services.Mode
 {
     public enum DisplayMode

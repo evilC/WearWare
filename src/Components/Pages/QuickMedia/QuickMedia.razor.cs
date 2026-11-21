@@ -2,17 +2,23 @@ using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.QuickMedia;
+using WearWare.Services.OperationProgress;
+using WearWare.Architecture;
+using WearWare.Architecture.QuickMedia;
+using WearWare.Utils;
 
 namespace WearWare.Components.Pages.QuickMedia
 {
     public partial class QuickMedia : DataPageBase
     {
-        [Inject] private QuickMediaService QuickMediaService { get; set; } = null!;
+        [Inject] private QuickMediaManager QuickMediaManager { get; set; } = null!;
+        [Inject] private QuickMediaHandler QuickMediaHandler { get; set; } = null!;
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] private ILogger<QuickMedia> Logger { get; set; } = null!;
+        [Inject] private IOperationProgressService OperationProgress { get; set; } = null!;
 
-        private IReadOnlyList<IQuickMediaButton?> quickButtons = Array.Empty<IQuickMediaButton?>();
+        private List<PlayableItem?> _quickMediaItems = [];
         private IReadOnlyList<PlayableItem>? _libraryItems;
         private EditPlayableItemFormModel? _addFormModel = null;
         private EditPlayableItemFormModel? _editFormModel = null;
@@ -22,39 +28,40 @@ namespace WearWare.Components.Pages.QuickMedia
         {
             if (!_subscribed)
             {
-                QuickMediaService.StateChanged += OnStateChanged;
+                QuickMediaManager.StateChanged += OnManagerStateChanged;
                 _subscribed = true;
             }
-            try
-            {
-                quickButtons = QuickMediaService?.GetQuickMediaButtons() ?? Array.Empty<IQuickMediaButton?>();
-            }
-            catch
-            {
-                quickButtons = Array.Empty<IQuickMediaButton?>();
-            }
+            LoadQuickMediaItems();
             _libraryItems = LibraryService.Items;
             return Task.CompletedTask;
+        }
+
+        private void LoadQuickMediaItems()
+        {
+            _quickMediaItems = new List<PlayableItem?>();
+            for (int i = 0; i < QuickMediaManager.GetButtonCount(); i++)
+            {
+                _quickMediaItems.Add(QuickMediaManager.GetButtonItem(i));
+            }
         }
 
         public override void Dispose()
         {
             if (_subscribed)
             {
-                QuickMediaService.StateChanged -= OnStateChanged;
+                QuickMediaManager.StateChanged -= OnManagerStateChanged;
                 _subscribed = false;
             }
             base.Dispose();
         }
 
-        /// <summary>
-        /// Handler for QuickMediaService StateChanged event.
-        /// Currently, this is not used for anything (See notes in the Service)
-        /// It's OK to remove the subscription, but do not remove the event itself from the service as the Mock page uses it.
-        /// </summary>
-        private void OnStateChanged()
+        private void OnManagerStateChanged()
         {
-            InvokeAsync(StateHasChanged);
+            InvokeAsync(() =>
+            {
+                LoadQuickMediaItems();
+                StateHasChanged();
+            });
         }
         // ================================================== Add Dialog  ==================================================
         void OnAddDialogShow(int index)
@@ -76,7 +83,6 @@ namespace WearWare.Components.Pages.QuickMedia
         /// <summary>
         /// Called after we click "Add" and a playable item is picked from the list
         /// </summary>
-        /// <param name="args"></param> Tuple of (insertIndex, libItem)
         async Task OnAddDialogItemChosen(EditPlayableItemFormModel editFormModel)
         {
             _addFormModel = null;
@@ -92,8 +98,6 @@ namespace WearWare.Components.Pages.QuickMedia
         /// <summary>
         /// Called when Edit is clicked on the QuickMedia page
         /// </summary>
-        /// <param name="button"></param>
-        /// <param name="index"></param>
         async Task OnEditQuickMediaItem(PlayableItem item, int index)
         {
             var editFormModel = new EditPlayableItemFormModel() {
@@ -111,12 +115,52 @@ namespace WearWare.Components.Pages.QuickMedia
         /// <summary>
         /// Called when Save is clicked in the EditPlayableItemForm
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         public async Task OnSaveQuickMediaItem(EditPlayableItemFormModel formModel)
         {
             _editFormModel = null;
-            await QuickMediaService.OnEditFormSubmit(formModel);
+            var opId = await OperationProgress.StartOperation($"{(formModel.FormMode == EditPlayableItemFormMode.Add ? "Adding" : "Editing")} Quick Media Item");
+            
+            try
+            {
+                if (formModel.FormMode == EditPlayableItemFormMode.Edit)
+                {
+                    var originalItem = formModel.OriginalItem;
+                    originalItem.UpdateFromClone(formModel.UpdatedItem);
+                    QuickMediaManager.UpsertButtonItem(formModel.ItemIndex, originalItem);
+                    OperationProgress.CompleteOperation(opId, true, "Done");
+                }
+                else
+                {
+                    // ADD mode
+                    var newItem = formModel.UpdatedItem;
+                    newItem.ParentFolder = Path.Combine(PathConfig.QuickMediaFolder, formModel.ItemIndex.ToString());
+                    
+                    // Copy fseq file
+                    var copyFrom = formModel.OriginalItem.GetFseqFilePath();
+                    var copyTo = newItem.GetFseqFilePath();
+                    await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
+                    
+                    // Copy source file
+                    var srcCopyFrom = formModel.OriginalItem.GetSourceFilePath();
+                    var srcCopyTo = newItem.GetSourceFilePath();
+                    if (!File.Exists(srcCopyTo))
+                    {
+                        await FileUtils.CopyFileAsync(srcCopyFrom, srcCopyTo).ConfigureAwait(false);
+                    }
+                    
+                    QuickMediaManager.UpsertButtonItem(formModel.ItemIndex, newItem);
+                    QuickMediaHandler.Stop();
+                    QuickMediaManager.SetActiveButton(formModel.ItemIndex);
+                    QuickMediaHandler.Start();
+                    OperationProgress.CompleteOperation(opId, true, "Done");
+                }
+            }
+            catch (Exception ex)
+            {
+                OperationProgress.CompleteOperation(opId, false, $"Error: {ex.Message}");
+                Logger.LogError(ex, "Error saving quick media item");
+            }
+            
             await InvokeAsync(StateHasChanged);
         }
 
@@ -132,14 +176,32 @@ namespace WearWare.Components.Pages.QuickMedia
         // ================================================= Delete Item ==================================================
         void DeleteQuickMediaButton(int index)
         {
-            QuickMediaService.DeleteQuickMediaButton(index);
+            var currentItem = QuickMediaManager.GetButtonItem(index);
+            if (currentItem == null) return;
+            
+            bool wasPlaying = QuickMediaHandler.State == HandlerState.Running && 
+                              QuickMediaManager.ActiveButtonNumber == index;
+            
+            QuickMediaManager.DeleteButtonItem(index);
+            
+            if (wasPlaying)
+            {
+                QuickMediaHandler.Stop();
+                var loadedButtons = QuickMediaManager.GetLoadedButtonNumbers();
+                if (loadedButtons.Count > 0)
+                {
+                    QuickMediaManager.SetActiveButton(loadedButtons[0]);
+                    QuickMediaHandler.Start();
+                }
+            }
+            
             StateHasChanged();
         }
 
         private async Task ConfirmDeleteQuickMediaButton(int index)
         {
-            var btn = quickButtons.ElementAtOrDefault(index);
-            var name = btn?.Item?.Name ?? $"Button {index + 1}";
+            var item = _quickMediaItems.ElementAtOrDefault(index);
+            var name = item?.Name ?? $"Button {index + 1}";
             var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete quick-media button '{name}'?");
             if (ok)
             {

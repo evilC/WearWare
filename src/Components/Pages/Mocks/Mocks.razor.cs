@@ -1,3 +1,4 @@
+using WearWare.Architecture.QuickMedia;
 using WearWare.Components.Base;
 using WearWare.Services.MediaController;
 
@@ -5,16 +6,17 @@ namespace WearWare.Components.Pages.Mocks
 {
     public partial class Mocks : DataPageBase
     {
-        [Inject] public QuickMediaService QuickMediaService { get; set; } = null!;
-        
+        [Inject] public QuickMediaManager QuickMediaManager { get; set; } = null!;
+        [Inject] public QuickMediaHandler QuickMediaHandler { get; set; } = null!;
         [Inject] public MediaControllerService MediaController { get; set; } = null!;
+        
         private bool _subscribed;
         
         protected override Task InitializeDataAsync()
         {
             if (!_subscribed)
             {
-                QuickMediaService.StateChanged += OnStateChanged;
+                QuickMediaManager.StateChanged += OnStateChanged;
                 _subscribed = true;
             }
             return Task.CompletedTask;
@@ -24,7 +26,7 @@ namespace WearWare.Components.Pages.Mocks
         {
             if (_subscribed)
             {
-                QuickMediaService.StateChanged -= OnStateChanged;
+                QuickMediaManager.StateChanged -= OnStateChanged;
                 _subscribed = false;
             }
             base.Dispose();
@@ -33,6 +35,12 @@ namespace WearWare.Components.Pages.Mocks
         private void OnStateChanged()
         {
             InvokeAsync(StateHasChanged);
+        }
+
+        private void OnButtonClick(int buttonNumber)
+        {
+            QuickMediaManager.SetActiveButton(buttonNumber);
+            QuickMediaHandler.Start();
         }
     }
 }
