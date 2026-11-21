@@ -31,6 +31,8 @@
 
 ## High Priority
 - Lots of edge cases with start/stop/quickmedia forever items etc. Whole system needs refactoring
+- Too many Service singletons?  
+  Some things maybe do not need to be - eg physics simulations
 - Add Preview page
   Button to upload. File is instantly converted and played.  
   Uploaded files are stored in separate folder, and do not overwrite incoming / library.  
