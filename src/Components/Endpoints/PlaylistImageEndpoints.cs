@@ -1,5 +1,4 @@
 using WearWare.Config;
-using WearWare.Services.Playlist;
 using Microsoft.AspNetCore.Http;
 using WearWare.Common.Media;
 
@@ -9,7 +8,7 @@ public static class PlaylistImageEndpoints
 {
     public static void MapEndpoints(WebApplication app)
     {
-        app.MapGet("/playlist-images/{playlistName}/{sourceFileName}", (string playlistName, string sourceFileName, PlaylistService playlistService) =>
+        app.MapGet("/playlist-images/{playlistName}/{sourceFileName}", (string playlistName, string sourceFileName) =>
         {
             var imagePath = Path.Combine(PathConfig.PlaylistPath, playlistName, sourceFileName);
             if (!File.Exists(imagePath))

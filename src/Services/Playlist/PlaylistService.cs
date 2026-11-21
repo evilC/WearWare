@@ -1,11 +1,13 @@
-using WearWare.Common.Media;
 using WearWare.Components.Forms.EditPlayableItemForm;
-using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;
 using WearWare.Utils;
 
+/*
+ * PlaylistService is currently disabled and replaced by PlaylistManager + PlaylistHandler.
+ * The code below is kept for reference and may be removed in the future.
+ */
 namespace WearWare.Services.Playlist
 {
     public class PlaylistService

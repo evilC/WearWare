@@ -3,14 +3,19 @@ using WearWare.Components.Forms.AddCopyPlaylistForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.Playlist;
+using WearWare.Services.OperationProgress;
 using WearWare.Utils;
+using WearWare.Architecture;
+using WearWare.Architecture.Playlist;
 
 namespace WearWare.Components.Pages.Playlist
 {
     public partial class Playlist : DataPageBase
     {
         [Inject] public IJSRuntime JSRuntime { get; set; } = null!;
-        [Inject] public PlaylistService PlaylistService { get; set; } = null!;
+        [Inject] public PlaylistManager PlaylistManager { get; set; } = null!;
+        [Inject] public PlaylistHandler PlaylistHandler { get; set; } = null!;
+        [Inject] public IOperationProgressService OperationProgress { get; set; } = null!;
         [Inject] public LibraryService LibraryService { get; set; } = null!;
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
 
@@ -42,13 +47,13 @@ namespace WearWare.Components.Pages.Playlist
         {
             if (!_subscribed)
             {
-                PlaylistService.StateChanged += OnStateChanged;
+                PlaylistManager.StateChanged += OnStateChanged;
                 _subscribed = true;
             }
-            availablePlaylists = PlaylistService.GetPlaylistNames();
-            _editingPlaylist = PlaylistService.GetPlaylistBeingEdited()?.Name;
-            activePlaylist = PlaylistService.GetActivePlaylistName();
-            _playlist = PlaylistService.GetPlaylistBeingEdited();
+            availablePlaylists = PlaylistManager.GetPlaylistNames();
+            _editingPlaylist = PlaylistManager.EditingPlaylistName;
+            activePlaylist = PlaylistManager.CurrentPlaylistName;
+            _playlist = PlaylistManager.EditingPlaylist;
             if (_playlist is not null)
             {
                 _items = _playlist.GetPlaylistItems();
@@ -61,7 +66,7 @@ namespace WearWare.Components.Pages.Playlist
         {
             if (_subscribed)
             {
-                PlaylistService.StateChanged -= OnStateChanged;
+                PlaylistManager.StateChanged -= OnStateChanged;
                 _subscribed = false;
             }
             base.Dispose();
@@ -88,13 +93,12 @@ namespace WearWare.Components.Pages.Playlist
                 activePlaylist = newValue;
                 if (newValue is null)
                 {
-                    PlaylistService.SetActivePlaylistState(false);
+                    // Deactivate
                 }
                 else
                 {
-                    PlaylistService.SetActivePlaylistState(true, newValue);
+                    PlaylistManager.SetActivePlaylist(newValue);
                 }
-                // Optionally, you can load the playlist or update UI here
                 StateHasChanged();
             }
         }
@@ -177,12 +181,14 @@ namespace WearWare.Components.Pages.Playlist
         // ToDo: Update PlaylistService.OnEditFormSubmit to accept EditPlayableItemFormModel
         async Task OnSavePlaylistItem(EditPlayableItemFormModel formModel)
         {
-            if (_playlist is null){
-                Logger.LogError($"{_logTag}: OnSavePlaylistItem called but _playlist is null");
+            if (_playlist is null || _editingPlaylist is null){
+                Logger.LogError($"{_logTag}: OnSavePlaylistItem called but _playlist or _editingPlaylist is null");
                 return;
             }
             _editFormModel = null;
-            await PlaylistService.OnEditFormSubmit(_playlist, formModel);
+            await PlaylistManager.UpsertPlaylistItemAsync(_editingPlaylist, formModel, OperationProgress);
+            _playlist = PlaylistManager.GetPlaylist(_editingPlaylist);
+            _items = _playlist?.GetPlaylistItems();
             await InvokeAsync(StateHasChanged);
         }
 
@@ -203,11 +209,12 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="itemIndex"></param> The index of the item to delete
         void DeletePlaylistItem(int itemIndex)
         {
-            if (_playlist is null)
+            if (_editingPlaylist is null)
                 return;
-            var removed = PlaylistService.RemovePlaylistItem(_playlist, itemIndex);
+            var removed = PlaylistManager.RemovePlaylistItem(_editingPlaylist, itemIndex);
             if (removed)
             {
+                _playlist = PlaylistManager.GetPlaylist(_editingPlaylist);
                 _items = _playlist?.GetPlaylistItems();
                 StateHasChanged();
             }
@@ -234,9 +241,9 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="newState"></param> The new enabled state
         async void ItemEnableToggled(PlayableItem item, int itemIndex, bool newState)
         {
-            if (_playlist is null)
+            if (_playlist is null || _editingPlaylist is null)
                 return;
-            var originalItem = item.Clone();    // Take a clone so that we can pass the original state (Enabled in original state) to the service
+            var originalItem = item.Clone();
             item.Enabled = newState;
             var formModel = new EditPlayableItemFormModel()
             {
@@ -247,7 +254,7 @@ namespace WearWare.Components.Pages.Playlist
                 UpdatedItem = item,
             };
             formModel.UpdatedItem.Enabled = newState;
-            await PlaylistService.OnEditFormSubmit(_playlist, formModel);
+            await PlaylistManager.UpsertPlaylistItemAsync(_editingPlaylist, formModel, OperationProgress);
             StateHasChanged();
         }
 
@@ -259,9 +266,25 @@ namespace WearWare.Components.Pages.Playlist
         /// <param name="index"></param> The index of the PlayableItem that was clicked
         void OnPlaylistItemImageClicked(PlayableItem item, int index)
         {
-            if (_playlist is null)
+            if (_editingPlaylist is null)
                 return;
-            PlaylistService.JumpToPlaylistItem(_playlist, index);
+            
+            // Only jump if editing the currently active playlist
+            if (_editingPlaylist == PlaylistManager.CurrentPlaylistName)
+            {
+                PlaylistManager.JumpToItem(index);
+                // Restart handler to begin playing from the new index
+                if (PlaylistHandler.State == HandlerState.Running)
+                {
+                    PlaylistHandler.Stop();
+                    PlaylistHandler.Start();
+                }
+            }
+            else
+            {
+                // If editing a different playlist, just update the editing playlist position
+                PlaylistManager.JumpToItemInPlaylist(_editingPlaylist, index);
+            }
         }
 
         // ============================================ Active Playlist controls ===============================================
@@ -270,16 +293,14 @@ namespace WearWare.Components.Pages.Playlist
         {
             if (!string.IsNullOrEmpty(activePlaylist))
             {
-                PlaylistService.SetActivePlaylistState(true, activePlaylist);
+                PlaylistManager.SetActivePlaylist(activePlaylist);
+                PlaylistHandler.Start();
             }
         }
 
         private void StopActivePlaylist()
         {
-            if (!string.IsNullOrEmpty(activePlaylist))
-            {
-                PlaylistService.SetActivePlaylistState(false);
-            }
+            PlaylistHandler.Stop();
         }
 
         /// <summary>
@@ -291,10 +312,10 @@ namespace WearWare.Components.Pages.Playlist
             if (_editingPlaylist != newValue)
             {
                 _editingPlaylist = newValue;
-                PlaylistService.OnEditingPlaylistChanged(_editingPlaylist);
+                PlaylistManager.SetEditingPlaylist(_editingPlaylist);
                 if (!string.IsNullOrEmpty(_editingPlaylist))
                 {
-                    _playlist = PlaylistService.GetPlaylist(_editingPlaylist);
+                    _playlist = PlaylistManager.GetPlaylist(_editingPlaylist);
                     _items = _playlist?.GetPlaylistItems();
                 }
                 else
@@ -337,26 +358,24 @@ namespace WearWare.Components.Pages.Playlist
         {
             _addCopyPlaylistModel = null!;
             var sanitized = FilenameValidator.Sanitize(model.NewName);
-            // Replace spaces and invalid folder characters with '-'
             if (string.IsNullOrWhiteSpace(model.NewName))
             {
                 return;
             }
             if (model.Mode == AddCopyPlaylistMode.Add)
             {
-                PlaylistService.AddPlaylist(model.NewName);
+                PlaylistManager.AddPlaylist(model.NewName);
             }
             else if (model.Mode == AddCopyPlaylistMode.Copy)
             {
-                await PlaylistService.CopyPlaylist(model.OldName, model.NewName);
+                await PlaylistManager.CopyPlaylistAsync(model.OldName, model.NewName);
             }
             else
             {
                 Logger.LogError($"{_logTag}: OnAddCopyPlaylistFormSubmit called with unknown mode {model.Mode}");
                 return;
             }
-            availablePlaylists = PlaylistService.GetPlaylistNames();
-            // Automatically select the new playlist in the Editing DDL by firing the change event only
+            availablePlaylists = PlaylistManager.GetPlaylistNames();
             OnEditingPlaylistChanged(new ChangeEventArgs { Value = sanitized });
             StateHasChanged();
         }
@@ -368,13 +387,9 @@ namespace WearWare.Components.Pages.Playlist
         {
             if (!string.IsNullOrEmpty(_editingPlaylist))
             {
-                // If the playlist being deleted is also active, reset the active DDL
-                if (activePlaylist == _editingPlaylist)
-                {
-                    activePlaylist = null;
-                }
-                PlaylistService.DeletePlaylist(_editingPlaylist);
-                availablePlaylists = PlaylistService.GetPlaylistNames();
+                PlaylistManager.DeletePlaylist(_editingPlaylist);
+                availablePlaylists = PlaylistManager.GetPlaylistNames();
+                activePlaylist = PlaylistManager.CurrentPlaylistName;
                 _editingPlaylist = null;
                 _playlist = null;
                 _items = null;
