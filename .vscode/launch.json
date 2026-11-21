@@ -13,6 +13,12 @@
             "args": [],
             "cwd": "${env:WEARWARE_REMOTE_DIR}/bin",
             "stopAtEntry": false,
+            "requireExactSource": false,    // Added to work around bug in C# extension that stopped breakpoints from being hit
+                                            // https://github.com/dotnet/vscode-csharp/issues/9802
+                                            // Delete this line if you don't need the workaround
+            "logging": {
+                "moduleLoad": false // Suppress "Just my code" warnings in the Debug Console
+            },
             "console": "internalConsole",
             "pipeTransport": {
                 "pipeCwd": "${workspaceFolder}",
