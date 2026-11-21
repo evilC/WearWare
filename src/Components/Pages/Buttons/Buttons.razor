@@ -1,0 +1,113 @@
+@page "/buttons"
+@rendermode InteractiveServer
+@using WearWare.Architecture.Button
+@inject ButtonManager ButtonManager
+@inject ButtonFunctionMappingService MappingService
+
+<PageTitle>WearWare Buttons</PageTitle>
+
+<h1>Buttons</h1>
+
+@if (ButtonManager.Provider == null)
+{
+    <div class="alert alert-info" role="alert">
+        No button provider configured. Buttons are disabled.
+    </div>
+}
+else
+{
+    <p class="text-muted mb-3">
+        Provider: <strong>@_providerName</strong>
+    </p>
+
+    @if (!_buttons.Any())
+    {
+        <div class="alert alert-info" role="alert">
+            Button provider configured but no buttons are assigned.
+        </div>
+    }
+    else
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Button</th>
+                    <th style="width: 120px;">Physical Pin</th>
+                    <th>Function</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < _buttons.Count; i++)
+                {
+                    var button = _buttons[i];
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td><code>@button.PinName</code></td>
+                        <td>
+                            <select class="form-select" value="@(_functions[button.PinName])" 
+                                    @onchange="@((ChangeEventArgs e) => OnFunctionChanged(button.PinName, e.Value?.ToString() ?? "None"))">
+                                <option value="None">None</option>
+                                <option value="QuickMedia">QuickMedia</option>
+                            </select>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private List<ButtonInfo> _buttons = [];
+    private Dictionary<string, string> _functions = [];
+    private string _providerName = "";
+    private bool _saving;
+
+    protected override void OnInitialized()
+    {
+        _buttons = ButtonManager.GetAllButtons().ToList();
+        
+        foreach (var button in _buttons)
+        {
+            _functions[button.PinName] = MappingService.GetFunctionForPin(button.PinName);
+        }
+
+        _providerName = GetProviderName();
+    }
+
+    private string GetProviderName()
+    {
+        var provider = ButtonManager.Provider;
+        if (provider == null)
+        {
+            return "None";
+        }
+
+        var typeName = provider.GetType().Name;
+        return typeName switch
+        {
+            "PiGpioButtonProvider" => "Raspberry Pi GPIO",
+            "Mcp23017ButtonProvider" => "MCP23017 I2C Expander",
+            _ => typeName
+        };
+    }
+
+    private async Task OnFunctionChanged(string pinName, string function)
+    {
+        if (_saving)
+        {
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            _functions[pinName] = function;
+            await MappingService.SetFunctionForPinAsync(pinName, function);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

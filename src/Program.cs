@@ -27,6 +27,7 @@ using WearWare.Architecture.Display;
 using WearWare.Architecture.Playlist;
 using WearWare.Architecture.QuickMedia;
 using WearWare.Architecture.Mode;
+using WearWare.Architecture.Button;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -109,6 +110,9 @@ else
     builder.Services.AddSingleton<ImuTestRenderer>();
     builder.Services.AddSingleton<BallPhysicsRenderer>();
     builder.Services.AddSingleton<FluidRenderer>();
+    // Old QuickMediaService infrastructure - no longer used. QuickMediaHandler uses the new ButtonManager.
+    // Keeping this code as-is for reference in case rollback is needed.
+    /*
     builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
     {
         var config = sp.GetRequiredService<QuickMediaButtonsConfigService>().Config;
@@ -120,6 +124,7 @@ else
         };
     });
     builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
+    */
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
 
@@ -134,6 +139,9 @@ builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<ModeManager>();
 builder.Services.AddSingleton<ModeHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeHandler>());
+builder.Services.AddSingleton<ButtonManager>();
+builder.Services.AddSingleton<ButtonFunctionMappingService>();
+builder.Services.AddHostedService<ButtonManagerInitializer>();
 builder.Services.AddSingleton<IOperationProgressService, OperationProgressService>();
 
 // Add services to the container.
