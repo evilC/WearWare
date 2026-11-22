@@ -128,9 +128,11 @@ namespace WearWare.Architecture.QuickMedia
         public bool SetActiveButton(int buttonSlot)
         {
             var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
-            if (buttonSlot < 1 || buttonSlot > quickMediaButtons.Count)
+            var validButtonNumbers = quickMediaButtons.Select(b => b.Index + 1).ToList();
+            
+            if (!validButtonNumbers.Contains(buttonSlot))
             {
-                _logger.LogWarning("{tag} Cannot set active button: slot {slot} out of range.", _logTag, buttonSlot);
+                _logger.LogWarning("{tag} Cannot set active button: button {button} is not assigned to QuickMedia.", _logTag, buttonSlot);
                 return false;
             }
 

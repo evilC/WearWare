@@ -9,10 +9,12 @@ namespace WearWare.Architecture.Mode
         private readonly ModeManager _modeManager;
         private readonly PlaylistHandler _playlistHandler;
         private readonly QuickMediaHandler _quickMediaHandler;
+        private readonly QuickMediaManager _quickMediaManager;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<ModeHandler> _logger;
         private readonly string _logTag = "[MODEHANDLER]";
         private volatile bool _stopping;
+        private volatile bool _started;
 
         public event Action? StateChanged;
         public ModeState State => _modeManager.State;
@@ -21,15 +23,19 @@ namespace WearWare.Architecture.Mode
             ModeManager modeManager,
             PlaylistHandler playlistHandler,
             QuickMediaHandler quickMediaHandler,
+            QuickMediaManager quickMediaManager,
             IHostApplicationLifetime lifetime,
             ILogger<ModeHandler> logger)
         {
             _modeManager = modeManager;
             _playlistHandler = playlistHandler;
             _quickMediaHandler = quickMediaHandler;
+            _quickMediaManager = quickMediaManager;
             _lifetime = lifetime;
             _logger = logger;
             _modeManager.StateChanged += OnModeManagerStateChanged;
+            _quickMediaHandler.ButtonPressed += OnQuickMediaButtonPressed;
+            _quickMediaHandler.PlaybackCompleted += OnQuickMediaPlaybackCompleted;
         }
 
         private void OnModeManagerStateChanged()
@@ -37,7 +43,7 @@ namespace WearWare.Architecture.Mode
             StateChanged?.Invoke();
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("{tag} starting.", _logTag);
 
@@ -49,13 +55,15 @@ namespace WearWare.Architecture.Mode
             if (State.Mode == DisplayMode.QuickMedia)
             {
                 _quickMediaHandler.Start();
+                if (_quickMediaHandler.State == HandlerState.Failed)
+                    await RestoreAfterQuickMediaAsync();
             }
             else
             {
                 _playlistHandler.Start();
             }
 
-            return Task.CompletedTask;
+            _started = true;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
@@ -81,6 +89,128 @@ namespace WearWare.Architecture.Mode
                 throw new ArgumentOutOfRangeException(nameof(mode));
             }
             return ChangeModeAsync(mode);
+        }
+
+        private void OnQuickMediaButtonPressed(int buttonNumber)
+        {
+            _ = ActivateQuickMediaAsync(buttonNumber);
+        }
+
+        private async Task ActivateQuickMediaAsync(int buttonNumber)
+        {
+            await _transition.WaitAsync();
+            var playlistWasRunning = false;
+            try
+            {
+                if (_stopping || !_started)
+                    return;
+
+                if (State.Mode == DisplayMode.QuickMedia && _quickMediaHandler.IsPlayingForever(buttonNumber))
+                {
+                    _quickMediaHandler.Stop();
+                    await RestoreAfterQuickMediaAsync();
+                    return;
+                }
+
+                if (!_quickMediaManager.GetQuickMediaButtonNumbers().Contains(buttonNumber) ||
+                    _quickMediaManager.GetButtonItem(buttonNumber) == null)
+                {
+                    _logger.LogWarning("{tag} QuickMedia button {button} is unassigned or has no item.", _logTag, buttonNumber);
+                    return;
+                }
+
+                playlistWasRunning = _playlistHandler.IsRunning();
+                _playlistHandler.Stop();
+                _quickMediaHandler.Stop();
+                if (!_quickMediaManager.SetActiveButton(buttonNumber))
+                {
+                    await RecoverFromFailedActivationAsync(playlistWasRunning);
+                    return;
+                }
+
+                if (!await _modeManager.SetModeWithInterrupt(DisplayMode.QuickMedia))
+                {
+                    _logger.LogError("{tag} Could not switch to QuickMedia.", _logTag);
+                    await RecoverFromFailedActivationAsync(playlistWasRunning);
+                    return;
+                }
+
+                _quickMediaHandler.Start();
+                if (_quickMediaHandler.State == HandlerState.Failed)
+                    await RestoreAfterQuickMediaAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Failed to activate QuickMedia button {button}.", _logTag, buttonNumber);
+                if (!_stopping)
+                {
+                    try
+                    {
+                        await RecoverFromFailedActivationAsync(playlistWasRunning);
+                    }
+                    catch (Exception restoreException)
+                    {
+                        _logger.LogError(restoreException, "{tag} Failed to recover Playlist playback.", _logTag);
+                    }
+                }
+            }
+            finally
+            {
+                _transition.Release();
+            }
+        }
+
+        private async Task RecoverFromFailedActivationAsync(bool playlistWasRunning)
+        {
+            _quickMediaHandler.Stop();
+            if (State.Mode == DisplayMode.QuickMedia)
+                await RestoreAfterQuickMediaAsync();
+            else if (playlistWasRunning && !_stopping)
+                _playlistHandler.Start();
+        }
+
+        private void OnQuickMediaPlaybackCompleted(Task<bool> task, bool success)
+        {
+            _ = CompleteQuickMediaAsync(task, success);
+        }
+
+        private async Task CompleteQuickMediaAsync(Task<bool> task, bool success)
+        {
+            await _transition.WaitAsync();
+            try
+            {
+                if (_stopping || !_quickMediaHandler.IsCurrentPlayback(task))
+                    return;
+
+                _quickMediaHandler.Stop();
+                if (!success)
+                    _logger.LogError("{tag} QuickMedia playback failed; returning to Playlist.", _logTag);
+                await RestoreAfterQuickMediaAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Failed to restore mode after QuickMedia.", _logTag);
+            }
+            finally
+            {
+                _transition.Release();
+            }
+        }
+
+        private async Task RestoreAfterQuickMediaAsync()
+        {
+            if (!await _modeManager.RestoreInterruptedMode())
+            {
+                _logger.LogError("{tag} Could not restore the interrupted mode configuration; returning to Playlist.", _logTag);
+                _modeManager.UpdateState(State with
+                {
+                    Mode = DisplayMode.Playlist,
+                    Message = "Could not restore the interrupted mode configuration. See the log for details."
+                });
+            }
+
+            if (State.Mode == DisplayMode.Playlist && !_stopping)
+                _playlistHandler.Start();
         }
 
         private async Task ChangeModeAsync(DisplayMode requestedMode)
@@ -130,6 +260,11 @@ namespace WearWare.Architecture.Mode
                     _playlistHandler.Stop();
                     _quickMediaHandler.Start();
                     _modeManager.UpdateState(new ModeState(DisplayMode.QuickMedia, saveError, preferredMode));
+                    if (_quickMediaHandler.State == HandlerState.Failed)
+                    {
+                        await RestoreAfterQuickMediaAsync();
+                        return;
+                    }
                     _logger.LogInformation("{tag} Switched to QuickMedia mode.", _logTag);
                     return;
                 }

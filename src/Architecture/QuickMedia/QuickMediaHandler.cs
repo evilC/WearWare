@@ -1,7 +1,8 @@
 using WearWare.Common.Media;
 using WearWare.Services.MediaController;
 using WearWare.Architecture.Button;
-using System.Device.Gpio;
+
+using Iot.Device.Button;
 
 namespace WearWare.Architecture.QuickMedia
 {
@@ -14,15 +15,19 @@ namespace WearWare.Architecture.QuickMedia
         private readonly string _logTag = "[QUICKMEDIAHANDLER]";
 
         private volatile bool _running = false;
-        private Task? _playTask;
+        private Task<bool>? _playTask;
         private CancellationTokenSource? _cts;
         private HandlerState _state = HandlerState.Idle;
         private int? _lastActiveButtonSlot;
+        private PlayMode _playingMode;
         private Dictionary<int, int> _buttonIndexToSlot = [];
+        private Dictionary<int, GpioButton> _gpioButtons = [];
 
         public string Name => "QuickMedia";
         public HandlerState State => _state;
         public event Action? StateChanged;
+        public event Action<int>? ButtonPressed;
+        public event Action<Task<bool>, bool>? PlaybackCompleted;
 
         public QuickMediaHandler(
             QuickMediaManager quickMediaManager,
@@ -94,70 +99,62 @@ namespace WearWare.Architecture.QuickMedia
                 return;
             }
 
-            _buttonIndexToSlot.Clear();
-            int slot = 1;
             foreach (var button in quickMediaButtons)
             {
-                _buttonIndexToSlot[button.PinNumber] = slot;
                 try
                 {
-                    _buttonManager.Provider.Controller.OpenPin(button.PinNumber, PinMode.Input);
-                    _buttonManager.Provider.Controller.RegisterCallbackForPinValueChangedEvent(
-                        button.PinNumber,
-                        PinEventTypes.Falling,
-                        (object s, PinValueChangedEventArgs e) => OnButtonPressed(button.PinNumber));
-                    _logger.LogInformation("{tag} Subscribed to button {pin} ({name}) -> slot {slot}.", _logTag, button.PinNumber, button.PinName, slot);
+                    var buttonNumber = button.Index + 1;
+                    var gpioButton = new GpioButton(
+                        buttonPin: button.PinNumber,
+                        isPullUp: true,
+                        hasExternalResistor: false,
+                        gpio: _buttonManager.Provider.Controller,
+                        shouldDispose: false,
+                        debounceTime: TimeSpan.FromMilliseconds(50));
+                    
+                    gpioButton.Press += (s, e) => OnButtonPressed(buttonNumber);
+                    _gpioButtons[button.PinNumber] = gpioButton;
+                    
+                    _logger.LogInformation("{tag} Subscribed to button {pin} ({name}) -> button {button}.", _logTag, button.PinNumber, button.PinName, buttonNumber);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "{tag} Failed to subscribe to button {pin} ({name}).", _logTag, button.PinNumber, button.PinName);
                 }
-                slot++;
             }
+            
+            _logger.LogInformation("{tag} Button event handlers initialized and enabled.", _logTag);
         }
 
         private void UnsubscribeFromButtonEvents()
         {
-            if (_buttonManager.Provider == null)
-                return;
-
-            var handlers = new Dictionary<int, PinChangeEventHandler>();
-            foreach (var pinNumber in _buttonIndexToSlot.Keys)
+            foreach (var gpioButton in _gpioButtons.Values)
             {
                 try
                 {
-                    if (_buttonManager.Provider.Controller.IsPinOpen(pinNumber))
-                    {
-                        _buttonManager.Provider.Controller.ClosePin(pinNumber);
-                    }
+                    gpioButton?.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "{tag} Failed to unsubscribe from button {pin}.", _logTag, pinNumber);
+                    _logger.LogError(ex, "{tag} Failed to dispose GpioButton.", _logTag);
                 }
             }
+            _gpioButtons.Clear();
             _buttonIndexToSlot.Clear();
         }
 
-        private void OnButtonPressed(int pinNumber)
+        private void OnButtonPressed(int buttonNumber)
         {
-            if (!_buttonIndexToSlot.TryGetValue(pinNumber, out int slot))
-            {
-                _logger.LogWarning("{tag} Button pressed on unknown pin {pin}.", _logTag, pinNumber);
-                return;
-            }
+            _logger.LogInformation("{tag} QuickMedia button pressed: button {button}.", _logTag, buttonNumber);
 
-            _logger.LogInformation("{tag} QuickMedia button pressed: slot {slot}.", _logTag, slot);
-
-            if (_quickMediaManager.SetActiveButton(slot))
-            {
-                Stop();
-                Start();
-            }
+            if (ButtonPressed == null)
+                _logger.LogWarning("{tag} No mode handler available for button {button}.", _logTag, buttonNumber);
+            else
+                ButtonPressed.Invoke(buttonNumber);
         }
 
         /// <summary>
-        /// Starts playback of the active quick media item (looping forever).
+        /// Starts playback of the active quick media item.
         /// </summary>
         public void Start()
         {
@@ -167,7 +164,11 @@ namespace WearWare.Architecture.QuickMedia
                 return;
             }
 
-            if (_quickMediaManager.ActiveButtonItem == null)
+            if (_playTask != null)
+                Stop();
+
+            var item = _quickMediaManager.ActiveButtonItem?.ToPlayableItem();
+            if (item == null)
             {
                 _logger.LogWarning("{tag} No active quick media item, cannot start playback.", _logTag);
                 SetState(HandlerState.Failed);
@@ -178,10 +179,12 @@ namespace WearWare.Architecture.QuickMedia
             {
                 _cts = new CancellationTokenSource();
                 var ct = _cts.Token;
-                _running = true;
                 _lastActiveButtonSlot = _quickMediaManager.ActiveButtonSlot;
-                _playTask = Task.Run(() => PlayLoop(ct));
+                _playingMode = item.PlayMode;
+                _running = true;
+                _playTask = Task.Run(() => PlayLoop(item, ct));
                 SetState(HandlerState.Running);
+                _ = ObservePlaybackAsync(_playTask);
                 _logger.LogInformation("{tag} Playback started for slot {slot}.", _logTag, _quickMediaManager.ActiveButtonSlot);
             }
             catch (Exception ex)
@@ -199,7 +202,7 @@ namespace WearWare.Architecture.QuickMedia
         /// </summary>
         public void Stop()
         {
-            if (!_running)
+            if (_playTask == null)
             {
                 return;
             }
@@ -239,40 +242,41 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
-        /// <summary>
-        /// Main playback loop - plays the item according to its PlayMode.
-        /// </summary>
-        private void PlayLoop(CancellationToken ct)
+        public bool IsCurrentPlayback(Task<bool> task) => ReferenceEquals(_playTask, task);
+
+        public bool IsPlayingForever(int buttonSlot) =>
+            _running && _lastActiveButtonSlot == buttonSlot && _playingMode == PlayMode.Forever;
+
+        private async Task ObservePlaybackAsync(Task<bool> task)
+        {
+            var success = await task.ConfigureAwait(false);
+            PlaybackCompleted?.Invoke(task, success);
+        }
+
+        private bool PlayLoop(PlayableItem item, CancellationToken ct)
         {
             try
             {
-                while (_running && !ct.IsCancellationRequested)
+                var fseqPath = item.GetFseqFilePath();
+                if (!File.Exists(fseqPath))
                 {
-                    var item = _quickMediaManager.ActiveButtonItem;
-                    if (item == null)
-                    {
-                        _logger.LogWarning("{tag} Active item became null during playback.", _logTag);
-                        break;
-                    }
-
-                    var fseqPath = item.GetFseqFilePath();
-                    if (!File.Exists(fseqPath))
-                    {
-                        _logger.LogWarning("{tag} Quick media fseq file not found: {path}", _logTag, fseqPath);
-                        break;
-                    }
-
-                    var playableItem = item.ToPlayableItem();
-                    _mediaPlayer.PlayFseq(playableItem, ct);
-
-                    if (ct.IsCancellationRequested)
-                        break;
+                    _logger.LogWarning("{tag} Quick media fseq file not found: {path}", _logTag, fseqPath);
+                    return false;
                 }
+
+                var success = _mediaPlayer.PlayFseq(item, ct);
+                if (!success && !ct.IsCancellationRequested)
+                    _logger.LogError("{tag} Playback failed for quick media item {name}.", _logTag, item.Name);
+                return success;
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                return false;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{tag} Exception in PlayLoop: {message}", _logTag, ex.Message);
-                SetState(HandlerState.Failed);
+                return false;
             }
             finally
             {
@@ -281,3 +285,9 @@ namespace WearWare.Architecture.QuickMedia
         }
     }
 }
+
+
+
+
+
+

@@ -60,7 +60,6 @@ namespace WearWare.Architecture.Playlist
                 }
             }
 
-            Start();
             await Task.CompletedTask;
         }
 
