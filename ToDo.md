@@ -5,6 +5,8 @@
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
 ## Business Logic (New Architecture) changes
+- LOTS still depend on old MediaControllerService
+  NEEDS REMOVING!
 - Move things from HostedService to Singleton?
 - Delete old Services
 - ButtonHandler should subscribe to GPIO buttons, not the Mode handler?
