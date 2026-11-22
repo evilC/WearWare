@@ -32,6 +32,7 @@ namespace WearWare.Services.Mode
             QuickMediaHandler quickMediaHandler,
             PhysicsHandler physicsHandler,
             ButtonManager buttonManager,
+            ButtonHandler buttonHandler,
             ButtonFunctionMappingService buttonMappings,
             IHostApplicationLifetime lifetime,
             ILogger<ModeHandler> logger)
@@ -48,6 +49,7 @@ namespace WearWare.Services.Mode
             _logger = logger;
             _modeManager.StateChanged += () => StateChanged?.Invoke();
             _quickMediaHandler.ConfigureModeControl(RequestControlAsync, ReleaseControlAsync, () => _started && !_stopping);
+            buttonHandler.JogPressed += OnJogPressed;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -254,24 +256,68 @@ namespace WearWare.Services.Mode
             await _transition.WaitAsync();
             try
             {
-                if (_stopping || !_started)
-                    return;
-                if (_physicsHandler.SelectedSimulation == name && _physicsHandler.SelectionMessage == null)
-                    return;
-
-                var changed = _physicsHandler.SelectedSimulation != name;
-                if (!_physicsHandler.SelectSimulation(name) || !changed)
-                    return;
-
-                if (State.InterruptingMode == null && State.ActiveMode == DisplayMode.Physics)
-                {
-                    await StopPhysicsAsync();
-                    await StartNormalModeAsync();
-                }
+                await SelectPhysicsSimulationCoreAsync(name);
             }
             finally
             {
                 _transition.Release();
+            }
+        }
+
+        private async Task SelectPhysicsSimulationCoreAsync(string name)
+        {
+            if (_stopping || !_started)
+                return;
+            if (_physicsHandler.SelectedSimulation == name && _physicsHandler.SelectionMessage == null)
+                return;
+
+            var changed = _physicsHandler.SelectedSimulation != name;
+            if (!_physicsHandler.SelectSimulation(name) || !changed)
+                return;
+
+            if (State.InterruptingMode == null && State.ActiveMode == DisplayMode.Physics)
+            {
+                await StopPhysicsAsync();
+                await StartNormalModeAsync();
+            }
+        }
+
+        private void OnJogPressed(string pinName, JogDirection direction)
+        {
+            if (State.ActiveMode == DisplayMode.Physics)
+                _ = HandleJogAsync(pinName, direction);
+        }
+
+        private async Task HandleJogAsync(string pinName, JogDirection direction)
+        {
+            try
+            {
+                await _transition.WaitAsync();
+                try
+                {
+                    if (_stopping || !_started)
+                        return;
+
+                    var function = direction switch
+                    {
+                        JogDirection.Next => nameof(ButtonFunction.JogNext),
+                        JogDirection.Previous => nameof(ButtonFunction.JogPrevious),
+                        _ => throw new ArgumentOutOfRangeException(nameof(direction))
+                    };
+                    if (_buttonMappings.GetFunctionForPin(pinName) != function)
+                        return;
+
+                    if (State.ActiveMode == DisplayMode.Physics)
+                        await SelectPhysicsSimulationCoreAsync(_physicsHandler.GetJoggedSimulation(direction));
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MODEHANDLER] Failed to handle {direction} jog from {pinName}.", direction, pinName);
             }
         }
 

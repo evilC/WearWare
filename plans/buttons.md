@@ -4,7 +4,7 @@ Status: Configurable Pi GPIO and MCP23017 providers and central button routing a
 
 ## Goals
 
-- Support either configured Raspberry Pi GPIO pins or an Adafruit MCP23017 I2C GPIO expander for QuickMedia buttons. Only one provider is active at a time.
+- Support either configured Raspberry Pi GPIO pins or an Adafruit MCP23017 I2C GPIO expander for buttons. Only one provider is active at a time.
 - Share the existing `GpioButton` handling logic between providers.
 - Configure the provider and button pins in `config/buttonsconfig.json`. Its empty `PiGpio` configuration is a safe default.
 
@@ -15,8 +15,9 @@ Status: Configurable Pi GPIO and MCP23017 providers and central button routing a
 - Both providers expose a shared `GpioController`. The central button handler subscribes to all configured pins and routes presses according to their current function.
 - Each provider owns its controller resources; the MCP23017 provider also owns the Pi GPIO controller used for interrupts and the I2C device. Individual buttons do not dispose shared controllers.
 - If `buttonsconfig.json` is missing, WearWare creates an empty `PiGpio` configuration. Invalid config is logged and leaves buttons disabled without stopping playlist playback. The former `buttonpins.json` is no longer read.
-- The Buttons page assigns `None` or `QuickMedia` to each pin and saves the mapping in `config/buttonfunctionmapping.json`. Changes take effect immediately. QuickMedia button numbers correspond to the configured pin order, including pins assigned to other functions.
-- Reassigning a QuickMedia button stops its active item or clears its saved Forever item. Other QuickMedia playback continues or resumes as appropriate; otherwise control returns to the selected normal mode. The item's files are retained if the button is assigned to QuickMedia again.
+- The Buttons page assigns `None`, `QuickMedia`, `Jog Next` or `Jog Previous` to each pin and saves the mapping in `config/buttonfunctionmapping.json`. Changes take effect immediately. QuickMedia button numbers correspond to the configured pin order, including pins assigned to other functions.
+- Jog presses are routed to the active mode. Physics uses them to select the next or previous simulation, wrapping at either end and saving the selection. Jog does nothing in Playlist or while QuickMedia is active.
+- Reassigning a QuickMedia button stops its active item or clears its saved Forever item. Other QuickMedia playback continues or resumes as appropriate; otherwise control returns to the selected normal mode. The slot's saved item and files are deleted; library originals are preserved.
 - `GpioButton` uses its default pull-up and resistor settings and its default debounce time of zero. Physical debounce behaviour still needs testing.
 
 ## MCP23017 wiring

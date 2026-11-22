@@ -114,7 +114,7 @@ namespace WearWare.Services.Button
                 return;
             }
 
-            var validFunctions = new[] { "None", "QuickMedia" };
+            var validFunctions = Enum.GetNames<ButtonFunction>();
 
             foreach (var mapping in config.Mappings)
             {

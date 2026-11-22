@@ -1,3 +1,4 @@
+using WearWare.Services.Button;
 using WearWare.Services.Physics.Imu;
 using WearWare.Services.Physics.Simulations;
 using WearWare.Services.Physics.Simulations.Ball;
@@ -73,6 +74,21 @@ namespace WearWare.Services.Physics
                 NotifyStateChanged();
                 return false;
             }
+        }
+
+        internal string GetJoggedSimulation(JogDirection direction)
+        {
+            var index = Array.FindIndex(_simulations, simulation => simulation.Name == SelectedSimulation);
+            if (index < 0)
+                throw new InvalidOperationException("The selected Physics simulation is not available.");
+
+            var offset = direction switch
+            {
+                JogDirection.Next => 1,
+                JogDirection.Previous => -1,
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
+            return _simulations[(index + offset + _simulations.Length) % _simulations.Length].Name;
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)

@@ -11,6 +11,7 @@ namespace WearWare.Services.Button
         private bool _initialized;
 
         public event Action<int>? QuickMediaPressed;
+        public event Action<string, JogDirection>? JogPressed;
 
         public ButtonHandler(
             ButtonManager buttonManager,
@@ -60,8 +61,18 @@ namespace WearWare.Services.Button
         {
             try
             {
-                if (_mappingService.GetFunctionForPin(button.PinName) == "QuickMedia")
-                    QuickMediaPressed?.Invoke(button.Index + 1);
+                switch (_mappingService.GetFunctionForPin(button.PinName))
+                {
+                    case nameof(ButtonFunction.QuickMedia):
+                        QuickMediaPressed?.Invoke(button.Index + 1);
+                        break;
+                    case nameof(ButtonFunction.JogNext):
+                        JogPressed?.Invoke(button.PinName, JogDirection.Next);
+                        break;
+                    case nameof(ButtonFunction.JogPrevious):
+                        JogPressed?.Invoke(button.PinName, JogDirection.Previous);
+                        break;
+                }
             }
             catch (Exception ex)
             {

@@ -59,6 +59,8 @@ else
                                     @onchange="@((ChangeEventArgs e) => OnFunctionChanged(button.PinName, e.Value?.ToString() ?? ""))">
                                 <option value="None">None</option>
                                 <option value="QuickMedia">QuickMedia</option>
+                                <option value="@nameof(ButtonFunction.JogNext)">Jog Next</option>
+                                <option value="@nameof(ButtonFunction.JogPrevious)">Jog Previous</option>
                             </select>
                         </td>
                     </tr>
