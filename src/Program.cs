@@ -15,7 +15,6 @@ using WearWare.Services.Environment;
 using WearWare.Services.Options;
 using WearWare.Services.TempMon;
 using WearWare.Services.Matrix;
-using WearWare.Architecture.Display;
 using WearWare.Architecture.Playlist;
 using WearWare.Architecture.QuickMedia;
 using WearWare.Architecture.Mode;
@@ -84,8 +83,8 @@ if (env == "Desktop")
     builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
     // builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
-    builder.Services.AddSingleton<MatrixService>();
-    builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixService>());
+    builder.Services.AddSingleton<MatrixDisplay>();
+    builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixDisplay>());
 }
 else
 {
@@ -95,8 +94,8 @@ else
         Log.Warning("frame-sequence-player not found in tools folder! FSEQ conversion functionality will not work!");
     }
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
-    builder.Services.AddSingleton<MatrixService>();
-    builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixService>());
+    builder.Services.AddSingleton<MatrixDisplay>();
+    builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixDisplay>());
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }

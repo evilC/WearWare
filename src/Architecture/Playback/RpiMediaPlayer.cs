@@ -1,5 +1,5 @@
 using RPiRgbLEDMatrix;
-using WearWare.Architecture.Display;
+using WearWare.Services.Matrix;
 using WearWare.Common;
 using WearWare.Common.Media;
 using WearWare.Config;

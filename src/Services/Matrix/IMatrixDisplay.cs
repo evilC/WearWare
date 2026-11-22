@@ -1,6 +1,6 @@
 using RPiRgbLEDMatrix;
 
-namespace WearWare.Architecture.Display
+namespace WearWare.Services.Matrix
 {
     /// <summary>
     /// Provides synchronous access to the LED matrix for a handler that currently owns display control.

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using RPiRgbLEDMatrix;
-using WearWare.Architecture.Display;
+using WearWare.Services.Matrix;
 using WearWare.Architecture.Physics.Imu;
 using WearWare.Services.MatrixConfig;
 using WearWare.Architecture.Physics.Simulations.Fluid;
