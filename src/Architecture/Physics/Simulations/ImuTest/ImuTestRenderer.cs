@@ -1,14 +1,14 @@
 using RPiRgbLEDMatrix;
+using WearWare.Architecture.Display;
 using WearWare.Architecture.Physics.Imu;
-using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Architecture.Physics.Simulations.ImuTest
 {
     public sealed class ImuTestRenderer : PhysicsRenderer
     {
-        public ImuTestRenderer(ImuService imu, MatrixService matrix, MatrixConfigService config, ILogger<ImuTestRenderer> logger)
-            : base(imu, matrix, config, logger)
+        public ImuTestRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger<ImuTestRenderer> logger)
+            : base(imu, matrixController, config, logger)
         {
         }
 

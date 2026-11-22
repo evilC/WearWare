@@ -1,6 +1,6 @@
 using RPiRgbLEDMatrix;
+using WearWare.Architecture.Display;
 using WearWare.Architecture.Physics.Imu;
-using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
 namespace WearWare.Architecture.Physics.Simulations.Ball
@@ -9,8 +9,8 @@ namespace WearWare.Architecture.Physics.Simulations.Ball
     {
         private BallPhysics _ball = new BallPhysics();
 
-        public BallPhysicsRenderer(ImuService imu, MatrixService matrix, MatrixConfigService config, ILogger<BallPhysicsRenderer> logger)
-            : base(imu, matrix, config, logger)
+        public BallPhysicsRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger<BallPhysicsRenderer> logger)
+            : base(imu, matrixController, config, logger)
         {
         }
 

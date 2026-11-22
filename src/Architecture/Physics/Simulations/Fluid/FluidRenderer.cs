@@ -1,7 +1,8 @@
 using RPiRgbLEDMatrix;
+using WearWare.Architecture.Display;
 using WearWare.Architecture.Physics.Imu;
-using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
+
 namespace WearWare.Architecture.Physics.Simulations.Fluid
 {
     public sealed class FluidRenderer : PhysicsRenderer
@@ -12,8 +13,8 @@ namespace WearWare.Architecture.Physics.Simulations.Fluid
         private int _width;
         private int _height;
 
-        public FluidRenderer(ImuService imu, MatrixService matrix, MatrixConfigService config, ILogger<FluidRenderer> logger)
-            : base(imu, matrix, config, logger)
+        public FluidRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger<FluidRenderer> logger)
+            : base(imu, matrixController, config, logger)
         {
         }
 
