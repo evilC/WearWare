@@ -6,7 +6,7 @@ using WearWare.Config;
 using WearWare.Services.MatrixConfig;
 using System.Threading;
 
-namespace WearWare.Architecture.Playback
+namespace WearWare.Services.Playback
 {
     public class RpiMediaPlayer : IMediaPlayer
     {

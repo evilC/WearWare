@@ -1,6 +1,6 @@
 using WearWare.Common.Media;
 
-namespace WearWare.Architecture.Playback
+namespace WearWare.Services.Playback
 {
     public interface IMediaPlayer
     {

@@ -22,7 +22,7 @@ using WearWare.Services.Button;
 using WearWare.Architecture.Physics;
 using WearWare.Architecture.Physics.Imu;
 using WearWare.Architecture.Physics.Imu.Sensors;
-using WearWare.Architecture.Playback;
+using WearWare.Services.Playback;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
