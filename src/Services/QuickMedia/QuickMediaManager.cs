@@ -14,7 +14,7 @@ namespace WearWare.Services.QuickMedia
         private readonly ButtonManager _buttonManager;
         private readonly string _logTag = "[QUICKMEDIAMANAGER]";
 
-        private Dictionary<int, QuickMediaItem?> _buttonSlotItems = [];
+        private Dictionary<int, PlayableItem?> _buttonSlotItems = [];
         private int _activeButtonSlot = 0;
         private QuickMediaState _state;
 
@@ -26,7 +26,7 @@ namespace WearWare.Services.QuickMedia
 
         public int ActiveButtonSlot => _activeButtonSlot;
         public int ForeverButtonSlot => _state.ActiveSlotNumber;
-        public QuickMediaItem? ActiveButtonItem => _buttonSlotItems.TryGetValue(_activeButtonSlot, out var item) ? item : null;
+        public PlayableItem? ActiveButtonItem => GetButtonItem(_activeButtonSlot);
 
         public QuickMediaManager(ILogger<QuickMediaManager> logger, ILoggerFactory loggerFactory, ButtonManager buttonManager)
         {
@@ -68,7 +68,7 @@ namespace WearWare.Services.QuickMedia
         /// <summary>
         /// Loads a single quick media item by button slot number (1-indexed).
         /// </summary>
-        public QuickMediaItem? LoadButtonItem(int buttonSlot)
+        public PlayableItem? LoadButtonItem(int buttonSlot)
         {
             try
             {
@@ -90,13 +90,13 @@ namespace WearWare.Services.QuickMedia
 
                 var json = File.ReadAllText(configFile);
                 
-                QuickMediaItem? item = null;
+                PlayableItem? item = null;
                 try
                 {
                     var dto = JsonUtils.FromJson<QuickMediaDto>(json);
                     if (dto?.Item != null)
                     {
-                        item = QuickMediaItem.FromPlayableItem(dto.Item);
+                        item = dto.Item.Clone();
                         _logger.LogInformation("{tag} Loaded quick media item for slot {slot}.", _logTag, buttonSlot);
                     }
                 }
@@ -211,7 +211,7 @@ namespace WearWare.Services.QuickMedia
             if (!_buttonSlotItems.ContainsKey(buttonSlot))
                 return null;
             var item = _buttonSlotItems[buttonSlot];
-            return item?.ToPlayableItem();
+            return item?.Clone();
         }
 
         /// <summary>
@@ -245,7 +245,7 @@ namespace WearWare.Services.QuickMedia
         /// </summary>
         public bool UpsertButtonItem(int buttonSlot, PlayableItem item)
         {
-            var quickMediaItem = QuickMediaItem.FromPlayableItem(item);
+            var quickMediaItem = item.Clone();
             var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
             var validButtonNumbers = quickMediaButtons.Select(b => b.Index + 1).ToList();
             

@@ -425,7 +425,7 @@ namespace WearWare.Services.QuickMedia
             if (_playTask != null)
                 Stop();
 
-            var item = _quickMediaManager.ActiveButtonItem?.ToPlayableItem();
+            var item = _quickMediaManager.ActiveButtonItem;
             if (item == null)
             {
                 _logger.LogWarning("{tag} No active quick media item, cannot start playback.", _logTag);

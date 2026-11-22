@@ -10,8 +10,6 @@
 - Re-Add Library preview
 - Add Physics page
 - Re-implement mocks system
-- Undo PlayableItem / QuickMediaItem separation?  
-  I think all it really does currently is remove "Enabled" from QuickMediaItem?
 - Move things from HostedService to Singleton?
 - ButtonHandler should subscribe to GPIO buttons, not each Mode's handler?  
   ButtonHandler should handle subscribing to the physical GPIO button, and then route events to the handler.  
