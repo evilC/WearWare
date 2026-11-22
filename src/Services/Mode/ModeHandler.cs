@@ -50,6 +50,7 @@ namespace WearWare.Services.Mode
             _modeManager.StateChanged += () => StateChanged?.Invoke();
             _quickMediaHandler.ConfigureModeControl(RequestControlAsync, ReleaseControlAsync, () => _started && !_stopping);
             buttonHandler.JogPressed += OnJogPressed;
+            buttonHandler.ModePressed += OnModePressed;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -105,42 +106,79 @@ namespace WearWare.Services.Mode
             await _transition.WaitAsync();
             try
             {
-                if (_stopping || !_started)
-                    return;
-
-                var previous = State;
-                var next = previous with { CurrentMode = mode, Message = null };
-                if (!_modeManager.SaveState(next))
-                    next = next with { Message = "Could not save mode state. See the log for details." };
-
-                if (previous.InterruptingMode != null)
-                {
-                    _modeManager.UpdateState(next);
-                    return;
-                }
-
-                try
-                {
-                    if (previous.ActiveMode == DisplayMode.Physics)
-                        await StopPhysicsAsync();
-                    _playlistHandler.Stop();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "[MODEHANDLER] Could not stop the active mode.");
-                    _modeManager.UpdateState(next with
-                    {
-                        Message = CombineMessages(next.Message, "Could not switch modes. See the log for details.")
-                    });
-                    await ResumeActualModeAsync(previous.ActiveMode);
-                    return;
-                }
-                _modeManager.UpdateState(next);
-                await StartNormalModeAsync();
+                await SetModeCoreAsync(mode);
             }
             finally
             {
                 _transition.Release();
+            }
+        }
+
+        private async Task SetModeCoreAsync(DisplayMode mode)
+        {
+            if (_stopping || !_started)
+                return;
+
+            var previous = State;
+            var next = previous with { CurrentMode = mode, Message = null };
+            if (!_modeManager.SaveState(next))
+                next = next with { Message = "Could not save mode state. See the log for details." };
+
+            if (previous.InterruptingMode != null)
+            {
+                _modeManager.UpdateState(next);
+                return;
+            }
+
+            try
+            {
+                if (previous.ActiveMode == DisplayMode.Physics)
+                    await StopPhysicsAsync();
+                _playlistHandler.Stop();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MODEHANDLER] Could not stop the active mode.");
+                _modeManager.UpdateState(next with
+                {
+                    Message = CombineMessages(next.Message, "Could not switch modes. See the log for details.")
+                });
+                await ResumeActualModeAsync(previous.ActiveMode);
+                return;
+            }
+            _modeManager.UpdateState(next);
+            await StartNormalModeAsync();
+        }
+
+        private void OnModePressed(string pinName) => _ = HandleModePressAsync(pinName);
+
+        private async Task HandleModePressAsync(string pinName)
+        {
+            try
+            {
+                await _transition.WaitAsync();
+                try
+                {
+                    if (_stopping || !_started ||
+                        _buttonMappings.GetFunctionForPin(pinName) != nameof(ButtonFunction.Mode))
+                        return;
+
+                    var next = State.CurrentMode switch
+                    {
+                        DisplayMode.Playlist => DisplayMode.Physics,
+                        DisplayMode.Physics => DisplayMode.Playlist,
+                        _ => throw new InvalidOperationException($"Cannot cycle from mode {State.CurrentMode}.")
+                    };
+                    await SetModeCoreAsync(next);
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MODEHANDLER] Failed to handle mode press from {pinName}.", pinName);
             }
         }
 

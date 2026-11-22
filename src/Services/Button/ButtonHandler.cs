@@ -12,6 +12,7 @@ namespace WearWare.Services.Button
 
         public event Action<int>? QuickMediaPressed;
         public event Action<string, JogDirection>? JogPressed;
+        public event Action<string>? ModePressed;
 
         public ButtonHandler(
             ButtonManager buttonManager,
@@ -61,6 +62,7 @@ namespace WearWare.Services.Button
         {
             try
             {
+                _logger.LogInformation("[BUTTONHANDLER] Button {pin} ({name}) pressed.", button.PinNumber, button.PinName);
                 switch (_mappingService.GetFunctionForPin(button.PinName))
                 {
                     case nameof(ButtonFunction.QuickMedia):
@@ -71,6 +73,9 @@ namespace WearWare.Services.Button
                         break;
                     case nameof(ButtonFunction.JogPrevious):
                         JogPressed?.Invoke(button.PinName, JogDirection.Previous);
+                        break;
+                    case nameof(ButtonFunction.Mode):
+                        ModePressed?.Invoke(button.PinName);
                         break;
                 }
             }

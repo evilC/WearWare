@@ -5,7 +5,8 @@ namespace WearWare.Services.Button
         None,
         QuickMedia,
         JogNext,
-        JogPrevious
+        JogPrevious,
+        Mode
     }
 
     public enum JogDirection
