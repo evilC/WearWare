@@ -67,7 +67,6 @@ builder.Services.AddSingleton<MatrixConfigService>();
 builder.Services.AddSingleton<InMemoryLogService>();
 builder.Services.AddScoped<ImportService>();
 builder.Services.AddSingleton<LibraryService>();
-builder.Services.AddSingleton<QuickMediaButtonsConfigService>();
 builder.Services.AddSingleton<PlaylistManager>();
 builder.Services.AddSingleton<QuickMediaManager>();
 

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using WearWare.Common.Media;
 using WearWare.Services.OperationProgress;
 using WearWare.Components.Forms.EditPlayableItemForm;
@@ -10,6 +11,7 @@ namespace WearWare.Architecture.Playlist
         private readonly ILogger<PlaylistManager> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly string _logTag = "[PLAYLISTMANAGER]";
+        private static readonly string ConfigFilePath = Path.Combine(PathConfig.ConfigPath, "playlistsconfig.json");
         
         private Dictionary<string, PlaylistItems> _playlists = [];
         private string? _currentPlaylistName;
@@ -32,8 +34,33 @@ namespace WearWare.Architecture.Playlist
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
-            _config = PlaylistsConfig.Deserialize() ?? new PlaylistsConfig();
+            _config = LoadConfig();
             _logger.LogInformation("{tag} initialized.", _logTag);
+        }
+
+        private PlaylistsConfig LoadConfig()
+        {
+            if (!File.Exists(ConfigFilePath))
+            {
+                return new PlaylistsConfig();
+            }
+
+            try
+            {
+                return JsonUtils.FromJsonFile<PlaylistsConfig>(ConfigFilePath)
+                    ?? throw new JsonException("Playlist configuration file contains null.");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
+            {
+                _logger.LogError(ex, "{tag} Error loading playlist configuration from {path}. Using defaults.", _logTag, ConfigFilePath);
+                return new PlaylistsConfig();
+            }
+        }
+
+        private void SaveConfig()
+        {
+            Directory.CreateDirectory(PathConfig.ConfigPath);
+            JsonUtils.ToJsonFile(ConfigFilePath, _config);
         }
 
         /// <summary>
@@ -133,7 +160,7 @@ namespace WearWare.Architecture.Playlist
 
             _currentPlaylistName = playlistName;
             _config.ActivePlaylist = playlistName;
-            _config.Serialize();
+            SaveConfig();
             _logger.LogInformation("{tag} Active playlist set to '{playlist}'.", _logTag, playlistName);
             StateChanged?.Invoke();
             return true;
@@ -152,7 +179,7 @@ namespace WearWare.Architecture.Playlist
 
             _editingPlaylistName = playlistName;
             _config.EditingPlaylist = playlistName;
-            _config.Serialize();
+            SaveConfig();
             _logger.LogInformation("{tag} Editing playlist set to '{playlist}'.", _logTag, playlistName ?? "(none)");
             StateChanged?.Invoke();
             return true;
@@ -232,7 +259,7 @@ namespace WearWare.Architecture.Playlist
                     _config.EditingPlaylist = null;
                 }
 
-                _config.Serialize();
+                SaveConfig();
                 _playlists.Remove(playlistName);
 
                 // Delete the playlist folder from disk
