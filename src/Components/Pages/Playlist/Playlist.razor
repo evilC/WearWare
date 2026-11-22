@@ -3,6 +3,11 @@
 @rendermode InteractiveServer
 <PageTitle>WareWare Playlist</PageTitle>
 
+@if (ModeHandler.State.Message is { } message)
+{
+    <div class="alert alert-warning" role="alert">@message</div>
+}
+
 @if (!Ready)
 {
 	<LoadingOverlay />

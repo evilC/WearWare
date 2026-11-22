@@ -97,16 +97,10 @@ else
     builder.Services.AddSingleton<IMediaConverterService, FseqConverterService>();
     builder.Services.AddSingleton<MatrixService>();
     builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixService>());
-    builder.Services.AddSingleton<IMatrixController>(sp => new MatrixController(
-        sp.GetRequiredService<IMatrixDisplay>(),
-        sp.GetRequiredService<ILogger<MatrixController>>()));
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
 
-builder.Services.AddSingleton<IMatrixController>(sp => new MatrixController(
-    sp.GetRequiredService<IMatrixDisplay>(),
-    sp.GetRequiredService<ILogger<MatrixController>>()));
 builder.Services.AddSingleton<PlaylistHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<PlaylistHandler>());
 builder.Services.AddSingleton<ButtonManager>();

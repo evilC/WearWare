@@ -15,7 +15,6 @@ namespace WearWare.Architecture.Playlist
         private CancellationTokenSource? _cts;
         private bool _resuming = true;
         private HandlerState _state = HandlerState.Idle;
-        private string? _lastActivePlaylistName;
 
         public string Name => "Playlist";
         public HandlerState State => _state;
@@ -32,21 +31,6 @@ namespace WearWare.Architecture.Playlist
             _playlistManager = playlistManager;
             _mediaPlayer = mediaPlayer;
             _logger = logger;
-            _playlistManager.StateChanged += OnPlaylistManagerStateChanged;
-        }
-
-        /// <summary>
-        /// Restarts playback if the active playlist changes while playback is running.
-        /// </summary>
-        private void OnPlaylistManagerStateChanged()
-        {
-            // Only restart playback if the active playlist name actually changed
-            if (_running && _playlistManager.CurrentPlaylistName != _lastActivePlaylistName)
-            {
-                _lastActivePlaylistName = _playlistManager.CurrentPlaylistName;
-                Stop();
-                Start();
-            }
         }
 
         /// <summary>
@@ -85,7 +69,7 @@ namespace WearWare.Architecture.Playlist
         /// <summary>
         /// Starts playback of the current playlist.
         /// </summary>
-        public void Start()
+        internal void Start()
         {
             if (_running)
             {
@@ -107,7 +91,6 @@ namespace WearWare.Architecture.Playlist
                 var ct = _cts.Token;
                 _running = true;
                 _resuming = true;
-                _lastActivePlaylistName = _playlistManager.CurrentPlaylistName;
                 _playTask = Task.Run(() => PlayLoop(ct));
                 SetState(HandlerState.Running);
                 _logger.LogInformation("{tag} Playback started.", _logTag);
@@ -125,9 +108,9 @@ namespace WearWare.Architecture.Playlist
         /// <summary>
         /// Stops playback.
         /// </summary>
-        public void Stop()
+        internal void Stop()
         {
-            if (!_running)
+            if (_playTask == null)
             {
                 return;
             }
@@ -157,6 +140,8 @@ namespace WearWare.Architecture.Playlist
             SetState(HandlerState.Idle);
             _logger.LogInformation("{tag} Playback stopped.", _logTag);
         }
+
+        internal void Clear() => _mediaPlayer.Clear();
 
         /// <summary>
         /// Updates the handler state and notifies subscribers when it changes.

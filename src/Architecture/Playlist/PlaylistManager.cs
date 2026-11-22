@@ -12,14 +12,18 @@ namespace WearWare.Architecture.Playlist
         private readonly ILoggerFactory _loggerFactory;
         private readonly string _logTag = "[PLAYLISTMANAGER]";
         private static readonly string ConfigFilePath = Path.Combine(PathConfig.ConfigPath, "playlistsconfig.json");
+        private static readonly string StateFilePath = Path.Combine(PathConfig.ConfigPath, "playlist-state.json");
         
         private Dictionary<string, PlaylistItems> _playlists = [];
         private string? _currentPlaylistName;
         private string? _editingPlaylistName;
         private PlaylistsConfig _config;
+        private volatile bool _playlistRunning;
 
         public event Action? StateChanged;
 
+        public bool PlaylistRunning => _playlistRunning;
+        public string? StateLoadError { get; private set; }
         public string? CurrentPlaylistName => _currentPlaylistName;
         public PlaylistItems? CurrentPlaylist => _currentPlaylistName != null && _playlists.ContainsKey(_currentPlaylistName) 
             ? _playlists[_currentPlaylistName] 
@@ -35,7 +39,50 @@ namespace WearWare.Architecture.Playlist
             _logger = logger;
             _loggerFactory = loggerFactory;
             _config = LoadConfig();
+            _playlistRunning = LoadRunningState();
             _logger.LogInformation("{tag} initialized.", _logTag);
+        }
+
+        private bool LoadRunningState()
+        {
+            if (!File.Exists(StateFilePath))
+                return true;
+
+            try
+            {
+                var state = JsonUtils.FromJsonFile<PlaylistState>(StateFilePath)
+                    ?? throw new JsonException("Playlist state contains null.");
+                return state.Running ?? throw new JsonException("Playlist running state is missing.");
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                _logger.LogError(ex, "{tag} Error loading playlist state from {path}. Using defaults.", _logTag, StateFilePath);
+                StateLoadError = "Could not load Playlist state. See the log for details.";
+                return true;
+            }
+        }
+
+        internal bool SetPlaylistRunning(bool running)
+        {
+            _playlistRunning = running;
+            var saved = true;
+            try
+            {
+                JsonUtils.ToJsonFileAtomic(StateFilePath, new PlaylistState { Running = running }, _logger);
+                StateLoadError = null;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "{tag} Could not save Playlist state.", _logTag);
+                saved = false;
+            }
+            StateChanged?.Invoke();
+            return saved;
+        }
+
+        private sealed class PlaylistState
+        {
+            public bool? Running { get; set; }
         }
 
         private PlaylistsConfig LoadConfig()

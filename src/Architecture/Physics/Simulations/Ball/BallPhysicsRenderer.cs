@@ -9,8 +9,8 @@ namespace WearWare.Architecture.Physics.Simulations.Ball
     {
         private BallPhysics _ball = new BallPhysics();
 
-        public BallPhysicsRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger<BallPhysicsRenderer> logger)
-            : base(imu, matrixController, config, logger)
+        public BallPhysicsRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger<BallPhysicsRenderer> logger)
+            : base(imu, display, config, logger)
         {
         }
 

@@ -9,13 +9,16 @@ namespace WearWare.Architecture.Mode
         Physics
     }
 
-    public sealed record ModeState(DisplayMode Mode, string? Message, DisplayMode PreferredMode);
+    public sealed record ModeState(
+        DisplayMode CurrentMode,
+        DisplayMode? InterruptingMode,
+        DisplayMode ActiveMode,
+        string? Message);
 
     public sealed class ModeManager
     {
         private readonly ILogger<ModeManager> _logger;
-        private readonly string _logTag = "[MODEMANAGER]";
-        private readonly string _modePath = Path.Combine(PathConfig.ConfigPath, "modeconfig.json");
+        private readonly string _modePath = Path.Combine(PathConfig.ConfigPath, "mode-state.json");
         private ModeState _state;
 
         public event Action? StateChanged;
@@ -24,195 +27,76 @@ namespace WearWare.Architecture.Mode
         public ModeManager(ILogger<ModeManager> logger)
         {
             _logger = logger;
-            var mode = LoadMode();
-            _state = new ModeState(mode, null, mode);
+            _state = LoadState();
         }
 
-        public bool SaveMode(DisplayMode mode)
+        public bool SaveState(ModeState state)
         {
-            var temporaryPath = $"{_modePath}.{Guid.NewGuid():N}.tmp";
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(_modePath)!);
-                var config = new ModeConfig { Mode = mode.ToString() };
-                JsonUtils.ToJsonFile(temporaryPath, config);
-                File.Move(temporaryPath, _modePath, true);
-                _logger.LogInformation("{tag} Saved mode: {mode}.", _logTag, mode);
-                return true;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                _logger.LogError(ex, "{tag} Could not save mode configuration.", _logTag);
-                return false;
-            }
-            finally
-            {
-                try
+                var persisted = new PersistedModeState
                 {
-                    if (File.Exists(temporaryPath))
-                        File.Delete(temporaryPath);
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    _logger.LogWarning(ex, "{tag} Could not remove temporary configuration file {path}.", _logTag, temporaryPath);
-                }
-            }
-        }
-
-        public async Task<bool> SetModeWithInterrupt(DisplayMode newMode)
-        {
-            var currentMode = State.Mode;
-            if (currentMode == newMode)
-                return true;
-
-            var temporaryPath = $"{_modePath}.{Guid.NewGuid():N}.tmp";
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(_modePath)!);
-                var config = new ModeConfig
-                {
-                    Mode = newMode.ToString(),
-                    InterruptedMode = currentMode.ToString()
+                    CurrentMode = state.CurrentMode.ToString(),
+                    InterruptingMode = state.InterruptingMode?.ToString()
                 };
-                JsonUtils.ToJsonFile(temporaryPath, config);
-                File.Move(temporaryPath, _modePath, true);
-                _logger.LogInformation("{tag} Set mode: {mode} (interrupted: {interrupted}).", _logTag, newMode, currentMode);
-                UpdateState(new ModeState(newMode, null, State.PreferredMode));
+                JsonUtils.ToJsonFileAtomic(_modePath, persisted, _logger);
                 return true;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                _logger.LogError(ex, "{tag} Could not save interrupted mode configuration.", _logTag);
-                return false;
-            }
-            finally
-            {
-                try
-                {
-                    if (File.Exists(temporaryPath))
-                        File.Delete(temporaryPath);
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    _logger.LogWarning(ex, "{tag} Could not remove temporary configuration file {path}.", _logTag, temporaryPath);
-                }
-            }
-        }
-
-        public async Task<bool> RestoreInterruptedMode()
-        {
-            try
-            {
-                if (!File.Exists(_modePath))
-                    return false;
-
-                var json = File.ReadAllText(_modePath);
-                var config = JsonUtils.FromJson<ModeConfig>(json);
-                
-                if (config?.InterruptedMode == null || !Enum.TryParse<DisplayMode>(config.InterruptedMode, out var mode) || !Enum.IsDefined(mode))
-                {
-                    _logger.LogWarning("{tag} No valid interrupted mode found, defaulting to Playlist.", _logTag);
-                    return await SetModeWithoutInterrupt(DisplayMode.Playlist);
-                }
-
-                var temporaryPath = $"{_modePath}.{Guid.NewGuid():N}.tmp";
-                try
-                {
-                    var newConfig = new ModeConfig { Mode = mode.ToString(), InterruptedMode = null };
-                    JsonUtils.ToJsonFile(temporaryPath, newConfig);
-                    File.Move(temporaryPath, _modePath, true);
-                    _logger.LogInformation("{tag} Restored mode: {mode}.", _logTag, mode);
-                    UpdateState(new ModeState(mode, null, mode));
-                    return true;
-                }
-                finally
-                {
-                    try
-                    {
-                        if (File.Exists(temporaryPath))
-                            File.Delete(temporaryPath);
-                    }
-                    catch { }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{tag} Could not restore interrupted mode.", _logTag);
+                _logger.LogError(ex, "[MODEMANAGER] Could not save mode state.");
                 return false;
             }
         }
 
-        private async Task<bool> SetModeWithoutInterrupt(DisplayMode mode)
+        public void UpdateState(ModeState state)
         {
-            var temporaryPath = $"{_modePath}.{Guid.NewGuid():N}.tmp";
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(_modePath)!);
-                var config = new ModeConfig { Mode = mode.ToString(), InterruptedMode = null };
-                JsonUtils.ToJsonFile(temporaryPath, config);
-                File.Move(temporaryPath, _modePath, true);
-                _logger.LogInformation("{tag} Saved mode: {mode}.", _logTag, mode);
-                UpdateState(new ModeState(mode, null, mode));
-                return true;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                _logger.LogError(ex, "{tag} Could not save mode configuration.", _logTag);
-                return false;
-            }
-            finally
-            {
-                try
-                {
-                    if (File.Exists(temporaryPath))
-                        File.Delete(temporaryPath);
-                }
-                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                {
-                    _logger.LogWarning(ex, "{tag} Could not remove temporary configuration file {path}.", _logTag, temporaryPath);
-                }
-            }
-        }
-
-        private DisplayMode LoadMode()
-        {
-            try
-            {
-                if (!File.Exists(_modePath))
-                {
-                    var config = new ModeConfig { Mode = nameof(DisplayMode.Playlist) };
-                    SaveMode(DisplayMode.Playlist);
-                    return DisplayMode.Playlist;
-                }
-
-                var json = File.ReadAllText(_modePath);
-                var loadedConfig = JsonUtils.FromJson<ModeConfig>(json);
-                if (loadedConfig?.Mode == null || !Enum.TryParse<DisplayMode>(loadedConfig.Mode, out var mode) || !Enum.IsDefined(mode))
-                {
-                    _logger.LogWarning("{tag} Invalid mode in config, using Playlist.", _logTag);
-                    return DisplayMode.Playlist;
-                }
-
-                _logger.LogInformation("{tag} Loaded mode: {mode}.", _logTag, mode);
-                return mode;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
-            {
-                _logger.LogError(ex, "{tag} Could not load mode configuration, using Playlist.", _logTag);
-                return DisplayMode.Playlist;
-            }
-        }
-
-        public void UpdateState(ModeState newState)
-        {
-            Volatile.Write(ref _state, newState);
+            Volatile.Write(ref _state, state);
             StateChanged?.Invoke();
         }
 
-        private sealed class ModeConfig
+        private ModeState LoadState()
         {
-            public string? Mode { get; set; }
-            public string? InterruptedMode { get; set; }
+            var defaultState = new ModeState(DisplayMode.Playlist, null, DisplayMode.Playlist, null);
+            if (!File.Exists(_modePath))
+                return defaultState;
+
+            try
+            {
+                var persisted = JsonUtils.FromJsonFile<PersistedModeState>(_modePath)
+                    ?? throw new JsonException("Mode state contains null.");
+
+                var currentMode = ParseNormalMode(persisted.CurrentMode
+                    ?? throw new JsonException("Current mode is missing."));
+                DisplayMode? interruptingMode = null;
+                if (persisted.InterruptingMode != null)
+                {
+                    if (persisted.InterruptingMode != nameof(DisplayMode.QuickMedia))
+                        throw new JsonException("Invalid interrupting mode.");
+                    interruptingMode = DisplayMode.QuickMedia;
+                }
+
+                return new ModeState(currentMode, interruptingMode, interruptingMode ?? currentMode, null);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                _logger.LogError(ex, "[MODEMANAGER] Could not load mode state from {path}; using defaults.", _modePath);
+                return defaultState with { Message = "Could not load mode state. See the log for details." };
+            }
+        }
+
+        private static DisplayMode ParseNormalMode(string value)
+        {
+            if (Enum.TryParse<DisplayMode>(value, out var mode) &&
+                (mode == DisplayMode.Playlist || mode == DisplayMode.Physics))
+                return mode;
+            throw new JsonException($"Invalid current mode '{value}'.");
+        }
+
+        private sealed class PersistedModeState
+        {
+            public string? CurrentMode { get; set; }
+            public string? InterruptingMode { get; set; }
         }
     }
 }

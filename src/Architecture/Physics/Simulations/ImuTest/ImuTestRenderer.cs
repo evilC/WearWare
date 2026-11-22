@@ -7,8 +7,8 @@ namespace WearWare.Architecture.Physics.Simulations.ImuTest
 {
     public sealed class ImuTestRenderer : PhysicsRenderer
     {
-        public ImuTestRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger<ImuTestRenderer> logger)
-            : base(imu, matrixController, config, logger)
+        public ImuTestRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger<ImuTestRenderer> logger)
+            : base(imu, display, config, logger)
         {
         }
 

@@ -10,7 +10,7 @@ namespace WearWare.Architecture.Physics
     public sealed class PhysicsHandler : IHandler
     {
         private static readonly TimeSpan FrameInterval = TimeSpan.FromSeconds(1.0 / 30);
-        private readonly IMatrixController _matrixController;
+        private readonly IMatrixDisplay _display;
         private readonly ImuService _imu;
         private readonly MatrixConfigService _matrixConfig;
         private readonly ILogger<PhysicsHandler> _logger;
@@ -21,12 +21,12 @@ namespace WearWare.Architecture.Physics
         public event Action? StateChanged;
 
         public PhysicsHandler(
-            IMatrixController matrixController,
+            IMatrixDisplay display,
             ImuService imu,
             MatrixConfigService matrixConfig,
             ILogger<PhysicsHandler> logger)
         {
-            _matrixController = matrixController;
+            _display = display;
             _imu = imu;
             _matrixConfig = matrixConfig;
             _logger = logger;
@@ -43,12 +43,10 @@ namespace WearWare.Architecture.Physics
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            IMatrixDisplay? display = null;
             try
             {
-                display = await _matrixController.RequestControlAsync(this, cancellationToken);
                 SetState(HandlerState.Running);
-                await RunFluidAsync(display, cancellationToken);
+                await RunFluidAsync(_display, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -62,19 +60,14 @@ namespace WearWare.Architecture.Physics
             }
             finally
             {
-                if (display != null)
+                try
                 {
-                    try
-                    {
-                        if (!display.Clear())
-                            _logger.LogError("[PHYSICSHANDLER] Cannot clear the matrix after Physics: matrix is not initialized.");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "[PHYSICSHANDLER] Failed to clear the matrix after Physics.");
-                    }
-
-                    _matrixController.ReleaseControl(this);
+                    if (!_display.Clear())
+                        _logger.LogError("[PHYSICSHANDLER] Cannot clear the matrix after Physics: matrix is not initialized.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[PHYSICSHANDLER] Failed to clear the matrix after Physics.");
                 }
             }
         }

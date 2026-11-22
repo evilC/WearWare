@@ -10,7 +10,7 @@ namespace WearWare.Architecture.Physics.Simulations
     public abstract class PhysicsRenderer : IPhysicsRenderer
     {
         private static readonly TimeSpan FrameInterval = TimeSpan.FromSeconds(1.0 / 30);
-        private readonly IMatrixController _matrixController;
+        private readonly IMatrixDisplay _display;
         private readonly ImuService _imu;
         private readonly MatrixConfigService _config;
         private readonly ILogger _logger;
@@ -20,20 +20,18 @@ namespace WearWare.Architecture.Physics.Simulations
         public HandlerState State => _state;
         public event Action? StateChanged;
 
-        protected PhysicsRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger logger)
+        protected PhysicsRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger logger)
         {
             _imu = imu;
-            _matrixController = matrixController;
+            _display = display;
             _config = config;
             _logger = logger;
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            IMatrixDisplay? display = null;
             try
             {
-                display = await _matrixController.RequestControlAsync(this, cancellationToken);
                 SetState(HandlerState.Running);
                 Reset();
                 long previousFrame = 0;
@@ -49,7 +47,7 @@ namespace WearWare.Architecture.Physics.Simulations
                         throw new InvalidOperationException($"IMU reading unavailable: {state.Status}.");
                     }
 
-                    display.WithMatrix((matrix, canvas) =>
+                    _display.WithMatrix((matrix, canvas) =>
                     {
                         var brightness = (byte)_config.GetCurrentBrightness();
                         if (matrix.Brightness != brightness)
@@ -81,21 +79,14 @@ namespace WearWare.Architecture.Physics.Simulations
             }
             finally
             {
-                if (display != null)
+                try
                 {
-                    try
-                    {
-                        if (!display.Clear())
-                            _logger.LogError("Cannot clear the matrix after physics: matrix is not initialized.");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Failed to clear the matrix after physics.");
-                    }
-                    finally
-                    {
-                        _matrixController.ReleaseControl(this);
-                    }
+                    if (!_display.Clear())
+                        _logger.LogError("Cannot clear the matrix after physics: matrix is not initialized.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to clear the matrix after physics.");
                 }
             }
         }

@@ -13,8 +13,8 @@ namespace WearWare.Architecture.Physics.Simulations.Fluid
         private int _width;
         private int _height;
 
-        public FluidRenderer(ImuService imu, IMatrixController matrixController, MatrixConfigService config, ILogger<FluidRenderer> logger)
-            : base(imu, matrixController, config, logger)
+        public FluidRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger<FluidRenderer> logger)
+            : base(imu, display, config, logger)
         {
         }
 

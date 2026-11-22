@@ -8,23 +8,24 @@
 
 <h1>Mode</h1>
 
-<p>Current mode: <strong>@ModeHandler.State.Mode</strong></p>
+<p>Current mode: <strong>@ModeHandler.State.CurrentMode</strong></p>
+@if (ModeHandler.State.InterruptingMode is { } interruptingMode)
+{
+    <p>Interrupting mode: <strong>@interruptingMode</strong></p>
+}
 
 <div class="d-flex gap-2 mb-3">
-    <button class="btn @(ModeHandler.State.Mode == DisplayMode.Playlist ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.Playlist && ModeHandler.State.PreferredMode == DisplayMode.Playlist))"
+    <button class="btn @(ModeHandler.State.CurrentMode == DisplayMode.Playlist ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || (ModeHandler.State.CurrentMode == DisplayMode.Playlist && (ModeHandler.State.InterruptingMode != null || ModeHandler.State.ActiveMode == DisplayMode.Playlist)))"
             @onclick="() => ChangeMode(DisplayMode.Playlist)">Playlist</button>
-    <button class="btn @(ModeHandler.State.Mode == DisplayMode.QuickMedia ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.QuickMedia && ModeHandler.State.PreferredMode == DisplayMode.QuickMedia))"
-            @onclick="() => ChangeMode(DisplayMode.QuickMedia)">QuickMedia</button>
-    <button class="btn @(ModeHandler.State.Mode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
-            disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.Physics && ModeHandler.State.PreferredMode == DisplayMode.Physics))"
+    <button class="btn @(ModeHandler.State.CurrentMode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || (ModeHandler.State.CurrentMode == DisplayMode.Physics && (ModeHandler.State.InterruptingMode != null || ModeHandler.State.ActiveMode == DisplayMode.Physics)))"
             @onclick="() => ChangeMode(DisplayMode.Physics)">Physics (Fluid)</button>
 </div>
 
-@if (ModeHandler.State.Mode != ModeHandler.State.PreferredMode)
+@if (ModeHandler.State.InterruptingMode == null && ModeHandler.State.ActiveMode != ModeHandler.State.CurrentMode)
 {
-    <p>Saved mode: @ModeHandler.State.PreferredMode (will be retried on startup).</p>
+    <p>Active mode: @ModeHandler.State.ActiveMode (the selected mode will be retried on startup).</p>
 }
 
 @if (ModeHandler.State.Message is { } message)

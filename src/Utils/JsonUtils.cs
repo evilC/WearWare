@@ -33,5 +33,28 @@ namespace WearWare.Utils
         {
             File.WriteAllText(path, ToJson(obj));
         }
+
+        public static void ToJsonFileAtomic<T>(string path, T obj, ILogger logger)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+            try
+            {
+                ToJsonFile(temporaryPath, obj);
+                File.Move(temporaryPath, path, true);
+            }
+            finally
+            {
+                try
+                {
+                    if (File.Exists(temporaryPath))
+                        File.Delete(temporaryPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    logger.LogWarning(ex, "Could not remove temporary state file {path}.", temporaryPath);
+                }
+            }
+        }
     }
 }

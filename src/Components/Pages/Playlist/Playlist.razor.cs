@@ -6,6 +6,7 @@ using WearWare.Services.OperationProgress;
 using WearWare.Utils;
 using WearWare.Architecture;
 using WearWare.Architecture.Playlist;
+using WearWare.Architecture.Mode;
 
 namespace WearWare.Components.Pages.Playlist
 {
@@ -13,7 +14,7 @@ namespace WearWare.Components.Pages.Playlist
     {
         [Inject] public IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] public PlaylistManager PlaylistManager { get; set; } = null!;
-        [Inject] public PlaylistHandler PlaylistHandler { get; set; } = null!;
+        [Inject] public ModeHandler ModeHandler { get; set; } = null!;
         [Inject] public IOperationProgressService OperationProgress { get; set; } = null!;
         [Inject] public LibraryService LibraryService { get; set; } = null!;
         [Inject] public ILogger<Playlist> Logger { get; set; } = null!;
@@ -47,6 +48,7 @@ namespace WearWare.Components.Pages.Playlist
             if (!_subscribed)
             {
                 PlaylistManager.StateChanged += OnStateChanged;
+                ModeHandler.StateChanged += OnStateChanged;
                 _subscribed = true;
             }
             availablePlaylists = PlaylistManager.GetPlaylistNames();
@@ -66,6 +68,7 @@ namespace WearWare.Components.Pages.Playlist
             if (_subscribed)
             {
                 PlaylistManager.StateChanged -= OnStateChanged;
+                ModeHandler.StateChanged -= OnStateChanged;
                 _subscribed = false;
             }
             base.Dispose();
@@ -79,7 +82,7 @@ namespace WearWare.Components.Pages.Playlist
             InvokeAsync(StateHasChanged);
         }
 
-        private void OnActivePlaylistChanged(ChangeEventArgs e)
+        private async Task OnActivePlaylistChanged(ChangeEventArgs e)
         {
             var newValue = e.Value?.ToString();
             if (newValue == "")
@@ -93,7 +96,7 @@ namespace WearWare.Components.Pages.Playlist
                 }
                 else
                 {
-                    PlaylistManager.SetActivePlaylist(newValue);
+                    await ModeHandler.SelectPlaylistAsync(newValue);
                 }
                 StateHasChanged();
             }
@@ -259,7 +262,7 @@ namespace WearWare.Components.Pages.Playlist
         /// </summary>
         /// <param name="item"></param> The PlayableItem that was clicked
         /// <param name="index"></param> The index of the PlayableItem that was clicked
-        void OnPlaylistItemImageClicked(PlayableItem item, int index)
+        async Task OnPlaylistItemImageClicked(PlayableItem item, int index)
         {
             if (_editingPlaylist is null)
                 return;
@@ -267,13 +270,7 @@ namespace WearWare.Components.Pages.Playlist
             // Only jump if editing the currently active playlist
             if (_editingPlaylist == PlaylistManager.CurrentPlaylistName)
             {
-                PlaylistManager.JumpToItem(index);
-                // Restart handler to begin playing from the new index
-                if (PlaylistHandler.State == HandlerState.Running)
-                {
-                    PlaylistHandler.Stop();
-                    PlaylistHandler.Start();
-                }
+                await ModeHandler.JumpToPlaylistItemAsync(index);
             }
             else
             {
@@ -284,18 +281,16 @@ namespace WearWare.Components.Pages.Playlist
 
         // ============================================ Active Playlist controls ===============================================
         
-        private void StartActivePlaylist()
+        private async Task StartActivePlaylist()
         {
             if (!string.IsNullOrEmpty(activePlaylist))
-            {
-                PlaylistManager.SetActivePlaylist(activePlaylist);
-                PlaylistHandler.Start();
-            }
+                await ModeHandler.SelectPlaylistAsync(activePlaylist);
+            await ModeHandler.SetPlaylistRunningAsync(true);
         }
 
-        private void StopActivePlaylist()
+        private async Task StopActivePlaylist()
         {
-            PlaylistHandler.Stop();
+            await ModeHandler.SetPlaylistRunningAsync(false);
         }
 
         /// <summary>
@@ -378,11 +373,11 @@ namespace WearWare.Components.Pages.Playlist
         /// <summary>
         /// Deletes the currently editing playlist
         /// </summary>
-        private void DeletePlaylist()
+        private async Task DeletePlaylist()
         {
             if (!string.IsNullOrEmpty(_editingPlaylist))
             {
-                PlaylistManager.DeletePlaylist(_editingPlaylist);
+                await ModeHandler.DeletePlaylistAsync(_editingPlaylist);
                 availablePlaylists = PlaylistManager.GetPlaylistNames();
                 activePlaylist = PlaylistManager.CurrentPlaylistName;
                 _editingPlaylist = null;
@@ -398,7 +393,7 @@ namespace WearWare.Components.Pages.Playlist
             var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete playlist '{_editingPlaylist}' and all its files?");
             if (ok)
             {
-                DeletePlaylist();
+                await DeletePlaylist();
             }
         }
 
