@@ -7,9 +7,12 @@
 ## Business Logic (New Architecture) changes
 - PlaylistItems refactor? Feels messy. Will also need back as well as forward once we implement back/forward with joystick
 - Re-Add Library preview
+- Add Physics page
 - Re-implement mocks system
-- Relocate files? Some things in services, some in Architecture
-  Need consistent location for various concerns
+- Undo PlayableItem / QuickMediaItem separation?  
+  I think all it really does currently is remove "Enabled" from QuickMediaItem?
+- Relocate files / name things better 
+  - Too many things called "config", when some are config, some are state  
 - MatrixService - move to new location?
 - Move things from HostedService to Singleton?
 - ButtonHandler should subscribe to GPIO buttons, not each Mode's handler?  
