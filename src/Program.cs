@@ -19,9 +19,9 @@ using WearWare.Architecture.Playlist;
 using WearWare.Architecture.QuickMedia;
 using WearWare.Architecture.Mode;
 using WearWare.Services.Button;
-using WearWare.Architecture.Physics;
-using WearWare.Architecture.Physics.Imu;
-using WearWare.Architecture.Physics.Imu.Sensors;
+using WearWare.Services.Physics;
+using WearWare.Services.Physics.Imu;
+using WearWare.Services.Physics.Imu.Sensors;
 using WearWare.Services.Playback;
 
 var builder = WebApplication.CreateBuilder(args);

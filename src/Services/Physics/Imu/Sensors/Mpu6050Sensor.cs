@@ -2,7 +2,7 @@ using System.Device.I2c;
 using System.Numerics;
 using Iot.Device.Imu;
 
-namespace WearWare.Architecture.Physics.Imu.Sensors
+namespace WearWare.Services.Physics.Imu.Sensors
 {
     public sealed class Mpu6050Sensor : IImuSensor
     {

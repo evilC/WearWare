@@ -10,7 +10,7 @@ This can also be reprodueced with particles at the bottom of the screen
 */
 using System.Numerics;
 
-namespace WearWare.Architecture.Physics.Simulations.Fluid
+namespace WearWare.Services.Physics.Simulations.Fluid
 {
     internal sealed class FluidSimulation
     {

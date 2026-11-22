@@ -1,9 +1,9 @@
 using RPiRgbLEDMatrix;
 using WearWare.Services.Matrix;
-using WearWare.Architecture.Physics.Imu;
+using WearWare.Services.Physics.Imu;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Architecture.Physics.Simulations.Ball
+namespace WearWare.Services.Physics.Simulations.Ball
 {
     public sealed class BallPhysicsRenderer : PhysicsRenderer
     {

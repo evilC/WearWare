@@ -1,9 +1,9 @@
 using RPiRgbLEDMatrix;
 using WearWare.Services.Matrix;
-using WearWare.Architecture.Physics.Imu;
+using WearWare.Services.Physics.Imu;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Architecture.Physics.Simulations.Fluid
+namespace WearWare.Services.Physics.Simulations.Fluid
 {
     public sealed class FluidRenderer : PhysicsRenderer
     {

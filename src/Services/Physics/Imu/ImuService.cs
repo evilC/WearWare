@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Numerics;
 using WearWare.Config;
-using WearWare.Architecture.Physics.Imu.Sensors;
+using WearWare.Services.Physics.Imu.Sensors;
 
-namespace WearWare.Architecture.Physics.Imu
+namespace WearWare.Services.Physics.Imu
 {
     public sealed class ImuService : BackgroundService
     {

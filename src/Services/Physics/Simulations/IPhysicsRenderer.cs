@@ -1,6 +1,6 @@
 using WearWare.Architecture;
 
-namespace WearWare.Architecture.Physics.Simulations
+namespace WearWare.Services.Physics.Simulations
 {
     public interface IPhysicsRenderer : IHandler
     {

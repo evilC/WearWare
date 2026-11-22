@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace WearWare.Architecture.Physics.Simulations.Ball
+namespace WearWare.Services.Physics.Simulations.Ball
 {
     internal sealed class BallPhysics
     {

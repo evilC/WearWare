@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Numerics;
 
-namespace WearWare.Architecture.Physics.Imu
+namespace WearWare.Services.Physics.Imu
 {
     /// <summary>Acceleration is in m/s^2 and gyroscope values are in degrees per second.</summary>
     public sealed record ImuReading(

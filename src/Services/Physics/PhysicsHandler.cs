@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using RPiRgbLEDMatrix;
+using WearWare.Architecture;
 using WearWare.Services.Matrix;
-using WearWare.Architecture.Physics.Imu;
+using WearWare.Services.Physics.Imu;
 using WearWare.Services.MatrixConfig;
-using WearWare.Architecture.Physics.Simulations.Fluid;
+using WearWare.Services.Physics.Simulations.Fluid;
 
-namespace WearWare.Architecture.Physics
+namespace WearWare.Services.Physics
 {
     public sealed class PhysicsHandler : IHandler
     {
