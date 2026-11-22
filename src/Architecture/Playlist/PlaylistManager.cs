@@ -11,13 +11,13 @@ namespace WearWare.Architecture.Playlist
         private readonly ILogger<PlaylistManager> _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly string _logTag = "[PLAYLISTMANAGER]";
-        private static readonly string ConfigFilePath = Path.Combine(PathConfig.ConfigPath, "playlistsconfig.json");
+        private static readonly string SelectionStateFilePath = Path.Combine(PathConfig.ConfigPath, "playlist-selection-state.json");
         private static readonly string StateFilePath = Path.Combine(PathConfig.ConfigPath, "playlist-state.json");
         
         private Dictionary<string, PlaylistItems> _playlists = [];
         private string? _currentPlaylistName;
         private string? _editingPlaylistName;
-        private PlaylistsConfig _config;
+        private PlaylistSelectionState _selectionState;
         private volatile bool _playlistRunning;
 
         public event Action? StateChanged;
@@ -38,7 +38,7 @@ namespace WearWare.Architecture.Playlist
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
-            _config = LoadConfig();
+            _selectionState = LoadSelectionState();
             _playlistRunning = LoadRunningState();
             _logger.LogInformation("{tag} initialized.", _logTag);
         }
@@ -85,29 +85,29 @@ namespace WearWare.Architecture.Playlist
             public bool? Running { get; set; }
         }
 
-        private PlaylistsConfig LoadConfig()
+        private PlaylistSelectionState LoadSelectionState()
         {
-            if (!File.Exists(ConfigFilePath))
+            if (!File.Exists(SelectionStateFilePath))
             {
-                return new PlaylistsConfig();
+                return new PlaylistSelectionState();
             }
 
             try
             {
-                return JsonUtils.FromJsonFile<PlaylistsConfig>(ConfigFilePath)
-                    ?? throw new JsonException("Playlist configuration file contains null.");
+                return JsonUtils.FromJsonFile<PlaylistSelectionState>(SelectionStateFilePath)
+                    ?? throw new JsonException("Playlist selection state file contains null.");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or ArgumentException or NotSupportedException)
             {
-                _logger.LogError(ex, "{tag} Error loading playlist configuration from {path}. Using defaults.", _logTag, ConfigFilePath);
-                return new PlaylistsConfig();
+                _logger.LogError(ex, "{tag} Error loading playlist selection state from {path}. Using defaults.", _logTag, SelectionStateFilePath);
+                return new PlaylistSelectionState();
             }
         }
 
-        private void SaveConfig()
+        private void SaveSelectionState()
         {
             Directory.CreateDirectory(PathConfig.ConfigPath);
-            JsonUtils.ToJsonFile(ConfigFilePath, _config);
+            JsonUtils.ToJsonFile(SelectionStateFilePath, _selectionState);
         }
 
         /// <summary>
@@ -129,18 +129,18 @@ namespace WearWare.Architecture.Playlist
                 _logger.LogInformation("{tag} Loaded {count} playlists.", _logTag, _playlists.Count);
 
                 // Restore editing/active playlists if they still exist
-                if (!string.IsNullOrEmpty(_config.EditingPlaylist) && _playlists.ContainsKey(_config.EditingPlaylist))
+                if (!string.IsNullOrEmpty(_selectionState.EditingPlaylist) && _playlists.ContainsKey(_selectionState.EditingPlaylist))
                 {
-                    _editingPlaylistName = _config.EditingPlaylist;
+                    _editingPlaylistName = _selectionState.EditingPlaylist;
                 }
                 else
                 {
                     _editingPlaylistName = null;
                 }
 
-                if (!string.IsNullOrEmpty(_config.ActivePlaylist) && _playlists.ContainsKey(_config.ActivePlaylist))
+                if (!string.IsNullOrEmpty(_selectionState.ActivePlaylist) && _playlists.ContainsKey(_selectionState.ActivePlaylist))
                 {
-                    _currentPlaylistName = _config.ActivePlaylist;
+                    _currentPlaylistName = _selectionState.ActivePlaylist;
                 }
                 else
                 {
@@ -206,8 +206,8 @@ namespace WearWare.Architecture.Playlist
             }
 
             _currentPlaylistName = playlistName;
-            _config.ActivePlaylist = playlistName;
-            SaveConfig();
+            _selectionState.ActivePlaylist = playlistName;
+            SaveSelectionState();
             _logger.LogInformation("{tag} Active playlist set to '{playlist}'.", _logTag, playlistName);
             StateChanged?.Invoke();
             return true;
@@ -225,8 +225,8 @@ namespace WearWare.Architecture.Playlist
             }
 
             _editingPlaylistName = playlistName;
-            _config.EditingPlaylist = playlistName;
-            SaveConfig();
+            _selectionState.EditingPlaylist = playlistName;
+            SaveSelectionState();
             _logger.LogInformation("{tag} Editing playlist set to '{playlist}'.", _logTag, playlistName ?? "(none)");
             StateChanged?.Invoke();
             return true;
@@ -292,21 +292,21 @@ namespace WearWare.Architecture.Playlist
 
             try
             {
-                // If the playlist is active, clear it and update config
+                // If the playlist is active, clear it and update state
                 if (_currentPlaylistName == playlistName)
                 {
                     _currentPlaylistName = null;
-                    _config.ActivePlaylist = null;
+                    _selectionState.ActivePlaylist = null;
                 }
 
-                // If the playlist is being edited, clear it and update config
+                // If the playlist is being edited, clear it and update state
                 if (_editingPlaylistName == playlistName)
                 {
                     _editingPlaylistName = null;
-                    _config.EditingPlaylist = null;
+                    _selectionState.EditingPlaylist = null;
                 }
 
-                SaveConfig();
+                SaveSelectionState();
                 _playlists.Remove(playlistName);
 
                 // Delete the playlist folder from disk
