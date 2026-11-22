@@ -1,7 +1,8 @@
 using WearWare.Common.Media;
+using WearWare.Architecture;
 using WearWare.Services.Playback;
 
-namespace WearWare.Architecture.Playlist
+namespace WearWare.Services.Playlist
 {
     public class PlaylistHandler : IHandler, IHostedService
     {

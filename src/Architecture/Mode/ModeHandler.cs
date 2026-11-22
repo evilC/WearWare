@@ -1,4 +1,4 @@
-using WearWare.Architecture.Playlist;
+using WearWare.Services.Playlist;
 using WearWare.Architecture.QuickMedia;
 using WearWare.Services.Physics;
 

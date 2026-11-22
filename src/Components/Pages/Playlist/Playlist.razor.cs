@@ -5,7 +5,7 @@ using WearWare.Services.Library;
 using WearWare.Services.OperationProgress;
 using WearWare.Utils;
 using WearWare.Architecture;
-using WearWare.Architecture.Playlist;
+using WearWare.Services.Playlist;
 using WearWare.Architecture.Mode;
 
 namespace WearWare.Components.Pages.Playlist

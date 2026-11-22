@@ -1,7 +1,7 @@
 using WearWare.Config;
 using WearWare.Utils;
 
-namespace WearWare.Architecture.Playlist
+namespace WearWare.Services.Playlist
 {
     // Keep the frequently updated current item index separate from the playlist definition.
     public class PlaylistItemsState

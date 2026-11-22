@@ -1,4 +1,4 @@
-namespace WearWare.Architecture.Playlist
+namespace WearWare.Services.Playlist
 {
     public class PlaylistSelectionState
     {

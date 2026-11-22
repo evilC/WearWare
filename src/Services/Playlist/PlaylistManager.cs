@@ -1,10 +1,11 @@
 using System.Text.Json;
+using WearWare.Architecture;
 using WearWare.Common.Media;
 using WearWare.Services.OperationProgress;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Utils;
 
-namespace WearWare.Architecture.Playlist
+namespace WearWare.Services.Playlist
 {
     public class PlaylistManager : IManager
     {

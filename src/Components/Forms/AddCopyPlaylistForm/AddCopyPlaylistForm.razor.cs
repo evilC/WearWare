@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components.Forms;
-using WearWare.Architecture.Playlist;
+using WearWare.Services.Playlist;
 
 namespace WearWare.Components.Forms.AddCopyPlaylistForm
 {
