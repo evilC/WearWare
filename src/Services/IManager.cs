@@ -1,4 +1,4 @@
-namespace WearWare.Architecture
+namespace WearWare.Services
 {
     /// <summary>
     /// Base interface for manager components. Managers own user-configurable rules,

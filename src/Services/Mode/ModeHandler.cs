@@ -2,7 +2,7 @@ using WearWare.Services.Playlist;
 using WearWare.Services.QuickMedia;
 using WearWare.Services.Physics;
 
-namespace WearWare.Architecture.Mode
+namespace WearWare.Services.Mode
 {
     public sealed class ModeHandler : IHostedService
     {

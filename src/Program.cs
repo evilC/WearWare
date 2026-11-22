@@ -17,7 +17,7 @@ using WearWare.Services.TempMon;
 using WearWare.Services.Matrix;
 using WearWare.Services.Playlist;
 using WearWare.Services.QuickMedia;
-using WearWare.Architecture.Mode;
+using WearWare.Services.Mode;
 using WearWare.Services.Button;
 using WearWare.Services.Physics;
 using WearWare.Services.Physics.Imu;

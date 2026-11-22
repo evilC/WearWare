@@ -1,6 +1,6 @@
 using WearWare.Utils;
 
-namespace WearWare.Architecture.Mode
+namespace WearWare.Services.Mode
 {
     public enum DisplayMode
     {

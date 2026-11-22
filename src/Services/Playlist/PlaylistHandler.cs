@@ -1,5 +1,5 @@
 using WearWare.Common.Media;
-using WearWare.Architecture;
+using WearWare.Services;
 using WearWare.Services.Playback;
 
 namespace WearWare.Services.Playlist

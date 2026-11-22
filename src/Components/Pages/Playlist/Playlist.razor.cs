@@ -4,9 +4,9 @@ using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
 using WearWare.Services.OperationProgress;
 using WearWare.Utils;
-using WearWare.Architecture;
+using WearWare.Services;
 using WearWare.Services.Playlist;
-using WearWare.Architecture.Mode;
+using WearWare.Services.Mode;
 
 namespace WearWare.Components.Pages.Playlist
 {

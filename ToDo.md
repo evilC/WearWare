@@ -12,8 +12,6 @@
 - Re-implement mocks system
 - Undo PlayableItem / QuickMediaItem separation?  
   I think all it really does currently is remove "Enabled" from QuickMediaItem?
-- Relocate files / name things better 
-  - Get rid of Architecture folder - move stuff back into Services
 - Move things from HostedService to Singleton?
 - ButtonHandler should subscribe to GPIO buttons, not each Mode's handler?  
   ButtonHandler should handle subscribing to the physical GPIO button, and then route events to the handler.  

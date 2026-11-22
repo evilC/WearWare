@@ -1,4 +1,4 @@
-namespace WearWare.Architecture
+namespace WearWare.Services
 {
     /// <summary>
     /// Base interface for handler components. A Handler applies configuration at runtime to do work.
