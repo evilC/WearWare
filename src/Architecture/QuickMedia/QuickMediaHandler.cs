@@ -1,5 +1,5 @@
 using WearWare.Common.Media;
-using WearWare.Services.MediaController;
+using WearWare.Architecture.Playback;
 using WearWare.Architecture.Button;
 using WearWare.Architecture.Mode;
 

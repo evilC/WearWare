@@ -7,6 +7,11 @@
 ## Business Logic (New Architecture) changes
 - LOTS still depend on old MediaControllerService
   NEEDS REMOVING!
+- Once old mediaplayer / mediacontroller removed, rename references to new architecture versions, eg:  
+  ```
+  using ArchitectureMediaPlayer = WearWare.Architecture.Playback.IMediaPlayer;
+  using ArchitectureRpiMediaPlayer = WearWare.Architecture.Playback.RpiMediaPlayer;
+  ```
 - Re-Add Library preview
 - Move things from HostedService to Singleton?
 - Delete old Services

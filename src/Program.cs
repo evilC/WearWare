@@ -26,6 +26,8 @@ using WearWare.Architecture.Button;
 using WearWare.Architecture.Physics;
 using WearWare.Architecture.Physics.Imu;
 using WearWare.Architecture.Physics.Imu.Sensors;
+using ArchitectureMediaPlayer = WearWare.Architecture.Playback.IMediaPlayer;
+using ArchitectureRpiMediaPlayer = WearWare.Architecture.Playback.RpiMediaPlayer;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -86,6 +88,7 @@ if (env == "Desktop")
     // Desktop specific services (mocks)
     builder.Services.AddSingleton<IMediaConverterService, MockMediaConverterService>();
     builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
+    builder.Services.AddSingleton<ArchitectureMediaPlayer>(sp => sp.GetRequiredService<IMediaPlayer>());
     builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
     builder.Services.AddSingleton<MatrixService>();
@@ -105,6 +108,7 @@ else
         sp.GetRequiredService<IMatrixDisplay>(),
         sp.GetRequiredService<ILogger<MatrixController>>()));
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
+    builder.Services.AddSingleton<ArchitectureMediaPlayer, ArchitectureRpiMediaPlayer>();
     // Old QuickMediaService infrastructure - no longer used. QuickMediaHandler uses the new ButtonManager.
     // Keeping this code as-is for reference in case rollback is needed.
     /*
