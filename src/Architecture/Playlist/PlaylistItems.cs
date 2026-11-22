@@ -15,23 +15,23 @@ namespace WearWare.Architecture.Playlist
         public string Name { get; init; }
         private readonly List<PlayableItem> _items = [];
 
-        private PlaylistItemsConfig _config { get; init; }
+        private PlaylistItemsState _state { get; init; }
         ILogger<PlaylistItems> _logger;
         private static readonly string _logTag = "[PLAYLISTITEMS]";
         private static readonly string _configFileName = "playlistitems.json";
 
-        public PlaylistItems(ILogger<PlaylistItems> logger, string name, PlaylistItemsConfig playlistConfig, List<PlayableItem> items)
+        public PlaylistItems(ILogger<PlaylistItems> logger, string name, PlaylistItemsState playlistState, List<PlayableItem> items)
         {
             _logger = logger;
             Name = name;
-            _config = playlistConfig;
-            if (_config.CurrentItem >= items.Count || _config.CurrentItem < -1)
+            _state = playlistState;
+            if (_state.CurrentItem >= items.Count || _state.CurrentItem < -1)
             {
-                _config.CurrentItem = -1;
+                _state.CurrentItem = -1;
             }
             _items = items;
-            _logger.LogInformation("{tag} Playlist {playlist} initialized with {itemCount} items. Current item index: {currentItemIndex}", _logTag, Name, _items.Count, _config.CurrentItem);
-            // if (_config.CurrentItem == -1)
+            _logger.LogInformation("{tag} Playlist {playlist} initialized with {itemCount} items. Current item index: {currentItemIndex}", _logTag, Name, _items.Count, _state.CurrentItem);
+            // if (_state.CurrentItem == -1)
             // {
             //     MoveNext();
             // }
@@ -43,8 +43,8 @@ namespace WearWare.Architecture.Playlist
         /// <returns></returns>
         public PlayableItem? GetCurrentItem()
         {
-            if (_items.Count == 0 || _config.CurrentItem < 0 || _config.CurrentItem >= _items.Count) return null;
-            return _items[_config.CurrentItem];
+            if (_items.Count == 0 || _state.CurrentItem < 0 || _state.CurrentItem >= _items.Count) return null;
+            return _items[_state.CurrentItem];
         }
         
         public PlayableItem? MoveNext()
@@ -53,12 +53,12 @@ namespace WearWare.Architecture.Playlist
             if (nextIndex == null)
             {
                 // No next item found
-                _config.CurrentItem = -1;
-                _config.Serialize(Name);
+                _state.CurrentItem = -1;
+                _state.Serialize(Name);
                 return null;
             }
-            _config.CurrentItem = nextIndex.Value;
-            _config.Serialize(Name);
+            _state.CurrentItem = nextIndex.Value;
+            _state.Serialize(Name);
             return GetCurrentItem();
         }
 
@@ -68,7 +68,7 @@ namespace WearWare.Architecture.Playlist
         /// <returns>The index of the next enabled item, or null if none found</returns>
         public int? GetNextElegibleItemIndex()
         {
-            var currentIndex = _config.CurrentItem;
+            var currentIndex = _state.CurrentItem;
             if (_items.Count == 0)
             {
                 return null;
@@ -99,8 +99,8 @@ namespace WearWare.Architecture.Playlist
         {
             if (index < 0 || index >= _items.Count) return false;
             if (!_items[index].Enabled) return false;
-            _config.CurrentItem = index;
-            _config.Serialize(Name);
+            _state.CurrentItem = index;
+            _state.Serialize(Name);
             return true;
         }
 
@@ -133,15 +133,15 @@ namespace WearWare.Architecture.Playlist
                 _items.Insert(insertIndex, item);
             }
             // If current index is -1 (no current item), try to move to this item
-            if (_config.CurrentItem == -1)
+            if (_state.CurrentItem == -1)
             {
                 MoveNext();
             }
-            else if (insertIndex <= _config.CurrentItem)
+            else if (insertIndex <= _state.CurrentItem)
             {
                 // Adjust current index if necessary
-                _config.CurrentItem++;
-                _config.Serialize(Name);
+                _state.CurrentItem++;
+                _state.Serialize(Name);
             }
             Serialize();
             return true;
@@ -153,7 +153,7 @@ namespace WearWare.Architecture.Playlist
         public bool RemoveItem(int removedIndex)
         {
             if (removedIndex < 0 || removedIndex >= _items.Count) return false;
-            var oldCurrentIndex = _config.CurrentItem;
+            var oldCurrentIndex = _state.CurrentItem;
             _items.RemoveAt(removedIndex);
 
             // Adjust current index if necessary
@@ -163,13 +163,13 @@ namespace WearWare.Architecture.Playlist
                 if (_items.Count == 0)
                 {
                     // Last item removed, reset current index
-                    _config.CurrentItem = -1;
-                    _config.Serialize(Name);
+                    _state.CurrentItem = -1;
+                    _state.Serialize(Name);
                 }
                 else
                 {
                     // Try to move to next item
-                    _config.CurrentItem--; // Step back one so that MoveNext advances to the next item correctly
+                    _state.CurrentItem--; // Step back one so that MoveNext advances to the next item correctly
                     MoveNext();
                 }
             }
@@ -177,8 +177,8 @@ namespace WearWare.Architecture.Playlist
             else if (removedIndex < oldCurrentIndex)
             {
                 // Adjust current index if necessary
-                _config.CurrentItem--;
-                _config.Serialize(Name);
+                _state.CurrentItem--;
+                _state.Serialize(Name);
             }
             Serialize();
             return true;
@@ -191,7 +191,7 @@ namespace WearWare.Architecture.Playlist
             {
                 return null;
             }
-            var config = PlaylistItemsConfig.Deserialize(playlistName);
+            var state = PlaylistItemsState.Deserialize(playlistName);
             var items = JsonUtils.FromJsonFile<List<PlayableItem>>(path);
             if (items == null)
             {
@@ -211,7 +211,7 @@ namespace WearWare.Architecture.Playlist
                 })
                 .ToList();
 
-            return new PlaylistItems(logger, playlistName, config, items);
+            return new PlaylistItems(logger, playlistName, state, items);
         }
 
         public void Serialize()
@@ -252,7 +252,7 @@ namespace WearWare.Architecture.Playlist
                 item.ParentFolder = Path.Combine(PathConfig.PlaylistFolder, newName);
                 items.Add(item);
             }
-            return new PlaylistItems(_logger, newName, _config.Clone(), items);
+            return new PlaylistItems(_logger, newName, _state.Clone(), items);
         }
     }
 }

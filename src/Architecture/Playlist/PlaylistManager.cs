@@ -349,7 +349,7 @@ namespace WearWare.Architecture.Playlist
             try
             {
                 var playlistItemsLogger = _loggerFactory.CreateLogger<PlaylistItems>();
-                var playlist = new PlaylistItems(playlistItemsLogger, playlistName, new PlaylistItemsConfig(), []);
+                var playlist = new PlaylistItems(playlistItemsLogger, playlistName, new PlaylistItemsState(), []);
                 _playlists[playlistName] = playlist;
 
                 // Create playlist folder
