@@ -1,4 +1,4 @@
-# Motion-driven playback
+# Physics
 
 Status: IMU sensing and a separate Physics mode are implemented. Simulation tuning and hardware testing remain ongoing. See also [I2C](i2c.md).
 

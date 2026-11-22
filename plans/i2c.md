@@ -6,7 +6,7 @@ Status: Partially implemented. MCP23017 QuickMedia buttons and MPU-6050 motion s
 
 - Add I2C devices to the existing Raspberry Pi setup, starting with a GPIO expander for QuickMedia buttons. Configure one active button provider at a time.
 - Configure hardware through files so users do not need to modify code.
-- Support motion sensing and consider battery monitoring. See [buttons](buttons.md), [battery monitoring](battery-monitoring.md), and [motion playback](motion-playback.md).
+- Support motion sensing and consider battery monitoring. See [buttons](buttons.md), [battery monitoring](battery-monitoring.md), and [physics](physics.md).
 - Protect playlist and QuickMedia reliability. Hardware is optional and sensor failures must not stop playback.
 
 ## Proposed approach
