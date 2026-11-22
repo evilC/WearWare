@@ -6,7 +6,10 @@ Status: IMU sensing and a separate Physics mode are implemented. Simulation tuni
 
 - The MPU-6050 uses the `Iot.Device.Bindings` driver on I2C bus 1 at the default address `0x68`. The service polls at approximately 30 Hz; it does not use a sensor interrupt.
 - Raw acceleration and gyroscope readings are retained alongside mounting-adjusted readings. Tilt is calculated from adjusted acceleration and smoothed; acceleration includes movement as well as gravity.
-- The selected mode is saved in `config/mode-state.json`. A saved Physics mode is retried at startup. Physics currently runs the Fluid simulation; simulation selection is not yet implemented.
+- The selected mode is saved in `config/mode-state.json`. A saved Physics mode is retried at startup.
+- The Physics page selects from the ordered list: Fluid, Ball and IMU Test. Fluid is the default. The selection is saved in `config/physics-state.json` and restored at startup.
+- Changing the selection switches simulations immediately when Physics is active, without selecting Physics mode. During a QuickMedia interruption, the new selection is used when Physics resumes.
+- Invalid or unreadable simulation state is logged and reported on the Physics page, and Fluid is used. If saving a selection fails, the current selection remains unchanged and the page reports the error.
 - An unavailable, stale or failed IMU prevents Physics from running. WearWare falls back to Playlist and reports the failure, while Physics remains the selected mode. If Playlist is stopped, the display remains blank. A sensor failure is logged and monitoring does not automatically retry.
 
 ## Mounting orientation
@@ -19,6 +22,7 @@ Status: IMU sensing and a separate Physics mode are implemented. Simulation tuni
 ## Remaining work
 
 - Configure the sensor model and address, and consider calibration or additional filtering if needed.
+- Add physical buttons to select the previous or next simulation.
 - Consider display pitch when calculating the real-world fall rate, and configuration options for the simulations. The fluid simulation currently uses an off-screen margin to reduce wall-sticking artefacts, with trade-offs in visible pool depth and splashing.
 - Verify mounting directions, simulation behaviour and performance on the shirt. A shared I2C bus fault can also affect buttons.
 

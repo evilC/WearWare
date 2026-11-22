@@ -1,36 +1,47 @@
-using System.Diagnostics;
-using RPiRgbLEDMatrix;
-using WearWare.Services;
-using WearWare.Services.Matrix;
 using WearWare.Services.Physics.Imu;
-using WearWare.Services.MatrixConfig;
+using WearWare.Services.Physics.Simulations;
+using WearWare.Services.Physics.Simulations.Ball;
 using WearWare.Services.Physics.Simulations.Fluid;
+using WearWare.Services.Physics.Simulations.ImuTest;
+using WearWare.Utils;
 
 namespace WearWare.Services.Physics
 {
     public sealed class PhysicsHandler : IHandler
     {
-        private static readonly TimeSpan FrameInterval = TimeSpan.FromSeconds(1.0 / 30);
-        private readonly IMatrixDisplay _display;
+        private readonly record struct Simulation(string Name, IPhysicsRenderer Renderer);
+
+        private readonly string _selectionPath = Path.Combine(PathConfig.ConfigPath, "physics-state.json");
         private readonly ImuService _imu;
-        private readonly MatrixConfigService _matrixConfig;
         private readonly ILogger<PhysicsHandler> _logger;
+        private readonly Simulation[] _simulations;
+        private string _selectedSimulation;
         private volatile HandlerState _state = HandlerState.Idle;
 
         public string Name => "Physics";
         public HandlerState State => _state;
+        public IReadOnlyList<string> Simulations { get; }
+        public string SelectedSimulation => Volatile.Read(ref _selectedSimulation);
+        public string? SelectionMessage { get; private set; }
         public event Action? StateChanged;
 
         public PhysicsHandler(
-            IMatrixDisplay display,
             ImuService imu,
-            MatrixConfigService matrixConfig,
+            FluidRenderer fluid,
+            BallPhysicsRenderer ball,
+            ImuTestRenderer imuTest,
             ILogger<PhysicsHandler> logger)
         {
-            _display = display;
             _imu = imu;
-            _matrixConfig = matrixConfig;
             _logger = logger;
+            _simulations =
+            [
+                new("Fluid", fluid),
+                new("Ball", ball),
+                new("IMU Test", imuTest)
+            ];
+            Simulations = Array.AsReadOnly(_simulations.Select(simulation => simulation.Name).ToArray());
+            _selectedSimulation = LoadSelection();
         }
 
         public async Task WaitForImuAsync(CancellationToken cancellationToken)
@@ -42,12 +53,35 @@ namespace WearWare.Services.Physics
                 throw new InvalidOperationException($"IMU is unavailable: {_imu.State.Status}.");
         }
 
+        internal bool SelectSimulation(string name)
+        {
+            if (!Simulations.Contains(name))
+                throw new ArgumentOutOfRangeException(nameof(name));
+
+            try
+            {
+                JsonUtils.ToJsonFileAtomic(_selectionPath, new PhysicsState { Simulation = name }, _logger);
+                Volatile.Write(ref _selectedSimulation, name);
+                SelectionMessage = null;
+                NotifyStateChanged();
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "[PHYSICSHANDLER] Could not save simulation selection.");
+                SelectionMessage = "Could not save simulation selection. See the log for details.";
+                NotifyStateChanged();
+                return false;
+            }
+        }
+
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             try
             {
                 SetState(HandlerState.Running);
-                await RunFluidAsync(_display, cancellationToken);
+                var renderer = _simulations.First(simulation => simulation.Name == SelectedSimulation).Renderer;
+                await renderer.RunAsync(cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -59,68 +93,26 @@ namespace WearWare.Services.Physics
                 SetState(HandlerState.Failed);
                 throw;
             }
-            finally
-            {
-                try
-                {
-                    if (!_display.Clear())
-                        _logger.LogError("[PHYSICSHANDLER] Cannot clear the matrix after Physics: matrix is not initialized.");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "[PHYSICSHANDLER] Failed to clear the matrix after Physics.");
-                }
-            }
         }
 
-        private async Task RunFluidAsync(IMatrixDisplay display, CancellationToken cancellationToken)
+        private string LoadSelection()
         {
-            FluidSimulation? fluid = null;
-            float[] density = [];
-            Color[] pixels = [];
-            var width = 0;
-            var height = 0;
-            long previousFrame = 0;
+            if (!File.Exists(_selectionPath))
+                return Simulations[0];
 
-            while (true)
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var frameStart = Stopwatch.GetTimestamp();
-                var elapsed = previousFrame == 0 ? 0 : Stopwatch.GetElapsedTime(previousFrame, frameStart).TotalSeconds;
-                previousFrame = frameStart;
-
-                var reading = _imu.State;
-                if (reading.Status != ImuStatus.Available || reading.Reading == null)
-                    throw new InvalidOperationException($"IMU reading unavailable: {reading.Status}.");
-
-                display.WithMatrix((matrix, canvas) =>
-                {
-                    var brightness = (byte)_matrixConfig.GetCurrentBrightness();
-                    if (matrix.Brightness != brightness)
-                        matrix.Brightness = brightness;
-
-                    if (fluid == null || width != canvas.Width || height != canvas.Height)
-                    {
-                        width = canvas.Width;
-                        height = canvas.Height;
-                        fluid = new FluidSimulation(width, height);
-                        density = new float[checked(width * height)];
-                        pixels = new Color[density.Length];
-                    }
-
-                    canvas.Clear();
-                    fluid.Update(reading.Reading.MountedAcceleration, elapsed);
-                    fluid.WriteDensity(density);
-                    var water = new Color(0, 100, 255);
-                    for (var i = 0; i < pixels.Length; i++)
-                        pixels[i] = density[i] >= 0.6f ? water : default;
-                    canvas.SetPixels(0, 0, width, height, pixels);
-                    matrix.SwapOnVsync(canvas);
-                });
-
-                var remaining = FrameInterval - Stopwatch.GetElapsedTime(frameStart);
-                if (remaining > TimeSpan.Zero)
-                    await Task.Delay(remaining, cancellationToken);
+                var state = JsonUtils.FromJsonFile<PhysicsState>(_selectionPath)
+                    ?? throw new JsonException("Physics state contains null.");
+                if (state.Simulation == null || !Simulations.Contains(state.Simulation))
+                    throw new JsonException($"Invalid Physics simulation '{state.Simulation}'.");
+                return state.Simulation;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                _logger.LogError(ex, "[PHYSICSHANDLER] Could not load simulation selection from {path}; using Fluid.", _selectionPath);
+                SelectionMessage = "Could not load simulation selection. Using Fluid. See the log for details.";
+                return Simulations[0];
             }
         }
 
@@ -130,6 +122,11 @@ namespace WearWare.Services.Physics
                 return;
 
             _state = state;
+            NotifyStateChanged();
+        }
+
+        private void NotifyStateChanged()
+        {
             var handlers = StateChanged;
             if (handlers == null)
                 return;
@@ -145,6 +142,11 @@ namespace WearWare.Services.Physics
                     _logger.LogError(ex, "[PHYSICSHANDLER] A state-changed listener failed.");
                 }
             }
+        }
+
+        private sealed class PhysicsState
+        {
+            public string? Simulation { get; set; }
         }
     }
 }

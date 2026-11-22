@@ -1,0 +1,62 @@
+@page "/physics"
+@rendermode InteractiveServer
+@implements IDisposable
+@using WearWare.Services.Mode
+@using WearWare.Services.Physics
+@inject PhysicsHandler PhysicsHandler
+@inject ModeHandler ModeHandler
+
+<PageTitle>WearWare Physics</PageTitle>
+
+<h1>Physics</h1>
+
+<p>Select the simulation to run in Physics mode.</p>
+
+@if (PhysicsHandler.SelectionMessage is { } selectionMessage)
+{
+    <div class="alert alert-warning" role="alert">@selectionMessage</div>
+}
+@if (ModeHandler.State.Message is { } modeMessage)
+{
+    <div class="alert alert-warning" role="alert">@modeMessage</div>
+}
+
+<div class="list-group" aria-label="Physics simulations">
+    @foreach (var simulation in PhysicsHandler.Simulations)
+    {
+        <button type="button" class="list-group-item list-group-item-action @(simulation == PhysicsHandler.SelectedSimulation ? "active" : "")"
+                aria-pressed="@(simulation == PhysicsHandler.SelectedSimulation)"
+                disabled="@_changing" @onclick="() => SelectSimulation(simulation)">@simulation</button>
+    }
+</div>
+
+@code {
+    private bool _changing;
+
+    protected override void OnInitialized()
+    {
+        PhysicsHandler.StateChanged += OnStateChanged;
+        ModeHandler.StateChanged += OnStateChanged;
+    }
+
+    private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private async Task SelectSimulation(string simulation)
+    {
+        _changing = true;
+        try
+        {
+            await ModeHandler.SelectPhysicsSimulationAsync(simulation);
+        }
+        finally
+        {
+            _changing = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        PhysicsHandler.StateChanged -= OnStateChanged;
+        ModeHandler.StateChanged -= OnStateChanged;
+    }
+}

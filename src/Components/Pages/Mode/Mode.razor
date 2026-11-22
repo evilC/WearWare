@@ -20,7 +20,7 @@
             @onclick="() => ChangeMode(DisplayMode.Playlist)">Playlist</button>
     <button class="btn @(ModeHandler.State.CurrentMode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
             disabled="@(_changing || (ModeHandler.State.CurrentMode == DisplayMode.Physics && (ModeHandler.State.InterruptingMode != null || ModeHandler.State.ActiveMode == DisplayMode.Physics)))"
-            @onclick="() => ChangeMode(DisplayMode.Physics)">Physics (Fluid)</button>
+            @onclick="() => ChangeMode(DisplayMode.Physics)">Physics</button>
 </div>
 
 @if (ModeHandler.State.InterruptingMode == null && ModeHandler.State.ActiveMode != ModeHandler.State.CurrentMode)

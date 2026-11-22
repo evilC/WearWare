@@ -177,6 +177,32 @@ namespace WearWare.Services.Mode
             }
         }
 
+        public async Task SelectPhysicsSimulationAsync(string name)
+        {
+            await _transition.WaitAsync();
+            try
+            {
+                if (_stopping || !_started)
+                    return;
+                if (_physicsHandler.SelectedSimulation == name && _physicsHandler.SelectionMessage == null)
+                    return;
+
+                var changed = _physicsHandler.SelectedSimulation != name;
+                if (!_physicsHandler.SelectSimulation(name) || !changed)
+                    return;
+
+                if (State.InterruptingMode == null && State.ActiveMode == DisplayMode.Physics)
+                {
+                    await StopPhysicsAsync();
+                    await StartNormalModeAsync();
+                }
+            }
+            finally
+            {
+                _transition.Release();
+            }
+        }
+
         public async Task SelectPlaylistAsync(string playlistName)
         {
             await _transition.WaitAsync();
