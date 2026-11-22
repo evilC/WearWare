@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components.Forms;
-using WearWare.Services.Playlist;
+using WearWare.Architecture.Playlist;
 
 namespace WearWare.Components.Forms.AddCopyPlaylistForm
 {
@@ -7,7 +7,7 @@ namespace WearWare.Components.Forms.AddCopyPlaylistForm
     {
         [Parameter] public AddCopyPlaylistFormModel Model { get; set; } = default!;
 
-        [Inject] private PlaylistService PlaylistService { get; set; } = null!;
+        [Inject] private PlaylistManager PlaylistManager { get; set; } = null!;
 
         [Parameter] public EventCallback<AddCopyPlaylistFormModel> OnSubmit { get; set; }
         [Parameter] public EventCallback OnCancel { get; set; }
@@ -42,7 +42,7 @@ namespace WearWare.Components.Forms.AddCopyPlaylistForm
 
             // Live uniqueness check
             if (!string.IsNullOrWhiteSpace(Model.NewName)
-                && PlaylistService.GetPlaylistNames().Any(n => string.Equals(n, Model.NewName, StringComparison.OrdinalIgnoreCase)))
+                && PlaylistManager.GetPlaylistNames().Any(n => string.Equals(n, Model.NewName, StringComparison.OrdinalIgnoreCase)))
             {
                 _messageStore?.Add(e.FieldIdentifier, "A playlist with that name already exists.");
             }
@@ -67,7 +67,7 @@ namespace WearWare.Components.Forms.AddCopyPlaylistForm
             }
 
             // Uniqueness check handled here in the form (service-aware)
-            if (PlaylistService.GetPlaylistNames().Any(n => string.Equals(n, Model.NewName, StringComparison.OrdinalIgnoreCase)))
+            if (PlaylistManager.GetPlaylistNames().Any(n => string.Equals(n, Model.NewName, StringComparison.OrdinalIgnoreCase)))
             {
                 _messageStore?.Add(new FieldIdentifier(Model, nameof(Model.NewName)), "A playlist with that name already exists.");
                 _editContext?.NotifyValidationStateChanged();

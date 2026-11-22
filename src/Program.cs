@@ -10,7 +10,6 @@ using System.Net;
 using Serilog;
 using Serilog.Events;
 using WearWare.Services.Logging;
-using WearWare.Services.ShutdownService;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.StreamConverter;
 using WearWare.Services.OperationProgress;
@@ -31,7 +30,6 @@ using ArchitectureRpiMediaPlayer = WearWare.Architecture.Playback.RpiMediaPlayer
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
-builder.Services.AddHostedService<ShutdownService>();
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 // Create folders
