@@ -16,6 +16,10 @@ namespace WearWare.Services.Playlist
         private CancellationTokenSource? _cts;
         private bool _resuming = true;
         private HandlerState _state = HandlerState.Idle;
+        private readonly object _pinLock = new();
+        private PlayableItem? _pinSource;
+        private PlayableItem? _pinnedItem;
+        private PlayableItem? _playingSource;
 
         public string Name => "Playlist";
         public HandlerState State => _state;
@@ -92,6 +96,8 @@ namespace WearWare.Services.Playlist
                 var ct = _cts.Token;
                 _running = true;
                 _resuming = true;
+                lock (_pinLock)
+                    _playingSource = null;
                 _playTask = Task.Run(() => PlayLoop(ct));
                 SetState(HandlerState.Running);
                 _logger.LogInformation("{tag} Playback started.", _logTag);
@@ -161,6 +167,74 @@ namespace WearWare.Services.Playlist
         /// </summary>
         public bool IsRunning() => _running;
 
+        internal void TogglePin()
+        {
+            lock (_pinLock)
+            {
+                if (!_running || _playingSource == null)
+                    return;
+            }
+
+            Stop();
+            try
+            {
+                var current = _playlistManager.GetCurrentItem();
+                if (current == null || !current.Enabled || !ReferenceEquals(current, _playingSource))
+                {
+                    ClearPin();
+                    return;
+                }
+
+                if (HasPinFor(current))
+                {
+                    ClearPin();
+                    _playlistManager.GetNextItem();
+                    _logger.LogInformation("{tag} Playlist item {item} unpinned.", _logTag, current.Name);
+                }
+                else
+                {
+                    // Enable "Pin" for the current playlist item (Keep it playing)
+                    // If we simply repeated the current item, it may loop in an odd place.
+                    // eg a 2 second clip that is normally PlayMode.Duration of 5 seconds would loop half way through.
+                    // So instead, we create a clone of the current item and set it to play indefinitely.
+                    var clone = current.Clone();
+                    clone.PlayMode = PlayMode.Forever;
+                    lock (_pinLock)
+                    {
+                        _pinSource = current;
+                        _pinnedItem = clone;
+                    }
+                    _logger.LogInformation("{tag} Playlist item {item} pinned.", _logTag, current.Name);
+                }
+            }
+            finally
+            {
+                Start();
+            }
+        }
+
+        private bool HasPinFor(PlayableItem item)
+        {
+            lock (_pinLock)
+                return ReferenceEquals(_pinSource, item);
+        }
+
+        internal bool HasInvalidPin()
+        {
+            lock (_pinLock)
+                return _pinSource != null &&
+                    (!ReferenceEquals(_pinSource, _playlistManager.GetCurrentItem()) || !_pinSource.Enabled);
+        }
+
+        internal void ClearPin()
+        {
+            lock (_pinLock)
+            {
+                _pinSource = null;
+                _pinnedItem = null;
+            }
+        }
+
         /// <summary>
         /// Main playback loop. Plays items from the current playlist in sequence.
         /// </summary>
@@ -170,21 +244,43 @@ namespace WearWare.Services.Playlist
             {
                 while (_running && _playlistManager.CurrentPlaylist != null)
                 {
+                    PlayableItem? source;
                     PlayableItem? item;
 
-                    if (_resuming)
+                    lock (_pinLock)
                     {
-                        // Resume from current item (after restart)
-                        item = _playlistManager.GetCurrentItem();
-                        _resuming = false;
-                    }
-                    else
-                    {
-                        // Move to next item
-                        item = _playlistManager.GetNextItem();
+                        var current = _playlistManager.GetCurrentItem();
+                        var pinMatches = _pinSource != null && ReferenceEquals(_pinSource, current) &&
+                            current != null && current.Enabled;
+                        if (_resuming)
+                        {
+                            if (_pinSource != null && !pinMatches)
+                            {
+                                _pinSource = null;
+                                _pinnedItem = null;
+                            }
+                            source = current;
+                            _resuming = false;
+                        }
+                        else if (pinMatches)
+                        {
+                            source = current;
+                        }
+                        else if (_pinSource != null)
+                        {
+                            _pinSource = null;
+                            _pinnedItem = null;
+                            source = current is { Enabled: true } ? current : _playlistManager.GetNextItem();
+                        }
+                        else
+                        {
+                            source = _playlistManager.GetNextItem();
+                        }
+                        item = pinMatches ? _pinnedItem : source;
+                        _playingSource = source;
                     }
 
-                    if (item == null)
+                    if (item == null || source == null)
                     {
                         _logger.LogInformation("{tag} Reached end of playlist.", _logTag);
                         break;
@@ -198,7 +294,8 @@ namespace WearWare.Services.Playlist
                     if (!success && !ct.IsCancellationRequested)
                     {
                         _logger.LogError("{tag} Playback failed for item {item}. Disabling item.", _logTag, item.Name);
-                        item.Enabled = false;
+                        source.Enabled = false;
+                        ClearPin();
                         StateChanged?.Invoke();
                     }
 

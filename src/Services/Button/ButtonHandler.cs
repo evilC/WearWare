@@ -13,6 +13,7 @@ namespace WearWare.Services.Button
         public event Action<int>? QuickMediaPressed;
         public event Action<string, JogDirection>? JogPressed;
         public event Action<string>? ModePressed;
+        public event Action<string>? PinPressed;
 
         public ButtonHandler(
             ButtonManager buttonManager,
@@ -76,6 +77,9 @@ namespace WearWare.Services.Button
                         break;
                     case nameof(ButtonFunction.Mode):
                         ModePressed?.Invoke(button.PinName);
+                        break;
+                    case nameof(ButtonFunction.Pin):
+                        PinPressed?.Invoke(button.PinName);
                         break;
                 }
             }

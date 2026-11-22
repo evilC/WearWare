@@ -51,6 +51,8 @@ namespace WearWare.Services.Mode
             _quickMediaHandler.ConfigureModeControl(RequestControlAsync, ReleaseControlAsync, () => _started && !_stopping);
             buttonHandler.JogPressed += OnJogPressed;
             buttonHandler.ModePressed += OnModePressed;
+            buttonHandler.PinPressed += OnPinPressed;
+            _playlistManager.StateChanged += OnPlaylistChanged;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -120,6 +122,8 @@ namespace WearWare.Services.Mode
                 return;
 
             var previous = State;
+            if (previous.CurrentMode != mode)
+                _playlistHandler.ClearPin();
             var next = previous with { CurrentMode = mode, Message = null };
             if (!_modeManager.SaveState(next))
                 next = next with { Message = "Could not save mode state. See the log for details." };
@@ -179,6 +183,64 @@ namespace WearWare.Services.Mode
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[MODEHANDLER] Failed to handle mode press from {pinName}.", pinName);
+            }
+        }
+
+        private void OnPinPressed(string pinName)
+        {
+            if (State.ActiveMode == DisplayMode.Playlist)
+                _ = HandlePinPressAsync(pinName);
+        }
+
+        private async Task HandlePinPressAsync(string pinName)
+        {
+            try
+            {
+                await _transition.WaitAsync();
+                try
+                {
+                    if (!_stopping && _started && State.ActiveMode == DisplayMode.Playlist &&
+                        _buttonMappings.GetFunctionForPin(pinName) == nameof(ButtonFunction.Pin))
+                        _playlistHandler.TogglePin();
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MODEHANDLER] Failed to handle pin press from {pinName}.", pinName);
+            }
+        }
+
+        private void OnPlaylistChanged() => _ = HandlePlaylistChangedAsync();
+
+        private async Task HandlePlaylistChangedAsync()
+        {
+            try
+            {
+                await _transition.WaitAsync();
+                try
+                {
+                    if (_stopping || !_started || !_playlistHandler.HasInvalidPin())
+                        return;
+
+                    var wasRunning = State.ActiveMode == DisplayMode.Playlist && _playlistHandler.IsRunning();
+                    if (wasRunning)
+                        _playlistHandler.Stop();
+                    _playlistHandler.ClearPin();
+                    if (wasRunning)
+                        _playlistHandler.Start();
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[MODEHANDLER] Failed to update a pinned Playlist item.");
             }
         }
 
@@ -380,7 +442,10 @@ namespace WearWare.Services.Mode
                     _ => throw new ArgumentOutOfRangeException(nameof(direction))
                 };
                 if (index.HasValue)
+                {
                     playlist.JumpToPlaylistIndex(index.Value);
+                    _playlistHandler.ClearPin();
+                }
             }
             finally
             {
@@ -399,7 +464,8 @@ namespace WearWare.Services.Mode
                 var wasRunning = _playlistHandler.IsRunning();
                 if (wasRunning)
                     _playlistHandler.Stop();
-                _playlistManager.SetActivePlaylist(playlistName);
+                if (_playlistManager.SetActivePlaylist(playlistName))
+                    _playlistHandler.ClearPin();
                 if (wasRunning)
                     _playlistHandler.Start();
             }
@@ -416,10 +482,23 @@ namespace WearWare.Services.Mode
             {
                 if (_stopping || !_started)
                     return;
-                if (_playlistManager.JumpToItem(index) && _playlistHandler.IsRunning())
-                {
+                var playlist = _playlistManager.CurrentPlaylist;
+                var items = playlist?.GetPlaylistItems();
+                if (items == null || index < 0 || index >= items.Count || !items[index].Enabled)
+                    return;
+
+                var wasRunning = _playlistHandler.IsRunning();
+                if (wasRunning)
                     _playlistHandler.Stop();
-                    _playlistHandler.Start();
+                try
+                {
+                    if (_playlistManager.JumpToItem(index))
+                        _playlistHandler.ClearPin();
+                }
+                finally
+                {
+                    if (wasRunning)
+                        _playlistHandler.Start();
                 }
             }
             finally
@@ -435,10 +514,13 @@ namespace WearWare.Services.Mode
             {
                 if (_stopping || !_started)
                     return false;
-                var wasRunning = _playlistHandler.IsRunning() && _playlistManager.CurrentPlaylistName == playlistName;
+                var wasActive = _playlistManager.CurrentPlaylistName == playlistName;
+                var wasRunning = _playlistHandler.IsRunning() && wasActive;
                 if (wasRunning)
                     _playlistHandler.Stop();
                 var deleted = _playlistManager.DeletePlaylist(playlistName);
+                if (deleted && wasActive)
+                    _playlistHandler.ClearPin();
                 if (wasRunning && !deleted)
                     _playlistHandler.Start();
                 return deleted;
