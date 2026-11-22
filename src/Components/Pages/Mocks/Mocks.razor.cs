@@ -1,6 +1,7 @@
+/*
+The old mock button path bypasses mode coordination; replace it with a coordinated button trigger.
 using WearWare.Architecture.QuickMedia;
 using WearWare.Components.Base;
-using WearWare.Services.MediaController;
 
 namespace WearWare.Components.Pages.Mocks
 {
@@ -8,7 +9,6 @@ namespace WearWare.Components.Pages.Mocks
     {
         [Inject] public QuickMediaManager QuickMediaManager { get; set; } = null!;
         [Inject] public QuickMediaHandler QuickMediaHandler { get; set; } = null!;
-        [Inject] public MediaControllerService MediaController { get; set; } = null!;
         
         private bool _subscribed;
         
@@ -44,3 +44,4 @@ namespace WearWare.Components.Pages.Mocks
         }
     }
 }
+*/

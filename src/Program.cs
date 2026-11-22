@@ -89,7 +89,7 @@ if (env == "Desktop")
     builder.Services.AddSingleton<IMediaConverterService, MockMediaConverterService>();
     builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
     builder.Services.AddSingleton<ArchitectureMediaPlayer>(sp => sp.GetRequiredService<IMediaPlayer>());
-    builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
+    // builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
     builder.Services.AddSingleton<MatrixService>();
     builder.Services.AddSingleton<IMatrixDisplay>(sp => sp.GetRequiredService<MatrixService>());

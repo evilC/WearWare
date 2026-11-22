@@ -1,6 +1,4 @@
-﻿@using WearWare.Services.Environment
-@inject EnvironmentService EnvironmentService
-
+﻿
 <div class="ww-nav-scrollable overflow-auto" role="navigation" aria-label="Main navigation">
     <nav class="ww-nav nav nav-pills flex-nowrap">
         <div class="ww-nav-item nav-item">
@@ -38,11 +36,13 @@
         <div class="ww-nav-item nav-item">
             <NavLink class="ww-nav-link nav-link" href="log">Log</NavLink>
         </div>
+        @* Mock buttons navigation:
         @if (EnvironmentService.EnvironmentName == "Desktop")
         {
             <div class="ww-nav-item nav-item">
                 <NavLink class="ww-nav-link nav-link" href="mocks">Mocks</NavLink>
             </div>
         }
+        *@
     </nav>
 </div>
