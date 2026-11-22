@@ -4,7 +4,7 @@ namespace WearWare.Architecture.QuickMedia
 {
     public class QuickMediaStateConfig
     {
-        public int ActiveSlotNumber { get; set; } = 1;
+        public int ActiveSlotNumber { get; set; }
 
         private static readonly string _configFileName = "quickmedia-state.json";
 

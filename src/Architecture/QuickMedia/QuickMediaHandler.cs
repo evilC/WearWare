@@ -16,6 +16,8 @@ namespace WearWare.Architecture.QuickMedia
 
         private volatile bool _running = false;
         private Task<bool>? _playTask;
+        private Task<bool>? _lastPlaybackTask;
+        private Task<bool>? _playbackStoppedForDeletion;
         private CancellationTokenSource? _cts;
         private HandlerState _state = HandlerState.Idle;
         private int? _lastActiveButtonSlot;
@@ -40,6 +42,28 @@ namespace WearWare.Architecture.QuickMedia
             _mediaPlayer = mediaPlayer;
             _logger = logger;
             _quickMediaManager.StateChanged += OnQuickMediaManagerStateChanged;
+            _quickMediaManager.ItemDeleting += OnItemDeleting;
+            _quickMediaManager.ItemDeletionFinished += OnItemDeletionFinished;
+        }
+
+        private void OnItemDeleting(int buttonSlot)
+        {
+            if (_lastActiveButtonSlot != buttonSlot || _playTask == null)
+                return;
+
+            _playbackStoppedForDeletion = _playTask;
+            Stop();
+        }
+
+        private void OnItemDeletionFinished(int buttonSlot, bool deleted)
+        {
+            var stoppedTask = _playbackStoppedForDeletion;
+            _playbackStoppedForDeletion = null;
+            if (!deleted && stoppedTask != null && ReferenceEquals(_lastPlaybackTask, stoppedTask) &&
+                _quickMediaManager.ActiveButtonSlot == buttonSlot)
+            {
+                Start();
+            }
         }
 
         private void OnQuickMediaManagerStateChanged()
@@ -58,19 +82,6 @@ namespace WearWare.Architecture.QuickMedia
 
             _quickMediaManager.LoadAllItems();
 
-            if (_quickMediaManager.ActiveButtonItem == null)
-            {
-                var loadedSlots = _quickMediaManager.GetLoadedButtonSlots();
-                if (loadedSlots.Count > 0)
-                {
-                    _quickMediaManager.SetActiveButton(loadedSlots[0]);
-                }
-                else
-                {
-                    _logger.LogWarning("{tag} No quick media items loaded on startup.", _logTag);
-                }
-            }
-
             SubscribeToButtonEvents();
             _logger.LogInformation("{tag} QuickMedia items loaded. Not starting playback - waiting for mode switch.", _logTag);
         }
@@ -79,6 +90,8 @@ namespace WearWare.Architecture.QuickMedia
         {
             _logger.LogInformation("{tag} stopping.", _logTag);
             _quickMediaManager.StateChanged -= OnQuickMediaManagerStateChanged;
+            _quickMediaManager.ItemDeleting -= OnItemDeleting;
+            _quickMediaManager.ItemDeletionFinished -= OnItemDeletionFinished;
             try
             {
                 Stop();
@@ -188,8 +201,9 @@ namespace WearWare.Architecture.QuickMedia
                 _playingMode = item.PlayMode;
                 _running = true;
                 _playTask = Task.Run(() => PlayLoop(item, ct));
+                _lastPlaybackTask = _playTask;
                 SetState(HandlerState.Running);
-                _ = ObservePlaybackAsync(_playTask);
+                _ = ObservePlaybackAsync(_playTask, ct);
                 _logger.LogInformation("{tag} Playback started for slot {slot}.", _logTag, _quickMediaManager.ActiveButtonSlot);
             }
             catch (Exception ex)
@@ -247,15 +261,15 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
-        public bool IsCurrentPlayback(Task<bool> task) => ReferenceEquals(_playTask, task);
+        public bool IsCurrentPlayback(Task<bool> task) => ReferenceEquals(_lastPlaybackTask, task);
 
         public bool IsPlayingForever(int buttonSlot) =>
             _running && _lastActiveButtonSlot == buttonSlot && _playingMode == PlayMode.Forever;
 
-        private async Task ObservePlaybackAsync(Task<bool> task)
+        private async Task ObservePlaybackAsync(Task<bool> task, CancellationToken ct)
         {
             var success = await task.ConfigureAwait(false);
-            PlaybackCompleted?.Invoke(task, success);
+            PlaybackCompleted?.Invoke(task, success || ct.IsCancellationRequested);
         }
 
         private bool PlayLoop(PlayableItem item, CancellationToken ct)

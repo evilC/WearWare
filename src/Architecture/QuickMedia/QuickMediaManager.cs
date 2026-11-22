@@ -18,6 +18,10 @@ namespace WearWare.Architecture.QuickMedia
         private QuickMediaStateConfig _stateConfig;
 
         public event Action? StateChanged;
+        internal event Action<int>? ItemDeleting;
+        internal event Action<int, bool>? ItemDeletionFinished;
+        // Deletion and playback transitions must not race each other.
+        internal SemaphoreSlim TransitionGate { get; } = new(1, 1);
 
         public int ActiveButtonSlot => _activeButtonSlot;
         public QuickMediaItem? ActiveButtonItem => _buttonSlotItems.TryGetValue(_activeButtonSlot, out var item) ? item : null;
@@ -150,6 +154,24 @@ namespace WearWare.Architecture.QuickMedia
             return true;
         }
 
+        public void ClearActiveButton()
+        {
+            if (_activeButtonSlot == 0)
+                return;
+
+            _activeButtonSlot = 0;
+            _stateConfig.ActiveSlotNumber = 0;
+            try
+            {
+                _stateConfig.Serialize();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "{tag} Could not save cleared active button slot.", _logTag);
+            }
+            StateChanged?.Invoke();
+        }
+
         /// <summary>
         /// Gets the item for a specific button slot.
         /// </summary>
@@ -230,7 +252,20 @@ namespace WearWare.Architecture.QuickMedia
         /// <summary>
         /// Deletes the quick media item for a button slot.
         /// </summary>
-        public bool DeleteButtonItem(int buttonSlot)
+        public async Task<bool> DeleteButtonItemAsync(int buttonSlot)
+        {
+            await TransitionGate.WaitAsync();
+            try
+            {
+                return DeleteButtonItem(buttonSlot);
+            }
+            finally
+            {
+                TransitionGate.Release();
+            }
+        }
+
+        private bool DeleteButtonItem(int buttonSlot)
         {
             var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
             var validButtonNumbers = quickMediaButtons.Select(b => b.Index + 1).ToList();
@@ -241,8 +276,16 @@ namespace WearWare.Architecture.QuickMedia
                 return false;
             }
 
+            if (!_buttonSlotItems.TryGetValue(buttonSlot, out var item) || item == null)
+            {
+                _logger.LogWarning("{tag} Cannot delete item: slot {slot} has no item loaded.", _logTag, buttonSlot);
+                return false;
+            }
+
+            var deleted = false;
             try
             {
+                ItemDeleting?.Invoke(buttonSlot);
                 var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonSlot.ToString());
                 if (Directory.Exists(buttonPath))
                 {
@@ -260,12 +303,17 @@ namespace WearWare.Architecture.QuickMedia
 
                 _logger.LogInformation("{tag} Deleted quick media item for slot {slot}.", _logTag, buttonSlot);
                 StateChanged?.Invoke();
+                deleted = true;
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{tag} Error deleting quick media item for slot {slot}.", _logTag, buttonSlot);
                 return false;
+            }
+            finally
+            {
+                ItemDeletionFinished?.Invoke(buttonSlot, deleted);
             }
         }
     }

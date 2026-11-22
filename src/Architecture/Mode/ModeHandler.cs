@@ -5,7 +5,7 @@ namespace WearWare.Architecture.Mode
 {
     public sealed class ModeHandler : IHostedService
     {
-        private readonly SemaphoreSlim _transition = new SemaphoreSlim(1, 1);
+        private readonly SemaphoreSlim _transition;
         private readonly ModeManager _modeManager;
         private readonly PlaylistHandler _playlistHandler;
         private readonly QuickMediaHandler _quickMediaHandler;
@@ -31,6 +31,7 @@ namespace WearWare.Architecture.Mode
             _playlistHandler = playlistHandler;
             _quickMediaHandler = quickMediaHandler;
             _quickMediaManager = quickMediaManager;
+            _transition = quickMediaManager.TransitionGate;
             _lifetime = lifetime;
             _logger = logger;
             _modeManager.StateChanged += OnModeManagerStateChanged;
@@ -54,12 +55,20 @@ namespace WearWare.Architecture.Mode
 
             if (State.Mode == DisplayMode.QuickMedia)
             {
-                _quickMediaHandler.Start();
-                if (_quickMediaHandler.State == HandlerState.Failed)
+                if (_quickMediaManager.ActiveButtonSlot == 0)
+                {
                     await RestoreAfterQuickMediaAsync();
+                }
+                else
+                {
+                    _quickMediaHandler.Start();
+                    if (_quickMediaHandler.State == HandlerState.Failed)
+                        await RestoreAfterQuickMediaAsync();
+                }
             }
             else
             {
+                _quickMediaManager.ClearActiveButton();
                 _playlistHandler.Start();
             }
 
@@ -165,8 +174,12 @@ namespace WearWare.Architecture.Mode
             _quickMediaHandler.Stop();
             if (State.Mode == DisplayMode.QuickMedia)
                 await RestoreAfterQuickMediaAsync();
-            else if (playlistWasRunning && !_stopping)
-                _playlistHandler.Start();
+            else
+            {
+                _quickMediaManager.ClearActiveButton();
+                if (playlistWasRunning && !_stopping)
+                    _playlistHandler.Start();
+            }
         }
 
         private void OnQuickMediaPlaybackCompleted(Task<bool> task, bool success)
@@ -179,7 +192,7 @@ namespace WearWare.Architecture.Mode
             await _transition.WaitAsync();
             try
             {
-                if (_stopping || !_quickMediaHandler.IsCurrentPlayback(task))
+                if (_stopping || State.Mode != DisplayMode.QuickMedia || !_quickMediaHandler.IsCurrentPlayback(task))
                     return;
 
                 _quickMediaHandler.Stop();
@@ -209,6 +222,7 @@ namespace WearWare.Architecture.Mode
                 });
             }
 
+            _quickMediaManager.ClearActiveButton();
             if (State.Mode == DisplayMode.Playlist && !_stopping)
                 _playlistHandler.Start();
         }
@@ -251,6 +265,7 @@ namespace WearWare.Architecture.Mode
                     _quickMediaHandler.Stop();
                     _playlistHandler.Start();
                     _modeManager.UpdateState(new ModeState(DisplayMode.Playlist, saveError, preferredMode));
+                    _quickMediaManager.ClearActiveButton();
                     _logger.LogInformation("{tag} Switched to Playlist mode.", _logTag);
                     return;
                 }
@@ -258,8 +273,13 @@ namespace WearWare.Architecture.Mode
                 if (mode == DisplayMode.QuickMedia)
                 {
                     _playlistHandler.Stop();
-                    _quickMediaHandler.Start();
                     _modeManager.UpdateState(new ModeState(DisplayMode.QuickMedia, saveError, preferredMode));
+                    if (_quickMediaManager.ActiveButtonSlot == 0)
+                    {
+                        await RestoreAfterQuickMediaAsync();
+                        return;
+                    }
+                    _quickMediaHandler.Start();
                     if (_quickMediaHandler.State == HandlerState.Failed)
                     {
                         await RestoreAfterQuickMediaAsync();

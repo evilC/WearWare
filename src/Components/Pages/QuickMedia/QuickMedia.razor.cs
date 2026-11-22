@@ -12,7 +12,6 @@ namespace WearWare.Components.Pages.QuickMedia
     public partial class QuickMedia : DataPageBase
     {
         [Inject] private QuickMediaManager QuickMediaManager { get; set; } = null!;
-        [Inject] private QuickMediaHandler QuickMediaHandler { get; set; } = null!;
         [Inject] private LibraryService LibraryService { get; set; } = null!;
         [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
         [Inject] private ILogger<QuickMedia> Logger { get; set; } = null!;
@@ -174,27 +173,9 @@ namespace WearWare.Components.Pages.QuickMedia
         }
 
         // ================================================= Delete Item ==================================================
-        void DeleteQuickMediaButton(int index)
+        async Task DeleteQuickMediaButton(int index)
         {
-            var currentItem = QuickMediaManager.GetButtonItem(index);
-            if (currentItem == null) return;
-            
-            bool wasPlaying = QuickMediaHandler.State == HandlerState.Running && 
-                              QuickMediaManager.ActiveButtonSlot == index;
-            
-            QuickMediaManager.DeleteButtonItem(index);
-            
-            if (wasPlaying)
-            {
-                QuickMediaHandler.Stop();
-                var loadedSlots = QuickMediaManager.GetLoadedButtonSlots();
-                if (loadedSlots.Count > 0)
-                {
-                    QuickMediaManager.SetActiveButton(loadedSlots[0]);
-                    QuickMediaHandler.Start();
-                }
-            }
-            
+            await QuickMediaManager.DeleteButtonItemAsync(index);
             StateHasChanged();
         }
 
@@ -205,7 +186,7 @@ namespace WearWare.Components.Pages.QuickMedia
             var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete quick-media button '{name}'?");
             if (ok)
             {
-                DeleteQuickMediaButton(index);
+                await DeleteQuickMediaButton(index);
             }
         }
 
