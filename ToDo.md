@@ -12,6 +12,8 @@
   ```
 - PlaylistItems refactor? Feels messy. Will also need back as well as forward once we implement back/forward with joystick
 - Re-Add Library preview
+- Relocate files? Some things in services, some in Architecture
+  Need consistent location for various concerns
 - MatrixService - move to new location?
 - Move things from HostedService to Singleton?
 - ButtonHandler should subscribe to GPIO buttons, not the Mode handler?
