@@ -21,6 +21,9 @@ namespace WearWare.Architecture.Playlist
         public HandlerState State => _state;
         public event Action? StateChanged;
 
+        /// <summary>
+        /// Connects the playlist handler to its manager and media player.
+        /// </summary>
         public PlaylistHandler(
             PlaylistManager playlistManager,
             IMediaPlayer mediaPlayer,
@@ -32,6 +35,9 @@ namespace WearWare.Architecture.Playlist
             _playlistManager.StateChanged += OnPlaylistManagerStateChanged;
         }
 
+        /// <summary>
+        /// Restarts playback if the active playlist changes while playback is running.
+        /// </summary>
         private void OnPlaylistManagerStateChanged()
         {
             // Only restart playback if the active playlist name actually changed
@@ -43,6 +49,9 @@ namespace WearWare.Architecture.Playlist
             }
         }
 
+        /// <summary>
+        /// Loads playlists and selects the default if no active playlist is available.
+        /// </summary>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("{tag} starting.", _logTag);
@@ -63,6 +72,9 @@ namespace WearWare.Architecture.Playlist
             await Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Stops playlist playback during application shutdown.
+        /// </summary>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("{tag} stopping.", _logTag);
@@ -146,6 +158,9 @@ namespace WearWare.Architecture.Playlist
             _logger.LogInformation("{tag} Playback stopped.", _logTag);
         }
 
+        /// <summary>
+        /// Updates the handler state and notifies subscribers when it changes.
+        /// </summary>
         private void SetState(HandlerState newState)
         {
             if (_state != newState)
@@ -155,6 +170,9 @@ namespace WearWare.Architecture.Playlist
             }
         }
 
+        /// <summary>
+        /// Returns whether playlist playback is running.
+        /// </summary>
         public bool IsRunning() => _running;
 
         /// <summary>

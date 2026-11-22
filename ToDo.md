@@ -6,6 +6,11 @@
 
 ## Business Logic (New Architecture) changes
 - Move things from HostedService to Singleton?
+- Delete old Services
+- ButtonHandler should subscribe to GPIO buttons, not the Mode handler?
+- ModeHandler should not store previous state, should instead store CurrentState and InterruptingState  
+  That way if QM interrupts Playback with Forever item, and while playing we change mode to Physics...  
+  ... When we end the forever item, it goes to Physics
 
 ## I2C support
 - Battery voltage monitoring / logging

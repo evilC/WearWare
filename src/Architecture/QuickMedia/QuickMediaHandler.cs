@@ -1,6 +1,7 @@
 using WearWare.Common.Media;
 using WearWare.Services.MediaController;
 using WearWare.Architecture.Button;
+using WearWare.Architecture.Mode;
 
 using Iot.Device.Button;
 
@@ -22,15 +23,21 @@ namespace WearWare.Architecture.QuickMedia
         private HandlerState _state = HandlerState.Idle;
         private int? _lastActiveButtonSlot;
         private PlayMode _playingMode;
+        private bool _hasControl;
+        private Func<DisplayMode, Task<bool>>? _requestControl;
+        private Func<DisplayMode, Task>? _releaseControl;
+        private Func<bool>? _controlAvailable;
         private Dictionary<int, int> _buttonIndexToSlot = [];
         private Dictionary<int, GpioButton> _gpioButtons = [];
 
         public string Name => "QuickMedia";
         public HandlerState State => _state;
         public event Action? StateChanged;
-        public event Action<int>? ButtonPressed;
-        public event Action<Task<bool>, bool>? PlaybackCompleted;
+        internal SemaphoreSlim TransitionGate => _quickMediaManager.TransitionGate;
 
+        /// <summary>
+        /// Connects the QM handler to its manager, buttons, and media player.
+        /// </summary>
         public QuickMediaHandler(
             QuickMediaManager quickMediaManager,
             ButtonManager buttonManager,
@@ -39,13 +46,16 @@ namespace WearWare.Architecture.QuickMedia
         {
             _quickMediaManager = quickMediaManager;
             _buttonManager = buttonManager;
-            _mediaPlayer = mediaPlayer;
+            _mediaPlayer = mediaPlayer; 
             _logger = logger;
             _quickMediaManager.StateChanged += OnQuickMediaManagerStateChanged;
             _quickMediaManager.ItemDeleting += OnItemDeleting;
             _quickMediaManager.ItemDeletionFinished += OnItemDeletionFinished;
         }
 
+        /// <summary>
+        /// Stops the item being deleted if it is the current playback.
+        /// </summary>
         private void OnItemDeleting(int buttonSlot)
         {
             if (_lastActiveButtonSlot != buttonSlot || _playTask == null)
@@ -55,6 +65,9 @@ namespace WearWare.Architecture.QuickMedia
             Stop();
         }
 
+        /// <summary>
+        /// Restarts the stopped item if its deletion failed and it is still active.
+        /// </summary>
         private void OnItemDeletionFinished(int buttonSlot, bool deleted)
         {
             var stoppedTask = _playbackStoppedForDeletion;
@@ -66,6 +79,9 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
+        /// <summary>
+        /// Restarts playback if the manager changes the active slot while QM is running.
+        /// </summary>
         private void OnQuickMediaManagerStateChanged()
         {
             if (_running && _quickMediaManager.ActiveButtonSlot != _lastActiveButtonSlot)
@@ -76,6 +92,9 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
+        /// <summary>
+        /// Loads QM items and subscribes to button events without starting playback.
+        /// </summary>
         public void Initialize()
         {
             _logger.LogInformation("{tag} starting.", _logTag);
@@ -86,9 +105,13 @@ namespace WearWare.Architecture.QuickMedia
             _logger.LogInformation("{tag} QuickMedia items loaded. Not starting playback - waiting for mode switch.", _logTag);
         }
 
+        /// <summary>
+        /// Stops playback and releases manager and GPIO subscriptions.
+        /// </summary>
         public void Dispose()
         {
             _logger.LogInformation("{tag} stopping.", _logTag);
+            _hasControl = false;
             _quickMediaManager.StateChanged -= OnQuickMediaManagerStateChanged;
             _quickMediaManager.ItemDeleting -= OnItemDeleting;
             _quickMediaManager.ItemDeletionFinished -= OnItemDeletionFinished;
@@ -102,6 +125,9 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
+        /// <summary>
+        /// Subscribes configured QM buttons to their GPIO press events.
+        /// </summary>
         private void SubscribeToButtonEvents()
         {
             if (_buttonManager.Provider == null)
@@ -144,6 +170,9 @@ namespace WearWare.Architecture.QuickMedia
             _logger.LogInformation("{tag} Button event handlers initialized and enabled.", _logTag);
         }
 
+        /// <summary>
+        /// Disposes the GPIO buttons and clears their subscriptions.
+        /// </summary>
         private void UnsubscribeFromButtonEvents()
         {
             foreach (var gpioButton in _gpioButtons.Values)
@@ -161,17 +190,141 @@ namespace WearWare.Architecture.QuickMedia
             _buttonIndexToSlot.Clear();
         }
 
+        /// <summary>
+        /// Dispatches a GPIO press for asynchronous processing.
+        /// </summary>
         private void OnButtonPressed(int buttonNumber)
         {
-            _logger.LogInformation("{tag} QuickMedia button pressed: button {button}.", _logTag, buttonNumber);
-
-            if (ButtonPressed == null)
-                _logger.LogWarning("{tag} No mode handler available for button {button}.", _logTag, buttonNumber);
-            else
-                ButtonPressed.Invoke(buttonNumber);
+            _ = HandleButtonPressAsync(buttonNumber);
         }
 
-        public bool ActivateButton(int buttonSlot)
+        /// <summary>
+        /// Supplies the callbacks used to request and yield playback control.
+        /// </summary>
+        internal void ConfigureModeControl(Func<DisplayMode, Task<bool>> requestControl, Func<DisplayMode, Task> releaseControl, Func<bool> controlAvailable)
+        {
+            _requestControl = requestControl;
+            _releaseControl = releaseControl;
+            _controlAvailable = controlAvailable;
+        }
+
+        /// <summary>
+        /// Validates a press, requests control when needed, and applies the QM slot change.
+        /// </summary>
+        private async Task HandleButtonPressAsync(int buttonNumber)
+        {
+            if (_controlAvailable == null)
+            {
+                _logger.LogError("{tag} Mode control is not configured.", _logTag);
+                return;
+            }
+            if (!_controlAvailable())
+                return;
+
+            await TransitionGate.WaitAsync();
+            try
+            {
+                _logger.LogInformation("{tag} QuickMedia button pressed: button {button}.", _logTag, buttonNumber);
+                if (!_quickMediaManager.GetQuickMediaButtonNumbers().Contains(buttonNumber) ||
+                    _quickMediaManager.GetButtonItem(buttonNumber) == null)
+                {
+                    _logger.LogWarning("{tag} QuickMedia button {button} is unassigned or has no item.", _logTag, buttonNumber);
+                    return;
+                }
+
+                if (_requestControl == null || _releaseControl == null)
+                {
+                    _logger.LogError("{tag} Mode control is not configured.", _logTag);
+                    return;
+                }
+
+                if (!_hasControl)
+                {
+                    if (!await _requestControl(DisplayMode.QuickMedia))
+                        return;
+                    _hasControl = true;
+                }
+                if (!ActivateButton(buttonNumber))
+                    await YieldControlAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Failed to activate QuickMedia button {button}.", _logTag, buttonNumber);
+                await RecoverAndYieldAsync();
+            }
+            finally
+            {
+                TransitionGate.Release();
+            }
+        }
+
+        /// <summary>
+        /// Yields playback control to the mode coordinator.
+        /// </summary>
+        private async Task YieldControlAsync()
+        {
+            if (_releaseControl == null)
+                throw new InvalidOperationException("Mode control is not configured.");
+
+            await _releaseControl(DisplayMode.QuickMedia);
+            _hasControl = false;
+        }
+
+        /// <summary>
+        /// Deactivates QM and attempts to yield control after an error.
+        /// </summary>
+        private async Task RecoverAndYieldAsync()
+        {
+            if (!_hasControl)
+                return;
+
+            try
+            {
+                Deactivate();
+                await YieldControlAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Failed to yield control after a QuickMedia error.", _logTag);
+            }
+        }
+
+        /// <summary>
+        /// Resumes the saved Forever item when QM is granted control.
+        /// </summary>
+        internal bool Resume()
+        {
+            _hasControl = true;
+            if (ResumeForever())
+                return true;
+
+            _hasControl = false;
+            return false;
+        }
+
+        /// <summary>
+        /// Stops playback without clearing the saved Forever item.
+        /// </summary>
+        internal void Suspend()
+        {
+            _hasControl = false;
+            Stop();
+        }
+
+        /// <summary>
+        /// Stops QM and clears both the active and saved Forever slots.
+        /// </summary>
+        internal void Deactivate()
+        {
+            Suspend();
+            _quickMediaManager.ClearActiveButton();
+            _quickMediaManager.ClearForeverButton();
+        }
+
+        /// <summary>
+        /// Applies a button press to the temporary and Forever items, returning whether QM retains control.
+        /// </summary>
+        private bool ActivateButton(int buttonSlot)
         {
             var item = _quickMediaManager.GetButtonItem(buttonSlot);
             if (item == null)
@@ -214,7 +367,10 @@ namespace WearWare.Architecture.QuickMedia
             return ResumeForever();
         }
 
-        public bool ResumeForever()
+        /// <summary>
+        /// Validates and starts the saved Forever item, returning whether playback started.
+        /// </summary>
+        private bool ResumeForever()
         {
             var buttonSlot = _quickMediaManager.ForeverButtonSlot;
             if (buttonSlot == 0)
@@ -238,7 +394,10 @@ namespace WearWare.Architecture.QuickMedia
             return false;
         }
 
-        public bool CompletePlayback(bool success)
+        /// <summary>
+        /// Cleans up the completed item and resumes Forever if available.
+        /// </summary>
+        private bool CompletePlayback(bool success)
         {
             var finishedForever = _playingMode == PlayMode.Forever &&
                                   _lastActiveButtonSlot == _quickMediaManager.ForeverButtonSlot;
@@ -332,6 +491,9 @@ namespace WearWare.Architecture.QuickMedia
             _logger.LogInformation("{tag} Playback stopped.", _logTag);
         }
 
+        /// <summary>
+        /// Updates the handler state and notifies subscribers when it changes.
+        /// </summary>
         private void SetState(HandlerState newState)
         {
             if (_state != newState)
@@ -341,17 +503,41 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
-        public bool IsCurrentPlayback(Task<bool> task) => ReferenceEquals(_lastPlaybackTask, task);
-
+        /// <summary>
+        /// Returns whether the specified button's Forever item is currently playing.
+        /// </summary>
         public bool IsPlayingForever(int buttonSlot) =>
             _running && _lastActiveButtonSlot == buttonSlot && _playingMode == PlayMode.Forever;
 
+        /// <summary>
+        /// Processes completion of the current playback and yields control if no QM item remains.
+        /// </summary>
         private async Task ObservePlaybackAsync(Task<bool> task, CancellationToken ct)
         {
             var success = await task.ConfigureAwait(false);
-            PlaybackCompleted?.Invoke(task, success || ct.IsCancellationRequested);
+            await TransitionGate.WaitAsync();
+            try
+            {
+                if (!_hasControl || !ReferenceEquals(_lastPlaybackTask, task))
+                    return;
+
+                if (!CompletePlayback(success || ct.IsCancellationRequested))
+                    await YieldControlAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Failed to complete QuickMedia playback.", _logTag);
+                await RecoverAndYieldAsync();
+            }
+            finally
+            {
+                TransitionGate.Release();
+            }
         }
 
+        /// <summary>
+        /// Plays the item's frame sequence and reports whether playback succeeded.
+        /// </summary>
         private bool PlayLoop(PlayableItem item, CancellationToken ct)
         {
             try

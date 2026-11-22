@@ -9,7 +9,6 @@ namespace WearWare.Architecture.Mode
         private readonly ModeManager _modeManager;
         private readonly PlaylistHandler _playlistHandler;
         private readonly QuickMediaHandler _quickMediaHandler;
-        private readonly QuickMediaManager _quickMediaManager;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<ModeHandler> _logger;
         private readonly string _logTag = "[MODEHANDLER]";
@@ -19,31 +18,37 @@ namespace WearWare.Architecture.Mode
         public event Action? StateChanged;
         public ModeState State => _modeManager.State;
 
+        /// <summary>
+        /// Connects the mode coordinator to the playback handlers and their control requests.
+        /// </summary>
         public ModeHandler(
             ModeManager modeManager,
             PlaylistHandler playlistHandler,
             QuickMediaHandler quickMediaHandler,
-            QuickMediaManager quickMediaManager,
             IHostApplicationLifetime lifetime,
             ILogger<ModeHandler> logger)
         {
             _modeManager = modeManager;
             _playlistHandler = playlistHandler;
             _quickMediaHandler = quickMediaHandler;
-            _quickMediaManager = quickMediaManager;
-            _transition = quickMediaManager.TransitionGate;
+            _transition = quickMediaHandler.TransitionGate;
             _lifetime = lifetime;
             _logger = logger;
             _modeManager.StateChanged += OnModeManagerStateChanged;
-            _quickMediaHandler.ButtonPressed += OnQuickMediaButtonPressed;
-            _quickMediaHandler.PlaybackCompleted += OnQuickMediaPlaybackCompleted;
+            _quickMediaHandler.ConfigureModeControl(RequestControlAsync, ReleaseControlAsync, () => _started && !_stopping);
         }
 
+        /// <summary>
+        /// Forwards mode state changes to subscribers.
+        /// </summary>
         private void OnModeManagerStateChanged()
         {
             StateChanged?.Invoke();
         }
 
+        /// <summary>
+        /// Starts playback for the persisted mode, restoring the interrupted mode if QM cannot resume.
+        /// </summary>
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("{tag} starting.", _logTag);
@@ -53,21 +58,31 @@ namespace WearWare.Architecture.Mode
                 _stopping = true;
             });
 
-            if (State.Mode == DisplayMode.QuickMedia)
+            await _transition.WaitAsync(cancellationToken);
+            try
             {
-                if (!_quickMediaHandler.ResumeForever())
-                    await RestoreAfterQuickMediaAsync();
-            }
-            else
-            {
-                _quickMediaManager.ClearActiveButton();
-                _quickMediaManager.ClearForeverButton();
-                _playlistHandler.Start();
-            }
+                if (State.Mode == DisplayMode.QuickMedia)
+                {
+                    if (!_quickMediaHandler.Resume())
+                        await RestoreInterruptedModeAsync();
+                }
+                else
+                {
+                    _quickMediaHandler.Deactivate();
+                    _playlistHandler.Start();
+                }
 
-            _started = true;
+                _started = true;
+            }
+            finally
+            {
+                _transition.Release();
+            }
         }
 
+        /// <summary>
+        /// Stops playback during application shutdown without clearing the saved QM item.
+        /// </summary>
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("{tag} stopping.", _logTag);
@@ -76,7 +91,7 @@ namespace WearWare.Architecture.Mode
             try
             {
                 _playlistHandler.Stop();
-                _quickMediaHandler.Stop();
+                _quickMediaHandler.Suspend();
             }
             finally
             {
@@ -84,6 +99,9 @@ namespace WearWare.Architecture.Mode
             }
         }
 
+        /// <summary>
+        /// Validates and applies a requested display mode.
+        /// </summary>
         public Task SetModeAsync(DisplayMode mode)
         {
             if (mode != DisplayMode.Playlist && mode != DisplayMode.QuickMedia)
@@ -93,105 +111,55 @@ namespace WearWare.Architecture.Mode
             return ChangeModeAsync(mode);
         }
 
-        private void OnQuickMediaButtonPressed(int buttonNumber)
+        /// <summary>
+        /// Grants QM control after stopping Playlist and recording the interrupted mode.
+        /// The requesting handler holds the transition gate until it has applied the grant.
+        /// </summary>
+        private async Task<bool> RequestControlAsync(DisplayMode requestedMode)
         {
-            _ = ActivateQuickMediaAsync(buttonNumber);
-        }
+            if (requestedMode != DisplayMode.QuickMedia)
+                throw new ArgumentOutOfRangeException(nameof(requestedMode));
 
-        private async Task ActivateQuickMediaAsync(int buttonNumber)
-        {
-            await _transition.WaitAsync();
+            if (_stopping || !_started)
+                return false;
+            if (State.Mode == requestedMode)
+                return true;
+
             var playlistWasRunning = false;
             try
             {
-                if (_stopping || !_started)
-                    return;
+                playlistWasRunning = _playlistHandler.IsRunning();
+                _playlistHandler.Stop();
+                if (await _modeManager.SetModeWithInterrupt(requestedMode))
+                    return true;
 
-                if (!_quickMediaManager.GetQuickMediaButtonNumbers().Contains(buttonNumber) ||
-                    _quickMediaManager.GetButtonItem(buttonNumber) == null)
-                {
-                    _logger.LogWarning("{tag} QuickMedia button {button} is unassigned or has no item.", _logTag, buttonNumber);
-                    return;
-                }
-
-                if (State.Mode != DisplayMode.QuickMedia)
-                {
-                    playlistWasRunning = _playlistHandler.IsRunning();
-                    _playlistHandler.Stop();
-
-                    if (!await _modeManager.SetModeWithInterrupt(DisplayMode.QuickMedia))
-                    {
-                        _logger.LogError("{tag} Could not switch to QuickMedia.", _logTag);
-                        await RecoverFromFailedActivationAsync(playlistWasRunning);
-                        return;
-                    }
-                }
-
-                if (!_quickMediaHandler.ActivateButton(buttonNumber))
-                    await RestoreAfterQuickMediaAsync();
+                _logger.LogError("{tag} Could not grant control to {mode}.", _logTag, requestedMode);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{tag} Failed to activate QuickMedia button {button}.", _logTag, buttonNumber);
-                if (!_stopping)
-                {
-                    try
-                    {
-                        await RecoverFromFailedActivationAsync(playlistWasRunning);
-                    }
-                    catch (Exception restoreException)
-                    {
-                        _logger.LogError(restoreException, "{tag} Failed to recover Playlist playback.", _logTag);
-                    }
-                }
+                _logger.LogError(ex, "{tag} Failed to grant control to {mode}.", _logTag, requestedMode);
             }
-            finally
-            {
-                _transition.Release();
-            }
+
+            if (State.Mode == requestedMode && !_stopping)
+                await RestoreInterruptedModeAsync();
+            else if (playlistWasRunning && !_stopping)
+                _playlistHandler.Start();
+            return false;
         }
 
-        private async Task RecoverFromFailedActivationAsync(bool playlistWasRunning)
+        /// <summary>
+        /// Restores the interrupted mode when the current mode yields control.
+        /// </summary>
+        private async Task ReleaseControlAsync(DisplayMode releasingMode)
         {
-            _quickMediaHandler.Stop();
-            if (State.Mode == DisplayMode.QuickMedia)
-                await RestoreAfterQuickMediaAsync();
-            else
-            {
-                _quickMediaManager.ClearActiveButton();
-                _quickMediaManager.ClearForeverButton();
-                if (playlistWasRunning && !_stopping)
-                    _playlistHandler.Start();
-            }
+            if (!_stopping && State.Mode == releasingMode)
+                await RestoreInterruptedModeAsync();
         }
 
-        private void OnQuickMediaPlaybackCompleted(Task<bool> task, bool success)
-        {
-            _ = CompleteQuickMediaAsync(task, success);
-        }
-
-        private async Task CompleteQuickMediaAsync(Task<bool> task, bool success)
-        {
-            await _transition.WaitAsync();
-            try
-            {
-                if (_stopping || State.Mode != DisplayMode.QuickMedia || !_quickMediaHandler.IsCurrentPlayback(task))
-                    return;
-
-                if (!_quickMediaHandler.CompletePlayback(success))
-                    await RestoreAfterQuickMediaAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{tag} Failed to restore mode after QuickMedia.", _logTag);
-            }
-            finally
-            {
-                _transition.Release();
-            }
-        }
-
-        private async Task RestoreAfterQuickMediaAsync()
+        /// <summary>
+        /// Restores the saved interrupted mode, falling back to Playlist if restoration fails.
+        /// </summary>
+        private async Task RestoreInterruptedModeAsync()
         {
             if (!await _modeManager.RestoreInterruptedMode())
             {
@@ -203,12 +171,13 @@ namespace WearWare.Architecture.Mode
                 });
             }
 
-            _quickMediaManager.ClearActiveButton();
-            _quickMediaManager.ClearForeverButton();
             if (State.Mode == DisplayMode.Playlist && !_stopping)
                 _playlistHandler.Start();
         }
 
+        /// <summary>
+        /// Persists a mode selection and coordinates the corresponding playback transition.
+        /// </summary>
         private async Task ChangeModeAsync(DisplayMode requestedMode)
         {
             await _transition.WaitAsync();
@@ -244,11 +213,9 @@ namespace WearWare.Architecture.Mode
 
                 if (mode == DisplayMode.Playlist)
                 {
-                    _quickMediaHandler.Stop();
+                    _quickMediaHandler.Deactivate();
                     _playlistHandler.Start();
                     _modeManager.UpdateState(new ModeState(DisplayMode.Playlist, saveError, preferredMode));
-                    _quickMediaManager.ClearActiveButton();
-                    _quickMediaManager.ClearForeverButton();
                     _logger.LogInformation("{tag} Switched to Playlist mode.", _logTag);
                     return;
                 }
@@ -257,9 +224,9 @@ namespace WearWare.Architecture.Mode
                 {
                     _playlistHandler.Stop();
                     _modeManager.UpdateState(new ModeState(DisplayMode.QuickMedia, saveError, preferredMode));
-                    if (!_quickMediaHandler.ResumeForever())
+                    if (!_quickMediaHandler.Resume())
                     {
-                        await RestoreAfterQuickMediaAsync();
+                        await RestoreInterruptedModeAsync();
                         return;
                     }
                     _logger.LogInformation("{tag} Switched to QuickMedia mode.", _logTag);
