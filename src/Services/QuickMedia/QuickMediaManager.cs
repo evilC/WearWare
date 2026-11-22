@@ -1,9 +1,10 @@
 using WearWare.Common.Media;
+using WearWare.Architecture;
 using WearWare.Utils;
 using WearWare.Services.Button;
 using System.Device.Gpio;
 
-namespace WearWare.Architecture.QuickMedia
+namespace WearWare.Services.QuickMedia
 {
     record QuickMediaDto(int ButtonNumber, PlayableItem Item);
     public class QuickMediaManager : IManager

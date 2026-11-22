@@ -1,5 +1,5 @@
 using WearWare.Services.Playlist;
-using WearWare.Architecture.QuickMedia;
+using WearWare.Services.QuickMedia;
 using WearWare.Services.Physics;
 
 namespace WearWare.Architecture.Mode

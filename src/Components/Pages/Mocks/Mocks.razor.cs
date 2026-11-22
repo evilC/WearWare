@@ -1,6 +1,6 @@
 /*
 The old mock button path bypasses mode coordination; replace it with a coordinated button trigger.
-using WearWare.Architecture.QuickMedia;
+using WearWare.Services.QuickMedia;
 using WearWare.Components.Base;
 
 namespace WearWare.Components.Pages.Mocks

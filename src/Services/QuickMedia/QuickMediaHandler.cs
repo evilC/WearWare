@@ -1,11 +1,12 @@
 using WearWare.Common.Media;
+using WearWare.Architecture;
 using WearWare.Services.Playback;
 using WearWare.Services.Button;
 using WearWare.Architecture.Mode;
 
 using Iot.Device.Button;
 
-namespace WearWare.Architecture.QuickMedia
+namespace WearWare.Services.QuickMedia
 {
     public class QuickMediaHandler : IHandler, IDisposable
     {

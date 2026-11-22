@@ -3,7 +3,7 @@ using WearWare.Common.Media;
 using WearWare.Config;
 using WearWare.Utils;
 
-namespace WearWare.Architecture.QuickMedia
+namespace WearWare.Services.QuickMedia
 {
     /// <summary>
     /// Represents a quick media item - a simplified media item for quick button-triggered playback.

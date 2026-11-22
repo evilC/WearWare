@@ -11,4 +11,4 @@ These are known issues in the current Playback, QuickMedia, and mode-switching i
 
 The edit path ignores the return value of `QuickMediaManager.UpsertButtonItem` and reports success even when the manager returns `false`.
 
-Relevant code: [QuickMedia.razor.cs](../src/Components/Pages/QuickMedia/QuickMedia.razor.cs) and [QuickMediaManager.cs](../src/Architecture/QuickMedia/QuickMediaManager.cs).
+Relevant code: [QuickMedia.razor.cs](../src/Components/Pages/QuickMedia/QuickMedia.razor.cs) and [QuickMediaManager.cs](../src/Services/QuickMedia/QuickMediaManager.cs).

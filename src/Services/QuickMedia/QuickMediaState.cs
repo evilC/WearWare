@@ -1,6 +1,6 @@
 using WearWare.Utils;
 
-namespace WearWare.Architecture.QuickMedia
+namespace WearWare.Services.QuickMedia
 {
     public class QuickMediaState
     {
