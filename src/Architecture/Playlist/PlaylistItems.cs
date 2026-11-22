@@ -1,7 +1,7 @@
 using WearWare.Services.MatrixConfig;
 using WearWare.Utils;
 
-namespace WearWare.Services.Playlist
+namespace WearWare.Architecture.Playlist
 {
 
     // Contains a list of playable items in a playlist

@@ -12,6 +12,7 @@
   using ArchitectureMediaPlayer = WearWare.Architecture.Playback.IMediaPlayer;
   using ArchitectureRpiMediaPlayer = WearWare.Architecture.Playback.RpiMediaPlayer;
   ```
+- PlaylistItems refactor? Feels messy. Will also need back as well as forward once we implement back/forward with joystick
 - Re-Add Library preview
 - Move things from HostedService to Singleton?
 - Delete old Services

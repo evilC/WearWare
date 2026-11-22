@@ -3,7 +3,6 @@ using WearWare.Components.Endpoints;
 using WearWare.Services.Import;
 using WearWare.Services.Library;
 using WearWare.Services.MediaController;
-using WearWare.Services.QuickMedia;
 using WearWare.Services.Mocks;
 using System.Net;
 

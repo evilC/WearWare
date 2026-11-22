@@ -1,4 +1,5 @@
 using WearWare.Components.Forms.EditPlayableItemForm;
+using WearWare.Architecture.Playlist;
 using WearWare.Services.MatrixConfig;
 using WearWare.Services.MediaController;
 using WearWare.Services.OperationProgress;

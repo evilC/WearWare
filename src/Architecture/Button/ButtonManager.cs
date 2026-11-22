@@ -1,5 +1,3 @@
-using WearWare.Services.QuickMedia;
-
 namespace WearWare.Architecture.Button
 {
     /// <summary>

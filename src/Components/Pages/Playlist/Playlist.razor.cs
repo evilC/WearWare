@@ -2,7 +2,6 @@ using WearWare.Components.Base;
 using WearWare.Components.Forms.AddCopyPlaylistForm;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
-using WearWare.Services.Playlist;
 using WearWare.Services.OperationProgress;
 using WearWare.Utils;
 using WearWare.Architecture;

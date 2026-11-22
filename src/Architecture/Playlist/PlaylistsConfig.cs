@@ -1,7 +1,7 @@
 using WearWare.Config;
 using WearWare.Utils;
 
-namespace WearWare.Services.Playlist
+namespace WearWare.Architecture.Playlist
 {
     public class PlaylistsConfig
     {

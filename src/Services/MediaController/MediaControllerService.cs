@@ -1,5 +1,5 @@
 using WearWare.Common.Media;
-using WearWare.Services.Playlist;
+using WearWare.Architecture.Playlist;
 
 namespace WearWare.Services.MediaController
 {

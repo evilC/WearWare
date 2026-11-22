@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace WearWare.Services.QuickMedia
+namespace WearWare.Architecture.Button
 {
     public sealed class QuickMediaButtonsConfig
     {

@@ -1,7 +1,7 @@
 using WearWare.Config;
 using WearWare.Utils;
 
-namespace WearWare.Services.Playlist
+namespace WearWare.Architecture.Playlist
 {
     // Configuration settings for a playlist
     // Stored separately from the playlist items themselves because this will be serialized A LOT

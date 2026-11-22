@@ -1,5 +1,4 @@
 using WearWare.Common.Media;
-using WearWare.Services.Playlist;
 using WearWare.Services.OperationProgress;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Utils;

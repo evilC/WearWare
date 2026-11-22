@@ -2,7 +2,7 @@ using System.Text.Json;
 using WearWare.Config;
 using WearWare.Utils;
 
-namespace WearWare.Services.QuickMedia
+namespace WearWare.Architecture.Button
 {
     public sealed class QuickMediaButtonsConfigService
     {
