@@ -14,7 +14,6 @@
   I think all it really does currently is remove "Enabled" from QuickMediaItem?
 - Relocate files / name things better 
   - Get rid of Architecture folder - move stuff back into Services
-- MatrixService - move to new location?
 - Move things from HostedService to Singleton?
 - ButtonHandler should subscribe to GPIO buttons, not each Mode's handler?  
   ButtonHandler should handle subscribing to the physical GPIO button, and then route events to the handler.  

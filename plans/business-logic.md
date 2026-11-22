@@ -127,7 +127,7 @@ Playlist and Physics are interruptible. Future modes such as Preview and Setting
 
 ### Matrix
 
-`MatrixService` owns the physical matrix instance and its lifecycle, and locks access during matrix operations and replacement. `ModeHandler` coordinates which Handler may use the display, and waits for the current Handler to stop before starting another. Mode Handlers should not start or stop one another directly.
+`MatrixDisplay` owns the physical matrix instance and its lifecycle, and locks access during matrix operations and replacement. `ModeHandler` coordinates which Handler may use the display, and waits for the current Handler to stop before starting another. Mode Handlers should not start or stop one another directly.
 
 Structural matrix options changes still need coordinated suspension and resumption of playback; a Forever item can otherwise hold the matrix lock indefinitely.
 
