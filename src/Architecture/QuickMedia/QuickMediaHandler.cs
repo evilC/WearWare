@@ -171,6 +171,86 @@ namespace WearWare.Architecture.QuickMedia
                 ButtonPressed.Invoke(buttonNumber);
         }
 
+        public bool ActivateButton(int buttonSlot)
+        {
+            var item = _quickMediaManager.GetButtonItem(buttonSlot);
+            if (item == null)
+            {
+                _logger.LogWarning("{tag} No QuickMedia item in slot {slot}.", _logTag, buttonSlot);
+                return _running;
+            }
+
+            var temporaryPlaying = _running && _playingMode != PlayMode.Forever;
+            if (_quickMediaManager.ForeverButtonSlot == buttonSlot)
+            {
+                _quickMediaManager.ClearForeverButton();
+                if (temporaryPlaying)
+                    return true;
+
+                Stop();
+                _quickMediaManager.ClearActiveButton();
+                return false;
+            }
+
+            if (item.PlayMode == PlayMode.Forever)
+            {
+                if (!_quickMediaManager.SetForeverButton(buttonSlot))
+                    return _running || ResumeForever();
+                if (temporaryPlaying)
+                    return true;
+            }
+
+            Stop();
+            if (_quickMediaManager.SetActiveButton(buttonSlot))
+            {
+                Start();
+                if (State != HandlerState.Failed)
+                    return true;
+            }
+
+            if (item.PlayMode == PlayMode.Forever)
+                _quickMediaManager.ClearForeverButton();
+            _quickMediaManager.ClearActiveButton();
+            return ResumeForever();
+        }
+
+        public bool ResumeForever()
+        {
+            var buttonSlot = _quickMediaManager.ForeverButtonSlot;
+            if (buttonSlot == 0)
+                return false;
+
+            if (_quickMediaManager.GetButtonItem(buttonSlot)?.PlayMode != PlayMode.Forever ||
+                !_quickMediaManager.SetActiveButton(buttonSlot))
+            {
+                _logger.LogWarning("{tag} Cannot resume Forever item in slot {slot}.", _logTag, buttonSlot);
+                _quickMediaManager.ClearForeverButton();
+                _quickMediaManager.ClearActiveButton();
+                return false;
+            }
+
+            Start();
+            if (State != HandlerState.Failed)
+                return true;
+
+            _quickMediaManager.ClearForeverButton();
+            _quickMediaManager.ClearActiveButton();
+            return false;
+        }
+
+        public bool CompletePlayback(bool success)
+        {
+            var finishedForever = _playingMode == PlayMode.Forever &&
+                                  _lastActiveButtonSlot == _quickMediaManager.ForeverButtonSlot;
+            Stop();
+            _quickMediaManager.ClearActiveButton();
+            if (finishedForever)
+                _quickMediaManager.ClearForeverButton();
+            if (!success)
+                _logger.LogError("{tag} QuickMedia playback failed.", _logTag);
+            return ResumeForever();
+        }
+
         /// <summary>
         /// Starts playback of the active quick media item.
         /// </summary>

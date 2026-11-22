@@ -22,7 +22,17 @@ namespace WearWare.Architecture.QuickMedia
         {
             var path = GetConfigFilePath();
             Directory.CreateDirectory(PathConfig.QuickMediaPath);
-            JsonUtils.ToJsonFile(path, this);
+            var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
+            try
+            {
+                JsonUtils.ToJsonFile(temporaryPath, this);
+                File.Move(temporaryPath, path, true);
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                    File.Delete(temporaryPath);
+            }
         }
 
         private static string GetConfigFilePath()

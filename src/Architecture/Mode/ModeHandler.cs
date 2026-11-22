@@ -55,20 +55,13 @@ namespace WearWare.Architecture.Mode
 
             if (State.Mode == DisplayMode.QuickMedia)
             {
-                if (_quickMediaManager.ActiveButtonSlot == 0)
-                {
+                if (!_quickMediaHandler.ResumeForever())
                     await RestoreAfterQuickMediaAsync();
-                }
-                else
-                {
-                    _quickMediaHandler.Start();
-                    if (_quickMediaHandler.State == HandlerState.Failed)
-                        await RestoreAfterQuickMediaAsync();
-                }
             }
             else
             {
                 _quickMediaManager.ClearActiveButton();
+                _quickMediaManager.ClearForeverButton();
                 _playlistHandler.Start();
             }
 
@@ -114,13 +107,6 @@ namespace WearWare.Architecture.Mode
                 if (_stopping || !_started)
                     return;
 
-                if (State.Mode == DisplayMode.QuickMedia && _quickMediaHandler.IsPlayingForever(buttonNumber))
-                {
-                    _quickMediaHandler.Stop();
-                    await RestoreAfterQuickMediaAsync();
-                    return;
-                }
-
                 if (!_quickMediaManager.GetQuickMediaButtonNumbers().Contains(buttonNumber) ||
                     _quickMediaManager.GetButtonItem(buttonNumber) == null)
                 {
@@ -128,24 +114,20 @@ namespace WearWare.Architecture.Mode
                     return;
                 }
 
-                playlistWasRunning = _playlistHandler.IsRunning();
-                _playlistHandler.Stop();
-                _quickMediaHandler.Stop();
-                if (!_quickMediaManager.SetActiveButton(buttonNumber))
+                if (State.Mode != DisplayMode.QuickMedia)
                 {
-                    await RecoverFromFailedActivationAsync(playlistWasRunning);
-                    return;
+                    playlistWasRunning = _playlistHandler.IsRunning();
+                    _playlistHandler.Stop();
+
+                    if (!await _modeManager.SetModeWithInterrupt(DisplayMode.QuickMedia))
+                    {
+                        _logger.LogError("{tag} Could not switch to QuickMedia.", _logTag);
+                        await RecoverFromFailedActivationAsync(playlistWasRunning);
+                        return;
+                    }
                 }
 
-                if (!await _modeManager.SetModeWithInterrupt(DisplayMode.QuickMedia))
-                {
-                    _logger.LogError("{tag} Could not switch to QuickMedia.", _logTag);
-                    await RecoverFromFailedActivationAsync(playlistWasRunning);
-                    return;
-                }
-
-                _quickMediaHandler.Start();
-                if (_quickMediaHandler.State == HandlerState.Failed)
+                if (!_quickMediaHandler.ActivateButton(buttonNumber))
                     await RestoreAfterQuickMediaAsync();
             }
             catch (Exception ex)
@@ -177,6 +159,7 @@ namespace WearWare.Architecture.Mode
             else
             {
                 _quickMediaManager.ClearActiveButton();
+                _quickMediaManager.ClearForeverButton();
                 if (playlistWasRunning && !_stopping)
                     _playlistHandler.Start();
             }
@@ -195,10 +178,8 @@ namespace WearWare.Architecture.Mode
                 if (_stopping || State.Mode != DisplayMode.QuickMedia || !_quickMediaHandler.IsCurrentPlayback(task))
                     return;
 
-                _quickMediaHandler.Stop();
-                if (!success)
-                    _logger.LogError("{tag} QuickMedia playback failed; returning to Playlist.", _logTag);
-                await RestoreAfterQuickMediaAsync();
+                if (!_quickMediaHandler.CompletePlayback(success))
+                    await RestoreAfterQuickMediaAsync();
             }
             catch (Exception ex)
             {
@@ -223,6 +204,7 @@ namespace WearWare.Architecture.Mode
             }
 
             _quickMediaManager.ClearActiveButton();
+            _quickMediaManager.ClearForeverButton();
             if (State.Mode == DisplayMode.Playlist && !_stopping)
                 _playlistHandler.Start();
         }
@@ -266,6 +248,7 @@ namespace WearWare.Architecture.Mode
                     _playlistHandler.Start();
                     _modeManager.UpdateState(new ModeState(DisplayMode.Playlist, saveError, preferredMode));
                     _quickMediaManager.ClearActiveButton();
+                    _quickMediaManager.ClearForeverButton();
                     _logger.LogInformation("{tag} Switched to Playlist mode.", _logTag);
                     return;
                 }
@@ -274,13 +257,7 @@ namespace WearWare.Architecture.Mode
                 {
                     _playlistHandler.Stop();
                     _modeManager.UpdateState(new ModeState(DisplayMode.QuickMedia, saveError, preferredMode));
-                    if (_quickMediaManager.ActiveButtonSlot == 0)
-                    {
-                        await RestoreAfterQuickMediaAsync();
-                        return;
-                    }
-                    _quickMediaHandler.Start();
-                    if (_quickMediaHandler.State == HandlerState.Failed)
+                    if (!_quickMediaHandler.ResumeForever())
                     {
                         await RestoreAfterQuickMediaAsync();
                         return;

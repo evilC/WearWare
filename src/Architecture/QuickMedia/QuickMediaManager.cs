@@ -24,6 +24,7 @@ namespace WearWare.Architecture.QuickMedia
         internal SemaphoreSlim TransitionGate { get; } = new(1, 1);
 
         public int ActiveButtonSlot => _activeButtonSlot;
+        public int ForeverButtonSlot => _stateConfig.ActiveSlotNumber;
         public QuickMediaItem? ActiveButtonItem => _buttonSlotItems.TryGetValue(_activeButtonSlot, out var item) ? item : null;
 
         public QuickMediaManager(ILogger<QuickMediaManager> logger, ILoggerFactory loggerFactory, ButtonManager buttonManager)
@@ -32,9 +33,7 @@ namespace WearWare.Architecture.QuickMedia
             _loggerFactory = loggerFactory;
             _buttonManager = buttonManager;
             _stateConfig = QuickMediaStateConfig.Deserialize() ?? new QuickMediaStateConfig();
-            _activeButtonSlot = _stateConfig.ActiveSlotNumber;
-            _stateConfig.Serialize();
-            _logger.LogInformation("{tag} initialized. Active button slot: {slot}.", _logTag, _activeButtonSlot);
+            _logger.LogInformation("{tag} initialized. Forever button slot: {slot}.", _logTag, ForeverButtonSlot);
         }
 
         /// <summary>
@@ -147,8 +146,6 @@ namespace WearWare.Architecture.QuickMedia
             }
 
             _activeButtonSlot = buttonSlot;
-            _stateConfig.ActiveSlotNumber = buttonSlot;
-            _stateConfig.Serialize();
             _logger.LogInformation("{tag} Active button slot set to {slot}.", _logTag, buttonSlot);
             StateChanged?.Invoke();
             return true;
@@ -160,6 +157,39 @@ namespace WearWare.Architecture.QuickMedia
                 return;
 
             _activeButtonSlot = 0;
+            StateChanged?.Invoke();
+        }
+
+        public bool SetForeverButton(int buttonSlot)
+        {
+            if (GetButtonItem(buttonSlot)?.PlayMode != PlayMode.Forever ||
+                !GetQuickMediaButtonNumbers().Contains(buttonSlot))
+            {
+                _logger.LogWarning("{tag} Cannot set Forever button: slot {slot} has no assigned Forever item.", _logTag, buttonSlot);
+                return false;
+            }
+
+            var previousSlot = _stateConfig.ActiveSlotNumber;
+            _stateConfig.ActiveSlotNumber = buttonSlot;
+            try
+            {
+                _stateConfig.Serialize();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _stateConfig.ActiveSlotNumber = previousSlot;
+                _logger.LogError(ex, "{tag} Could not save Forever button slot {slot}.", _logTag, buttonSlot);
+                return false;
+            }
+            StateChanged?.Invoke();
+            return true;
+        }
+
+        public void ClearForeverButton()
+        {
+            if (ForeverButtonSlot == 0)
+                return;
+
             _stateConfig.ActiveSlotNumber = 0;
             try
             {
@@ -167,7 +197,7 @@ namespace WearWare.Architecture.QuickMedia
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                _logger.LogError(ex, "{tag} Could not save cleared active button slot.", _logTag);
+                _logger.LogError(ex, "{tag} Could not save cleared Forever button slot.", _logTag);
             }
             StateChanged?.Invoke();
         }
@@ -295,11 +325,9 @@ namespace WearWare.Architecture.QuickMedia
                 _buttonSlotItems[buttonSlot] = null;
 
                 if (_activeButtonSlot == buttonSlot)
-                {
                     _activeButtonSlot = 0;
-                    _stateConfig.ActiveSlotNumber = 0;
-                    _stateConfig.Serialize();
-                }
+                if (ForeverButtonSlot == buttonSlot)
+                    ClearForeverButton();
 
                 _logger.LogInformation("{tag} Deleted quick media item for slot {slot}.", _logTag, buttonSlot);
                 StateChanged?.Invoke();
