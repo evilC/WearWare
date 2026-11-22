@@ -1,6 +1,6 @@
-using WearWare.Services.Imu;
+using WearWare.Architecture.Physics.Imu;
 using WearWare.Services.MediaController;
-using WearWare.Services.Simulations;
+using WearWare.Architecture.Physics.Simulations;
 
 /*
 Disabled: ModeService is currently replaced by ModeManager + ModeHandler.

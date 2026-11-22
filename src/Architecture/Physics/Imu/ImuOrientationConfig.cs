@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using WearWare.Utils;
 
-namespace WearWare.Services.Imu
+namespace WearWare.Architecture.Physics.Imu
 {
     internal sealed class ImuOrientationConfig
     {

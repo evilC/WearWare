@@ -5,7 +5,8 @@ namespace WearWare.Architecture.Mode
     public enum DisplayMode
     {
         Playlist,
-        QuickMedia
+        QuickMedia,
+        Physics
     }
 
     public sealed record ModeState(DisplayMode Mode, string? Message, DisplayMode PreferredMode);

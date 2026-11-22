@@ -17,17 +17,15 @@ using WearWare.Services.OperationProgress;
 using WearWare.Services.Environment;
 using WearWare.Services.Options;
 using WearWare.Services.TempMon;
-using WearWare.Services.Imu;
-using WearWare.Services.Imu.Sensors;
 using WearWare.Services.Matrix;
-using WearWare.Services.Simulations.Ball;
-using WearWare.Services.Simulations.Fluid;
-using WearWare.Services.Simulations.ImuTest;
 using WearWare.Architecture.Display;
 using WearWare.Architecture.Playlist;
 using WearWare.Architecture.QuickMedia;
 using WearWare.Architecture.Mode;
 using WearWare.Architecture.Button;
+using WearWare.Architecture.Physics;
+using WearWare.Architecture.Physics.Imu;
+using WearWare.Architecture.Physics.Imu.Sensors;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -107,9 +105,6 @@ else
         sp.GetRequiredService<IMatrixDisplay>(),
         sp.GetRequiredService<ILogger<MatrixController>>()));
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
-    builder.Services.AddSingleton<ImuTestRenderer>();
-    builder.Services.AddSingleton<BallPhysicsRenderer>();
-    builder.Services.AddSingleton<FluidRenderer>();
     // Old QuickMediaService infrastructure - no longer used. QuickMediaHandler uses the new ButtonManager.
     // Keeping this code as-is for reference in case rollback is needed.
     /*
@@ -138,6 +133,7 @@ builder.Services.AddSingleton<ButtonFunctionMappingService>();
 builder.Services.AddSingleton<QuickMediaHandler>();
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<ModeManager>();
+builder.Services.AddSingleton<PhysicsHandler>();
 builder.Services.AddSingleton<ModeHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeHandler>());
 builder.Services.AddSingleton<IOperationProgressService, OperationProgressService>();

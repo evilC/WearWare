@@ -1,10 +1,10 @@
 using System.Diagnostics;
 using RPiRgbLEDMatrix;
-using WearWare.Services.Imu;
+using WearWare.Architecture.Physics.Imu;
 using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Services.Simulations
+namespace WearWare.Architecture.Physics.Simulations
 {
     public abstract class PhysicsRenderer : IPhysicsRenderer
     {

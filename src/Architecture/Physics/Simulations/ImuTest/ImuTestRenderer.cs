@@ -1,9 +1,9 @@
 using RPiRgbLEDMatrix;
-using WearWare.Services.Imu;
+using WearWare.Architecture.Physics.Imu;
 using WearWare.Services.Matrix;
 using WearWare.Services.MatrixConfig;
 
-namespace WearWare.Services.Simulations.ImuTest
+namespace WearWare.Architecture.Physics.Simulations.ImuTest
 {
     public sealed class ImuTestRenderer : PhysicsRenderer
     {

@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace WearWare.Services.Imu.Sensors
+namespace WearWare.Architecture.Physics.Imu.Sensors
 {
     public interface IImuSensor : IDisposable
     {

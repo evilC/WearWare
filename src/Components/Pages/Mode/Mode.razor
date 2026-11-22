@@ -17,6 +17,9 @@
     <button class="btn @(ModeHandler.State.Mode == DisplayMode.QuickMedia ? "btn-primary" : "btn-outline-primary")"
             disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.QuickMedia && ModeHandler.State.PreferredMode == DisplayMode.QuickMedia))"
             @onclick="() => ChangeMode(DisplayMode.QuickMedia)">QuickMedia</button>
+    <button class="btn @(ModeHandler.State.Mode == DisplayMode.Physics ? "btn-primary" : "btn-outline-primary")"
+            disabled="@(_changing || (ModeHandler.State.Mode == DisplayMode.Physics && ModeHandler.State.PreferredMode == DisplayMode.Physics))"
+            @onclick="() => ChangeMode(DisplayMode.Physics)">Physics (Fluid)</button>
 </div>
 
 @if (ModeHandler.State.Mode != ModeHandler.State.PreferredMode)

@@ -1,5 +1,6 @@
 using WearWare.Architecture.Playlist;
 using WearWare.Architecture.QuickMedia;
+using WearWare.Architecture.Physics;
 
 namespace WearWare.Architecture.Mode
 {
@@ -9,6 +10,9 @@ namespace WearWare.Architecture.Mode
         private readonly ModeManager _modeManager;
         private readonly PlaylistHandler _playlistHandler;
         private readonly QuickMediaHandler _quickMediaHandler;
+        private readonly PhysicsHandler _physicsHandler;
+        private CancellationTokenSource? _physicsCancellation;
+        private Task? _physicsTask;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<ModeHandler> _logger;
         private readonly string _logTag = "[MODEHANDLER]";
@@ -25,12 +29,14 @@ namespace WearWare.Architecture.Mode
             ModeManager modeManager,
             PlaylistHandler playlistHandler,
             QuickMediaHandler quickMediaHandler,
+            PhysicsHandler physicsHandler,
             IHostApplicationLifetime lifetime,
             ILogger<ModeHandler> logger)
         {
             _modeManager = modeManager;
             _playlistHandler = playlistHandler;
             _quickMediaHandler = quickMediaHandler;
+            _physicsHandler = physicsHandler;
             _transition = quickMediaHandler.TransitionGate;
             _lifetime = lifetime;
             _logger = logger;
@@ -66,6 +72,12 @@ namespace WearWare.Architecture.Mode
                     if (!_quickMediaHandler.Resume())
                         await RestoreInterruptedModeAsync();
                 }
+                else if (State.Mode == DisplayMode.Physics)
+                {
+                    _quickMediaHandler.Deactivate();
+                    _playlistHandler.Stop();
+                    _ = RestorePhysicsAsync(_lifetime.ApplicationStopping);
+                }
                 else
                 {
                     _quickMediaHandler.Deactivate();
@@ -92,6 +104,7 @@ namespace WearWare.Architecture.Mode
             {
                 _playlistHandler.Stop();
                 _quickMediaHandler.Suspend();
+                await StopPhysicsAsync();
             }
             finally
             {
@@ -104,7 +117,7 @@ namespace WearWare.Architecture.Mode
         /// </summary>
         public Task SetModeAsync(DisplayMode mode)
         {
-            if (mode != DisplayMode.Playlist && mode != DisplayMode.QuickMedia)
+            if (mode != DisplayMode.Playlist && mode != DisplayMode.QuickMedia && mode != DisplayMode.Physics)
             {
                 throw new ArgumentOutOfRangeException(nameof(mode));
             }
@@ -125,11 +138,14 @@ namespace WearWare.Architecture.Mode
             if (State.Mode == requestedMode)
                 return true;
 
+            var previousMode = State.Mode;
             var playlistWasRunning = false;
             try
             {
                 playlistWasRunning = _playlistHandler.IsRunning();
                 _playlistHandler.Stop();
+                if (previousMode == DisplayMode.Physics)
+                    await StopPhysicsAsync();
                 if (await _modeManager.SetModeWithInterrupt(requestedMode))
                     return true;
 
@@ -142,8 +158,8 @@ namespace WearWare.Architecture.Mode
 
             if (State.Mode == requestedMode && !_stopping)
                 await RestoreInterruptedModeAsync();
-            else if (playlistWasRunning && !_stopping)
-                _playlistHandler.Start();
+            else if (!_stopping)
+                await ResumeModeAsync(previousMode, playlistWasRunning);
             return false;
         }
 
@@ -171,8 +187,14 @@ namespace WearWare.Architecture.Mode
                 });
             }
 
-            if (State.Mode == DisplayMode.Playlist && !_stopping)
+            if (_stopping)
+                return;
+
+            if (State.Mode == DisplayMode.Playlist)
                 _playlistHandler.Start();
+            else if (State.Mode == DisplayMode.Physics &&
+                !await TryStartPhysicsAsync(_lifetime.ApplicationStopping))
+                StartPlaylistAfterPhysicsFailure("Physics is unavailable. Returned to Playlist.");
         }
 
         /// <summary>
@@ -213,15 +235,21 @@ namespace WearWare.Architecture.Mode
 
                 if (mode == DisplayMode.Playlist)
                 {
+                    string? physicsError = null;
+                    if (previous.Mode == DisplayMode.Physics)
+                        physicsError = await StopPhysicsAsync();
+
                     _quickMediaHandler.Deactivate();
                     _playlistHandler.Start();
-                    _modeManager.UpdateState(new ModeState(DisplayMode.Playlist, saveError, preferredMode));
+                    _modeManager.UpdateState(new ModeState(DisplayMode.Playlist, CombineMessages(physicsError, saveError), preferredMode));
                     _logger.LogInformation("{tag} Switched to Playlist mode.", _logTag);
                     return;
                 }
 
                 if (mode == DisplayMode.QuickMedia)
                 {
+                    if (previous.Mode == DisplayMode.Physics)
+                        await StopPhysicsAsync();
                     _playlistHandler.Stop();
                     _modeManager.UpdateState(new ModeState(DisplayMode.QuickMedia, saveError, preferredMode));
                     if (!_quickMediaHandler.Resume())
@@ -232,11 +260,194 @@ namespace WearWare.Architecture.Mode
                     _logger.LogInformation("{tag} Switched to QuickMedia mode.", _logTag);
                     return;
                 }
+
+                if (mode == DisplayMode.Physics)
+                {
+                    _quickMediaHandler.Deactivate();
+                    _playlistHandler.Stop();
+                    if (!await TryStartPhysicsAsync(_lifetime.ApplicationStopping))
+                    {
+                        var message = CombineMessages("Physics is unavailable. Returned to Playlist.", saveError)
+                            ?? "Physics is unavailable. Returned to Playlist.";
+                        StartPlaylistAfterPhysicsFailure(
+                            message, preferredMode);
+                        return;
+                    }
+
+                    _modeManager.UpdateState(new ModeState(DisplayMode.Physics, saveError, preferredMode));
+                    _logger.LogInformation("{tag} Switched to Physics mode (Fluid).", _logTag);
+                    return;
+                }
             }
             finally
             {
                 _transition.Release();
             }
+        }
+
+        private async Task<string?> StopPhysicsAsync()
+        {
+            var cancellation = _physicsCancellation;
+            var task = _physicsTask;
+            if (cancellation == null || task == null)
+                return null;
+
+            cancellation.Cancel();
+            try
+            {
+                await task;
+                return null;
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Physics stopped unexpectedly.", _logTag);
+                return "Physics failed. Returned to Playlist.";
+            }
+            finally
+            {
+                _physicsTask = null;
+                _physicsCancellation = null;
+                cancellation.Dispose();
+            }
+        }
+
+        private async Task<bool> TryStartPhysicsAsync(CancellationToken cancellationToken)
+        {
+            CancellationTokenSource? cancellation = null;
+            try
+            {
+                await _physicsHandler.WaitForImuAsync(cancellationToken);
+                cancellation = new CancellationTokenSource();
+                var token = cancellation.Token;
+                var task = Task.Run(() => _physicsHandler.RunAsync(token));
+                _physicsCancellation = cancellation;
+                _physicsTask = task;
+                _ = ObservePhysicsAsync(task, token);
+                return true;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                cancellation?.Dispose();
+                return false;
+            }
+            catch (Exception ex)
+            {
+                cancellation?.Dispose();
+                _logger.LogError(ex, "{tag} Could not start Physics.", _logTag);
+                return false;
+            }
+        }
+
+        private async Task RestorePhysicsAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _physicsHandler.WaitForImuAsync(cancellationToken);
+                await _transition.WaitAsync(cancellationToken);
+                try
+                {
+                    if (!_stopping && State.Mode == DisplayMode.Physics &&
+                        !await TryStartPhysicsAsync(cancellationToken))
+                        StartPlaylistAfterPhysicsFailure("Physics is unavailable. Returned to Playlist.");
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{tag} Could not restore Physics mode.", _logTag);
+                await _transition.WaitAsync();
+                try
+                {
+                    if (!_stopping && State.Mode == DisplayMode.Physics)
+                        StartPlaylistAfterPhysicsFailure("Physics is unavailable. Returned to Playlist.");
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+        }
+
+        private async Task ObservePhysicsAsync(Task task, CancellationToken cancellationToken)
+        {
+            Exception failure;
+            try
+            {
+                await task;
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+                failure = new InvalidOperationException("Physics renderer stopped unexpectedly.");
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+
+            _logger.LogError(failure, "{tag} Physics failed; returning to Playlist.", _logTag);
+            await _transition.WaitAsync();
+            try
+            {
+                if (!ReferenceEquals(_physicsTask, task) || _stopping)
+                    return;
+
+                _physicsTask = null;
+                _physicsCancellation?.Dispose();
+                _physicsCancellation = null;
+                _playlistHandler.Start();
+                _modeManager.UpdateState(State with { Mode = DisplayMode.Playlist, Message = "Physics failed. Returned to Playlist." });
+            }
+            finally
+            {
+                _transition.Release();
+            }
+        }
+
+        private async Task ResumeModeAsync(DisplayMode mode, bool playlistWasRunning)
+        {
+            if (mode == DisplayMode.Physics)
+            {
+                if (!await TryStartPhysicsAsync(_lifetime.ApplicationStopping))
+                    StartPlaylistAfterPhysicsFailure("Physics is unavailable. Returned to Playlist.");
+            }
+            else if (playlistWasRunning || mode == DisplayMode.Playlist)
+            {
+                _playlistHandler.Start();
+            }
+        }
+
+        private void StartPlaylistAfterPhysicsFailure(string message, DisplayMode? preferredMode = null)
+        {
+            if (_stopping)
+                return;
+
+            _playlistHandler.Start();
+            _modeManager.UpdateState(State with
+            {
+                Mode = DisplayMode.Playlist,
+                Message = message,
+                PreferredMode = preferredMode ?? State.PreferredMode
+            });
+        }
+
+        private static string? CombineMessages(string? first, string? second)
+        {
+            if (first == null)
+                return second;
+            return second == null ? first : $"{first} {second}";
         }
     }
 }
