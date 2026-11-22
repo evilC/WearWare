@@ -4,18 +4,9 @@ These are known issues in the current Playback, QuickMedia, and mode-switching i
 
 ## Playback and mode transitions
 
-### QuickMedia does not clear its active slot after playback
+### QuickMedia UI
 
-**Status:** Open  
-**Impact:** Medium - the active item can remain selected and may be started again on a later QuickMedia transition.
-
-After playback finishes and the interrupted mode is restored, the active slot remains selected and persisted. Starting QuickMedia mode later can play that item again. The earlier attempt to clear it using `SetActiveButton(0)` has been removed.
-
-Relevant code: [ModeHandler.cs](../src/Architecture/Mode/ModeHandler.cs) and [QuickMediaManager.cs](../src/Architecture/QuickMedia/QuickMediaManager.cs).
-
-## QuickMedia UI
-
-### Delete confirmation can show the wrong item name
+#### Delete confirmation can show the wrong item name
 
 **Status:** Open  
 **Impact:** Low - the confirmation text may identify a different button from the one being deleted.
