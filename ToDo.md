@@ -5,6 +5,7 @@
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
 ## Business Logic (New Architecture) changes
+- On change of Matrix options: suspend playback and ignore QuickMedia triggers while reconfiguring, using a reconfiguration-in-progress flag. Then resume using the latest mode and Playlist state, preserving any Forever interruption.
 - PlaylistItems refactor? Feels messy. Will also need back as well as forward once we implement back/forward with joystick
 - Re-Add Library preview
 - Add Physics page
