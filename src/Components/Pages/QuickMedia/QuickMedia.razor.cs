@@ -173,20 +173,18 @@ namespace WearWare.Components.Pages.QuickMedia
         }
 
         // ================================================= Delete Item ==================================================
-        async Task DeleteQuickMediaButton(int index)
+        async Task DeleteQuickMediaButton(int buttonNumber)
         {
-            await QuickMediaManager.DeleteButtonItemAsync(index);
+            await QuickMediaManager.DeleteButtonItemAsync(buttonNumber);
             StateHasChanged();
         }
 
-        private async Task ConfirmDeleteQuickMediaButton(int index)
+        private async Task ConfirmDeleteQuickMediaButton(int buttonNumber)
         {
-            var item = _quickMediaItems.ElementAtOrDefault(index);
-            var name = item?.Name ?? $"Button {index + 1}";
-            var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete quick-media button '{name}'?");
+            var ok = await JSRuntime.InvokeAsync<bool>("confirm", $"Delete QuickMedia item in slot B{buttonNumber}?");
             if (ok)
             {
-                await DeleteQuickMediaButton(index);
+                await DeleteQuickMediaButton(buttonNumber);
             }
         }
 

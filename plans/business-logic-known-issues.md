@@ -4,13 +4,22 @@ These are known issues in the current Playback, QuickMedia, and mode-switching i
 
 ## Playback and mode transitions
 
-### QuickMedia UI
-
-#### Delete confirmation can show the wrong item name
+### Mock buttons use incorrect slots and bypass mode switching
 
 **Status:** Open  
-**Impact:** Low - the confirmation text may identify a different button from the one being deleted.
+**Impact:** High when using the mock buttons - playback handlers can compete for the matrix.
 
-The UI passes a 1-based button number to the confirmation handler, which uses it as a 0-based list index. This can display another item's name or fall back to a generic button label.
+The mock page uses 0-based list indexes as QuickMedia button numbers, which are 1-based and may not be contiguous. It also starts QuickMedia directly without coordinating with `ModeHandler`, so Playlist playback may remain active.
 
-Relevant code: [QuickMedia.razor](../src/Components/Pages/QuickMedia/QuickMedia.razor) and [QuickMedia.razor.cs](../src/Components/Pages/QuickMedia/QuickMedia.razor.cs).
+Relevant code: [Mocks.razor](../src/Components/Pages/Mocks/Mocks.razor) and [Mocks.razor.cs](../src/Components/Pages/Mocks/Mocks.razor.cs).
+
+## QuickMedia UI
+
+### Editing a QuickMedia item can report success when saving fails
+
+**Status:** Open  
+**Impact:** Medium - the UI can report that an edit was saved when it was not.
+
+The edit path ignores the return value of `QuickMediaManager.UpsertButtonItem` and reports success even when the manager returns `false`.
+
+Relevant code: [QuickMedia.razor.cs](../src/Components/Pages/QuickMedia/QuickMedia.razor.cs) and [QuickMediaManager.cs](../src/Architecture/QuickMedia/QuickMediaManager.cs).
