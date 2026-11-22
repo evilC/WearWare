@@ -12,14 +12,16 @@
   Need consistent location for various concerns
 - MatrixService - move to new location?
 - Move things from HostedService to Singleton?
-- ButtonHandler should subscribe to GPIO buttons, not the Mode handler?
+- ButtonHandler should subscribe to GPIO buttons, not each Mode's handler?  
+  ButtonHandler should handle subscribing to the physical GPIO button, and then route events to the handler.  
+  eg ButtonHandler subscribes to GPIO pin 10, which is assigned to QuickMedia...  
+  ... When pressed, should send "QuickMedia button pressed" event to QuickMedia Handler.
 - ModeHandler should not store previous state, should instead store CurrentState and InterruptingState  
   That way if QM interrupts Playback with Forever item, and while playing we change mode to Physics...  
   ... When we end the forever item, it goes to Physics
 
 ## I2C support
 - Battery voltage monitoring / logging
-- Extra features - IMU (Gyro) for physics simulation
 
 ## IMU
 - Config file for sensor model and address
@@ -99,11 +101,6 @@
 - Reorder playlist
 - If FOREVER mode item is playing, clicking `Save` in Matrix options does not close the page.  
   It does seem to save though, and manually navigating to another page does work.  
-- Review storing of matrix options in PlayableItem / Re-use of matrix instance for all items  
-  Is there any advantage to newing up a matrix instance for each PlayableItem?  
-  - Some options will be baked into the stream (eg brightness)  
-  - Some options will be ignored on playback, as the same matrix instance is used for each item (eg limit refresh)
-
 
 ### Crash hardening.  
 - Various places where null-forgiving operators are used
@@ -119,25 +116,10 @@ Either way, need to be able to tell if original file got overwritten or not
 ## Low Priority
 - If we trigger QuickMedia while the playlist is stopped, after it finishes playing, it should not start
 - Allow configuration of button pins via GUI
-- PlaylistService tidy
-  - A bunch of stuff in here should be moved to PlaylistItems
 - Clicking on Buttons can be bouncy? - seen ?Import? ?Add Item to Playlist? show duplicates
 
-### Extra button functionality
-- Add button config  
-- QuickActions
-  - Start / Stop playlist  
-  - Shutdown
-- QuickActions and QuickMedia would need to share same GPIO handler  
-  So that they do not try to subscribe to same button
-- PlayableItem's Matrix Options are not actually being used.  
-  It's using a stored one  
-  Every time we modify a playableItem's options, we should rebuild the native matrix options  
-  `playableItem.MatrixOptions.ToRGBLedMatrixOptions()`  
-  Changing Matrix however seems to caus corruption for 2nd item played
-
-
 ### General refactor of MediaController Start / Stop etc  
+Note: This refers to the old MediaController, but some of these items may still be relevant
 - New interface:
   - PlaylistRunning: true if playlist is set to play
   - QuickMediaPlaying: true if QuickMedia currently playing
