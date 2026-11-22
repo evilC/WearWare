@@ -4,6 +4,9 @@
 - I no longer use hostapd (Pi now connects to phone's hotspot using NetworkManager)  
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
+## Business Logic (New Architecture) changes
+- Move things from HostedService to Singleton?
+
 ## I2C support
 - Battery voltage monitoring / logging
 - Extra features - IMU (Gyro) for physics simulation
