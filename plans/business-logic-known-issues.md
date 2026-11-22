@@ -4,15 +4,6 @@ These are known issues in the current Playback, QuickMedia, and mode-switching i
 
 ## Playback and mode transitions
 
-### Adding QuickMedia through the UI can leave both playback handlers active
-
-**Status:** Open  
-**Impact:** High - competing playback can disrupt matrix output.
-
-When adding an item, the QuickMedia page starts `QuickMediaHandler` directly without going through `ModeHandler` or stopping Playlist playback. Both handlers can then contend for the matrix. Button-triggered transitions and startup now use `ModeHandler` to coordinate playback.
-
-Relevant code: [QuickMedia.razor.cs](../src/Components/Pages/QuickMedia/QuickMedia.razor.cs) and [ModeHandler.cs](../src/Architecture/Mode/ModeHandler.cs).
-
 ### QuickMedia does not clear its active slot after playback
 
 **Status:** Open  

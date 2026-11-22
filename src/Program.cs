@@ -135,9 +135,7 @@ builder.Services.AddSingleton<PlaylistHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<PlaylistHandler>());
 builder.Services.AddSingleton<ButtonManager>();
 builder.Services.AddSingleton<ButtonFunctionMappingService>();
-builder.Services.AddHostedService<ButtonManagerInitializer>();
 builder.Services.AddSingleton<QuickMediaHandler>();
-builder.Services.AddHostedService(sp => sp.GetRequiredService<QuickMediaHandler>());
 builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<ModeManager>();
 builder.Services.AddSingleton<ModeHandler>();
@@ -175,5 +173,11 @@ QuickMediaImageEndpoints.MapEndpoints(app);
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Wire button manager before anything which depends on button events
+app.Services.GetRequiredService<ButtonManager>().Initialize();
+// Wire mode handling before enabling button events
+app.Services.GetRequiredService<ModeHandler>();
+app.Services.GetRequiredService<QuickMediaHandler>().Initialize();
 
 app.Run();

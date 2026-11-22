@@ -6,7 +6,7 @@ using Iot.Device.Button;
 
 namespace WearWare.Architecture.QuickMedia
 {
-    public class QuickMediaHandler : IHandler, IHostedService
+    public class QuickMediaHandler : IHandler, IDisposable
     {
         private readonly QuickMediaManager _quickMediaManager;
         private readonly ButtonManager _buttonManager;
@@ -52,7 +52,7 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public void Initialize()
         {
             _logger.LogInformation("{tag} starting.", _logTag);
 
@@ -73,15 +73,20 @@ namespace WearWare.Architecture.QuickMedia
 
             SubscribeToButtonEvents();
             _logger.LogInformation("{tag} QuickMedia items loaded. Not starting playback - waiting for mode switch.", _logTag);
-            await Task.CompletedTask;
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public void Dispose()
         {
             _logger.LogInformation("{tag} stopping.", _logTag);
-            Stop();
-            UnsubscribeFromButtonEvents();
-            await Task.CompletedTask;
+            _quickMediaManager.StateChanged -= OnQuickMediaManagerStateChanged;
+            try
+            {
+                Stop();
+            }
+            finally
+            {
+                UnsubscribeFromButtonEvents();
+            }
         }
 
         private void SubscribeToButtonEvents()

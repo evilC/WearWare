@@ -150,10 +150,8 @@ namespace WearWare.Components.Pages.QuickMedia
                         await FileUtils.CopyFileAsync(srcCopyFrom, srcCopyTo).ConfigureAwait(false);
                     }
                     
-                    QuickMediaManager.UpsertButtonItem(formModel.ItemIndex, newItem);
-                    QuickMediaHandler.Stop();
-                    QuickMediaManager.SetActiveButton(formModel.ItemIndex);
-                    QuickMediaHandler.Start();
+                    if (!QuickMediaManager.UpsertButtonItem(formModel.ItemIndex, newItem))
+                        throw new InvalidOperationException("Could not save Quick Media item. See the log for details.");
                     OperationProgress.CompleteOperation(opId, true, "Done");
                 }
             }
