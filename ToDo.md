@@ -5,11 +5,6 @@
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
 ## Business Logic (New Architecture) changes
-- Once old mediaplayer / mediacontroller removed, rename references to new architecture versions, eg:  
-  ```
-  using ArchitectureMediaPlayer = WearWare.Architecture.Playback.IMediaPlayer;
-  using ArchitectureRpiMediaPlayer = WearWare.Architecture.Playback.RpiMediaPlayer;
-  ```
 - PlaylistItems refactor? Feels messy. Will also need back as well as forward once we implement back/forward with joystick
 - Re-Add Library preview
 - Relocate files? Some things in services, some in Architecture
