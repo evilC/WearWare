@@ -6,7 +6,6 @@ Status: IMU sensing and a separate Physics mode are implemented. Simulation tuni
 
 - The MPU-6050 uses the `Iot.Device.Bindings` driver on I2C bus 1 at the default address `0x68`. The service polls at approximately 30 Hz; it does not use a sensor interrupt.
 - Raw acceleration and gyroscope readings are retained alongside mounting-adjusted readings. Tilt is calculated from adjusted acceleration and smoothed; acceleration includes movement as well as gravity.
-- The Mode page switches between Playlist and Physics, with IMU Test, Ball and Fluid simulations. Physics suspends media playback and ignores QuickMedia triggers; returning to Playlist resumes media playback.
 - The selected mode and simulation are saved in `config/modeconfig.json` and `config/simulationconfig.json`. A saved Physics mode is retried at startup.
 - An unavailable, stale or failed IMU prevents Physics from running. If Physics fails while running, WearWare returns to Playlist and reports the failure. A sensor failure is logged and monitoring does not automatically retry.
 
