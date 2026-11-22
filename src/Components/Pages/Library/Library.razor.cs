@@ -72,15 +72,11 @@ namespace WearWare.Components.Pages.Library
             };
         }
 
-        /// <summary>
-        /// Called when the item card is clicked for a library item.
-        /// Plays a preview of the item.
-        /// </summary>
-        /// <param name="item"></param>
-        private void OnItemClicked(PlayableItem item)
-        {
-            LibraryService.PlayPreviewItem(item);
-        }
+        // Preview hook: replace the old controller call with the new preview system.
+        // private void OnItemClicked(PlayableItem item)
+        // {
+        //     LibraryService.PlayPreviewItem(item);
+        // }
 
         /// <summary>
         /// Called when the edit form is cancelled or closed.

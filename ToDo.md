@@ -7,6 +7,7 @@
 ## Business Logic (New Architecture) changes
 - LOTS still depend on old MediaControllerService
   NEEDS REMOVING!
+- Re-Add Library preview
 - Move things from HostedService to Singleton?
 - Delete old Services
 - ButtonHandler should subscribe to GPIO buttons, not the Mode handler?

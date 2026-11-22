@@ -25,7 +25,6 @@ else
 @if (items != null && items.Any())
 {
     @* Regular Library view *@
-    <span style="display:block; margin-bottom:1em;">Click on an image to play a preview as a QuickMedia item in FOREVER mode. Click the item again to stop the preview.</span>
     @if (!Ready)
     {
         <LoadingOverlay />
@@ -42,10 +41,11 @@ else
                 <div class="mb-3">
                     <div class="card h-100 shadow-sm bg-light">
                         <div class="card-body p-0">
-                            <div class="d-flex align-items-center gap-3 p-2" style="cursor:pointer;" @onclick="() => OnItemClicked(item)">
+                            @* Preview hook: @onclick="() => OnItemClicked(item)" *@
+                            <div class="d-flex align-items-center gap-3 p-2">
                                 <div class="d-flex flex-column justify-content-between me-2 gap-2">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditClicked(item)" @onclick:stopPropagation="true">Edit</button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)" @onclick:stopPropagation="true">Delete</button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => OnEditClicked(item)">Edit</button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmDelete(item)">Delete</button>
                                 </div>
 
                                 <div class="flex-grow-1">

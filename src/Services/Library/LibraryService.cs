@@ -1,5 +1,4 @@
 using WearWare.Utils;
-using WearWare.Services.MediaController;
 using WearWare.Components.Forms.EditPlayableItemForm;
 
 namespace WearWare.Services.Library
@@ -18,15 +17,12 @@ namespace WearWare.Services.Library
         }
 
         private readonly ILogger<LibraryService> _logger;
-        private readonly MediaControllerService _mediaControllerService;
         private readonly OperationProgress.IOperationProgressService _operationProgress;
 
         public LibraryService(ILogger<LibraryService> logger,
-            MediaControllerService mediaControllerService,
             OperationProgress.IOperationProgressService operationProgress)
         {
             _logger = logger;
-            _mediaControllerService = mediaControllerService;
             _operationProgress = operationProgress;
             LoadLibraryItems();
             _logger.LogInformation("LibraryService initialized.");
@@ -91,10 +87,11 @@ namespace WearWare.Services.Library
             Reload();
         }
 
-        public void PlayPreviewItem(PlayableItem libItem)
-        {
-            _mediaControllerService.PlayQuickMedia(libItem);
-        }
+        // The old preview bypassed mode coordination; replace it rather than re-enabling it.
+        // public void PlayPreviewItem(PlayableItem libItem)
+        // {
+        //     _mediaControllerService.PlayQuickMedia(libItem);
+        // }
 
         /// <summary>
         /// Called when the edit form is submitted in the Library page.
