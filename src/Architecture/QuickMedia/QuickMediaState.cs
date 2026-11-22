@@ -2,25 +2,25 @@ using WearWare.Utils;
 
 namespace WearWare.Architecture.QuickMedia
 {
-    public class QuickMediaStateConfig
+    public class QuickMediaState
     {
         public int ActiveSlotNumber { get; set; }
 
-        private static readonly string _configFileName = "quickmedia-state.json";
+        private static readonly string _stateFileName = "quickmedia-state.json";
 
-        public static QuickMediaStateConfig? Deserialize()
+        public static QuickMediaState? Deserialize()
         {
-            var path = GetConfigFilePath();
+            var path = GetStateFilePath();
             if (!File.Exists(path))
             {
                 return null;
             }
-            return JsonUtils.FromJsonFile<QuickMediaStateConfig>(path);
+            return JsonUtils.FromJsonFile<QuickMediaState>(path);
         }
 
         public void Serialize()
         {
-            var path = GetConfigFilePath();
+            var path = GetStateFilePath();
             Directory.CreateDirectory(PathConfig.QuickMediaPath);
             var temporaryPath = $"{path}.{Guid.NewGuid():N}.tmp";
             try
@@ -35,9 +35,9 @@ namespace WearWare.Architecture.QuickMedia
             }
         }
 
-        private static string GetConfigFilePath()
+        private static string GetStateFilePath()
         {
-            return Path.Combine(PathConfig.QuickMediaPath, _configFileName);
+            return Path.Combine(PathConfig.QuickMediaPath, _stateFileName);
         }
     }
 }

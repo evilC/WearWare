@@ -15,7 +15,7 @@ namespace WearWare.Architecture.QuickMedia
 
         private Dictionary<int, QuickMediaItem?> _buttonSlotItems = [];
         private int _activeButtonSlot = 0;
-        private QuickMediaStateConfig _stateConfig;
+        private QuickMediaState _state;
 
         public event Action? StateChanged;
         internal event Action<int>? ItemDeleting;
@@ -24,7 +24,7 @@ namespace WearWare.Architecture.QuickMedia
         internal SemaphoreSlim TransitionGate { get; } = new(1, 1);
 
         public int ActiveButtonSlot => _activeButtonSlot;
-        public int ForeverButtonSlot => _stateConfig.ActiveSlotNumber;
+        public int ForeverButtonSlot => _state.ActiveSlotNumber;
         public QuickMediaItem? ActiveButtonItem => _buttonSlotItems.TryGetValue(_activeButtonSlot, out var item) ? item : null;
 
         public QuickMediaManager(ILogger<QuickMediaManager> logger, ILoggerFactory loggerFactory, ButtonManager buttonManager)
@@ -32,7 +32,7 @@ namespace WearWare.Architecture.QuickMedia
             _logger = logger;
             _loggerFactory = loggerFactory;
             _buttonManager = buttonManager;
-            _stateConfig = QuickMediaStateConfig.Deserialize() ?? new QuickMediaStateConfig();
+            _state = QuickMediaState.Deserialize() ?? new QuickMediaState();
             _logger.LogInformation("{tag} initialized. Forever button slot: {slot}.", _logTag, ForeverButtonSlot);
         }
 
@@ -169,15 +169,15 @@ namespace WearWare.Architecture.QuickMedia
                 return false;
             }
 
-            var previousSlot = _stateConfig.ActiveSlotNumber;
-            _stateConfig.ActiveSlotNumber = buttonSlot;
+            var previousSlot = _state.ActiveSlotNumber;
+            _state.ActiveSlotNumber = buttonSlot;
             try
             {
-                _stateConfig.Serialize();
+                _state.Serialize();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                _stateConfig.ActiveSlotNumber = previousSlot;
+                _state.ActiveSlotNumber = previousSlot;
                 _logger.LogError(ex, "{tag} Could not save Forever button slot {slot}.", _logTag, buttonSlot);
                 return false;
             }
@@ -190,10 +190,10 @@ namespace WearWare.Architecture.QuickMedia
             if (ForeverButtonSlot == 0)
                 return;
 
-            _stateConfig.ActiveSlotNumber = 0;
+            _state.ActiveSlotNumber = 0;
             try
             {
-                _stateConfig.Serialize();
+                _state.Serialize();
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {

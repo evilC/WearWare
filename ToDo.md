@@ -13,7 +13,6 @@
 - Undo PlayableItem / QuickMediaItem separation?  
   I think all it really does currently is remove "Enabled" from QuickMediaItem?
 - Relocate files / name things better 
-  - Too many things called "config", when some are config, some are state  
   - Get rid of Architecture folder - move stuff back into Services
 - MatrixService - move to new location?
 - Move things from HostedService to Singleton?
