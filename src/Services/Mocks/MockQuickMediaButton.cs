@@ -1,3 +1,4 @@
+/*
 using WearWare.Common.Media;
 using WearWare.Services.QuickMedia;
 
@@ -25,3 +26,4 @@ namespace WearWare.Services.Mocks
         }
     }
 }
+*/

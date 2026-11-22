@@ -1,5 +1,5 @@
 using WearWare.Common.Media;
-using WearWare.Services.MediaController;
+using WearWare.Architecture.Playback;
 
 namespace WearWare.Services.Mocks
 {

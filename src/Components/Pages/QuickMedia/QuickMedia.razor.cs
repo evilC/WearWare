@@ -1,7 +1,6 @@
 using WearWare.Components.Base;
 using WearWare.Components.Forms.EditPlayableItemForm;
 using WearWare.Services.Library;
-using WearWare.Services.QuickMedia;
 using WearWare.Services.OperationProgress;
 using WearWare.Architecture;
 using WearWare.Architecture.QuickMedia;

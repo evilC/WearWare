@@ -2,7 +2,6 @@ using WearWare.Components;
 using WearWare.Components.Endpoints;
 using WearWare.Services.Import;
 using WearWare.Services.Library;
-using WearWare.Services.MediaController;
 using WearWare.Services.Mocks;
 using System.Net;
 
@@ -24,8 +23,7 @@ using WearWare.Architecture.Button;
 using WearWare.Architecture.Physics;
 using WearWare.Architecture.Physics.Imu;
 using WearWare.Architecture.Physics.Imu.Sensors;
-using ArchitectureMediaPlayer = WearWare.Architecture.Playback.IMediaPlayer;
-using ArchitectureRpiMediaPlayer = WearWare.Architecture.Playback.RpiMediaPlayer;
+using WearWare.Architecture.Playback;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.ConfigureHostOptions(o => o.ShutdownTimeout = TimeSpan.FromSeconds(1)); // Forces app to shut down within 1 second
@@ -85,7 +83,6 @@ if (env == "Desktop")
     // Desktop specific services (mocks)
     builder.Services.AddSingleton<IMediaConverterService, MockMediaConverterService>();
     builder.Services.AddSingleton<IMediaPlayer, MockMediaPlayer>();
-    builder.Services.AddSingleton<ArchitectureMediaPlayer>(sp => sp.GetRequiredService<IMediaPlayer>());
     // builder.Services.AddSingleton<IQuickMediaButtonFactory, MockQuickMediaButtonFactory>();
     builder.Services.AddSingleton<ITempMonService, MockTempMonService>();
     builder.Services.AddSingleton<MatrixService>();
@@ -105,22 +102,6 @@ else
         sp.GetRequiredService<IMatrixDisplay>(),
         sp.GetRequiredService<ILogger<MatrixController>>()));
     builder.Services.AddSingleton<IMediaPlayer, RpiMediaPlayer>();
-    builder.Services.AddSingleton<ArchitectureMediaPlayer, ArchitectureRpiMediaPlayer>();
-    // Old QuickMediaService infrastructure - no longer used. QuickMediaHandler uses the new ButtonManager.
-    // Keeping this code as-is for reference in case rollback is needed.
-    /*
-    builder.Services.AddSingleton<IButtonGpioProvider>(sp =>
-    {
-        var config = sp.GetRequiredService<QuickMediaButtonsConfigService>().Config;
-        return config.Provider switch
-        {
-            "PiGpio" => new PiGpioButtonProvider(config.ButtonPins ?? []),
-            "Mcp23017" => new AdafruitMcp23017GpioProvider(config.ButtonPins ?? [], config.InterruptPins ?? [null, null]),
-            _ => throw new InvalidOperationException($"Unsupported button provider '{config.Provider}'.")
-        };
-    });
-    builder.Services.AddSingleton<IQuickMediaButtonFactory, QuickMediaGpioButtonFactory>();
-    */
     builder.Services.AddSingleton<ITempMonService, TempMonService>();
 }
 
@@ -132,7 +113,6 @@ builder.Services.AddHostedService(sp => sp.GetRequiredService<PlaylistHandler>()
 builder.Services.AddSingleton<ButtonManager>();
 builder.Services.AddSingleton<ButtonFunctionMappingService>();
 builder.Services.AddSingleton<QuickMediaHandler>();
-builder.Services.AddSingleton<MediaControllerService>();
 builder.Services.AddSingleton<ModeManager>();
 builder.Services.AddSingleton<PhysicsHandler>();
 builder.Services.AddSingleton<ModeHandler>();

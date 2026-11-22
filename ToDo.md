@@ -5,8 +5,6 @@
   `resources\pi-scripts\wearware.service` still references it - should be removed?
 
 ## Business Logic (New Architecture) changes
-- LOTS still depend on old MediaControllerService
-  NEEDS REMOVING!
 - Once old mediaplayer / mediacontroller removed, rename references to new architecture versions, eg:  
   ```
   using ArchitectureMediaPlayer = WearWare.Architecture.Playback.IMediaPlayer;
@@ -14,8 +12,8 @@
   ```
 - PlaylistItems refactor? Feels messy. Will also need back as well as forward once we implement back/forward with joystick
 - Re-Add Library preview
+- MatrixService - move to new location?
 - Move things from HostedService to Singleton?
-- Delete old Services
 - ButtonHandler should subscribe to GPIO buttons, not the Mode handler?
 - ModeHandler should not store previous state, should instead store CurrentState and InterruptingState  
   That way if QM interrupts Playback with Forever item, and while playing we change mode to Physics...  

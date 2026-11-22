@@ -72,10 +72,7 @@ namespace WearWare.Components.Pages.Playlist
         }
 
         /// <summary>
-        /// Handler for PlaylistService StateChanged event.
-        /// The MediaControllerService raises it's own StateChanged when playback fails for an item
-        /// which PlaylistService listens to and raises it's own StateChanged event.
-        /// This allows UIs to update when an item is disabled due to playback failure.
+        /// Updates the page when the playlist manager state changes.
         /// </summary>
         private void OnStateChanged()
         {
@@ -177,7 +174,6 @@ namespace WearWare.Components.Pages.Playlist
             await InvokeAsync(StateHasChanged);
         }
 
-        // ToDo: Update PlaylistService.OnEditFormSubmit to accept EditPlayableItemFormModel
         async Task OnSavePlaylistItem(EditPlayableItemFormModel formModel)
         {
             if (_playlist is null || _editingPlaylist is null){
