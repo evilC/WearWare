@@ -1,6 +1,7 @@
 using WearWare.Services.Playlist;
 using WearWare.Services.QuickMedia;
 using WearWare.Services.Physics;
+using WearWare.Services.Button;
 
 namespace WearWare.Services.Mode
 {
@@ -12,6 +13,8 @@ namespace WearWare.Services.Mode
         private readonly PlaylistHandler _playlistHandler;
         private readonly QuickMediaHandler _quickMediaHandler;
         private readonly PhysicsHandler _physicsHandler;
+        private readonly ButtonManager _buttonManager;
+        private readonly ButtonFunctionMappingService _buttonMappings;
         private readonly IHostApplicationLifetime _lifetime;
         private readonly ILogger<ModeHandler> _logger;
         private CancellationTokenSource? _physicsCancellation;
@@ -28,6 +31,8 @@ namespace WearWare.Services.Mode
             PlaylistHandler playlistHandler,
             QuickMediaHandler quickMediaHandler,
             PhysicsHandler physicsHandler,
+            ButtonManager buttonManager,
+            ButtonFunctionMappingService buttonMappings,
             IHostApplicationLifetime lifetime,
             ILogger<ModeHandler> logger)
         {
@@ -36,6 +41,8 @@ namespace WearWare.Services.Mode
             _playlistHandler = playlistHandler;
             _quickMediaHandler = quickMediaHandler;
             _physicsHandler = physicsHandler;
+            _buttonManager = buttonManager;
+            _buttonMappings = buttonMappings;
             _transition = quickMediaHandler.TransitionGate;
             _lifetime = lifetime;
             _logger = logger;
@@ -132,6 +139,71 @@ namespace WearWare.Services.Mode
             finally
             {
                 _transition.Release();
+            }
+        }
+
+        public async Task SetButtonFunctionAsync(string pinName, string function)
+        {
+            await _quickMediaHandler.ItemMutationGate.WaitAsync();
+            try
+            {
+                await _transition.WaitAsync();
+                try
+                {
+                    await SetButtonFunctionCoreAsync(pinName, function);
+                }
+                finally
+                {
+                    _transition.Release();
+                }
+            }
+            finally
+            {
+                _quickMediaHandler.ItemMutationGate.Release();
+            }
+        }
+
+        private async Task SetButtonFunctionCoreAsync(string pinName, string function)
+        {
+            if (_stopping || !_started)
+                throw new InvalidOperationException("Button functions cannot be changed while playback is starting or stopping.");
+
+            var button = _buttonManager.GetAllButtons().FirstOrDefault(b => b.PinName == pinName)
+                ?? throw new ArgumentException($"Unknown button pin '{pinName}'.", nameof(pinName));
+            var previous = _buttonMappings.GetFunctionForPin(pinName);
+            if (previous == function)
+                return;
+
+            _buttonMappings.SetFunctionForPin(pinName, function);
+            try
+            {
+                var saved = true;
+                if (previous == "QuickMedia")
+                {
+                    saved = await _quickMediaHandler.RemoveButtonAssignmentAsync(button.Index + 1);
+                    if (!_quickMediaHandler.DeleteUnassignedButtonItem(button.Index + 1))
+                    {
+                        try
+                        {
+                            _buttonMappings.SetFunctionForPin(pinName, previous);
+                        }
+                        finally
+                        {
+                            _quickMediaHandler.UpdateButtonAssignment(button.Index + 1,
+                                _buttonMappings.GetFunctionForPin(pinName) == "QuickMedia");
+                        }
+                        throw new InvalidOperationException("Could not delete the QuickMedia item; the button assignment was restored. Files may have been partially deleted. See the log for details.");
+                    }
+                }
+                else if (function == "QuickMedia")
+                    _quickMediaHandler.UpdateButtonAssignment(button.Index + 1, true);
+
+                if (!saved)
+                    throw new InvalidOperationException("Button function was saved, but the cleared Forever state could not be saved.");
+            }
+            finally
+            {
+                _buttonMappings.NotifyStateChanged();
             }
         }
 

@@ -1,12 +1,23 @@
 @page "/buttons"
 @rendermode InteractiveServer
+@implements IDisposable
 @using WearWare.Services.Button
+@using WearWare.Services.Mode
 @inject ButtonManager ButtonManager
 @inject ButtonFunctionMappingService MappingService
+@inject ModeHandler ModeHandler
+@inject ILogger<Buttons> Logger
 
 <PageTitle>WearWare Buttons</PageTitle>
 
 <h1>Buttons</h1>
+
+<p class="text-muted">Changing a QuickMedia button's function deletes its QuickMedia item and files.</p>
+
+@if (_error is not null)
+{
+    <div class="alert alert-warning" role="alert">@_error</div>
+}
 
 @if (ButtonManager.Provider == null)
 {
@@ -44,8 +55,8 @@ else
                         <td>@(i + 1)</td>
                         <td><code>@button.PinName</code></td>
                         <td>
-                            <select class="form-select" value="@(_functions[button.PinName])" 
-                                    @onchange="@((ChangeEventArgs e) => OnFunctionChanged(button.PinName, e.Value?.ToString() ?? "None"))">
+                            <select @key="(button.PinName, _revision)" class="form-select" value="@(_functions[button.PinName])" disabled="@_saving"
+                                    @onchange="@((ChangeEventArgs e) => OnFunctionChanged(button.PinName, e.Value?.ToString() ?? ""))">
                                 <option value="None">None</option>
                                 <option value="QuickMedia">QuickMedia</option>
                             </select>
@@ -62,17 +73,30 @@ else
     private Dictionary<string, string> _functions = [];
     private string _providerName = "";
     private bool _saving;
+    private string? _error;
+    private int _revision;
 
     protected override void OnInitialized()
     {
         _buttons = ButtonManager.GetAllButtons().ToList();
-        
-        foreach (var button in _buttons)
-        {
-            _functions[button.PinName] = MappingService.GetFunctionForPin(button.PinName);
-        }
-
+        MappingService.StateChanged += OnMappingsChanged;
+        UpdateFunctions();
         _providerName = GetProviderName();
+    }
+
+    private void UpdateFunctions()
+    {
+        foreach (var button in _buttons)
+            _functions[button.PinName] = MappingService.GetFunctionForPin(button.PinName);
+    }
+
+    private void OnMappingsChanged()
+    {
+        _ = InvokeAsync(() =>
+        {
+            UpdateFunctions();
+            StateHasChanged();
+        });
     }
 
     private string GetProviderName()
@@ -100,14 +124,23 @@ else
         }
 
         _saving = true;
+        _error = null;
         try
         {
-            _functions[pinName] = function;
-            await MappingService.SetFunctionForPinAsync(pinName, function);
+            await ModeHandler.SetButtonFunctionAsync(pinName, function);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Could not update button function for {pinName}.", pinName);
+            _error = ex is InvalidOperationException ? ex.Message : "Could not complete the button function change. See the log for details.";
         }
         finally
         {
+            UpdateFunctions();
+            _revision++;
             _saving = false;
         }
     }
+
+    public void Dispose() => MappingService.StateChanged -= OnMappingsChanged;
 }

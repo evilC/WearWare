@@ -10,10 +10,6 @@
 - Re-Add Library preview
 - Re-implement mocks system
 - Move things from HostedService to Singleton?
-- ButtonHandler should subscribe to GPIO buttons, not each Mode's handler?  
-  ButtonHandler should handle subscribing to the physical GPIO button, and then route events to the handler.  
-  eg ButtonHandler subscribes to GPIO pin 10, which is assigned to QuickMedia...  
-  ... When pressed, should send "QuickMedia button pressed" event to QuickMedia Handler.
 
 ## I2C support
 - Battery voltage monitoring / logging

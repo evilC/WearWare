@@ -2,7 +2,7 @@ using WearWare.Common.Media;
 using WearWare.Services;
 using WearWare.Utils;
 using WearWare.Services.Button;
-using System.Device.Gpio;
+using System.Collections.Concurrent;
 
 namespace WearWare.Services.QuickMedia
 {
@@ -14,14 +14,15 @@ namespace WearWare.Services.QuickMedia
         private readonly ButtonManager _buttonManager;
         private readonly string _logTag = "[QUICKMEDIAMANAGER]";
 
-        private Dictionary<int, PlayableItem?> _buttonSlotItems = [];
+        private readonly ConcurrentDictionary<int, PlayableItem?> _buttonSlotItems = [];
         private int _activeButtonSlot = 0;
         private QuickMediaState _state;
 
         public event Action? StateChanged;
         internal event Action<int>? ItemDeleting;
         internal event Action<int, bool>? ItemDeletionFinished;
-        // Deletion and playback transitions must not race each other.
+        // Slot file operations take this gate before the playback transition gate.
+        internal SemaphoreSlim ItemMutationGate { get; } = new(1, 1);
         internal SemaphoreSlim TransitionGate { get; } = new(1, 1);
 
         public int ActiveButtonSlot => _activeButtonSlot;
@@ -186,12 +187,13 @@ namespace WearWare.Services.QuickMedia
             return true;
         }
 
-        public void ClearForeverButton()
+        public bool ClearForeverButton()
         {
             if (ForeverButtonSlot == 0)
-                return;
+                return true;
 
             _state.ActiveSlotNumber = 0;
+            var saved = true;
             try
             {
                 _state.Serialize();
@@ -199,8 +201,36 @@ namespace WearWare.Services.QuickMedia
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 _logger.LogError(ex, "{tag} Could not save cleared Forever button slot.", _logTag);
+                saved = false;
             }
             StateChanged?.Invoke();
+            return saved;
+        }
+
+        internal void UpdateButtonAssignment(int buttonSlot, bool assigned)
+        {
+            if (assigned)
+                LoadButtonItem(buttonSlot);
+            else
+                _buttonSlotItems.TryRemove(buttonSlot, out _);
+            StateChanged?.Invoke();
+        }
+
+        internal bool DeleteUnassignedButtonItem(int buttonSlot)
+        {
+            try
+            {
+                DeleteButtonFiles(buttonSlot);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _logger.LogError(ex, "{tag} Error deleting files for unassigned slot {slot}.", _logTag, buttonSlot);
+                return false;
+            }
+
+            _buttonSlotItems.TryRemove(buttonSlot, out _);
+            StateChanged?.Invoke();
+            return true;
         }
 
         /// <summary>
@@ -208,9 +238,8 @@ namespace WearWare.Services.QuickMedia
         /// </summary>
         public PlayableItem? GetButtonItem(int buttonSlot)
         {
-            if (!_buttonSlotItems.ContainsKey(buttonSlot))
+            if (!_buttonSlotItems.TryGetValue(buttonSlot, out var item))
                 return null;
-            var item = _buttonSlotItems[buttonSlot];
             return item?.Clone();
         }
 
@@ -243,7 +272,56 @@ namespace WearWare.Services.QuickMedia
         /// <summary>
         /// Updates or adds a quick media item for a button slot.
         /// </summary>
-        public bool UpsertButtonItem(int buttonSlot, PlayableItem item)
+        public async Task<bool> UpsertButtonItemAsync(int buttonSlot, PlayableItem item, PlayableItem? sourceItem = null)
+        {
+            await ItemMutationGate.WaitAsync();
+            try
+            {
+                if (!GetQuickMediaButtonNumbers().Contains(buttonSlot))
+                {
+                    _logger.LogWarning("{tag} Cannot upsert item: button {button} is not assigned to QuickMedia.", _logTag, buttonSlot);
+                    return false;
+                }
+
+                if (sourceItem == null && GetButtonItem(buttonSlot) == null)
+                {
+                    _logger.LogWarning("{tag} Cannot edit item: slot {slot} no longer has an item.", _logTag, buttonSlot);
+                    return false;
+                }
+
+                if (sourceItem != null)
+                {
+                    item.ParentFolder = Path.Combine(PathConfig.QuickMediaFolder, buttonSlot.ToString());
+                    try
+                    {
+                        await FileUtils.CopyFileAsync(sourceItem.GetFseqFilePath(), item.GetFseqFilePath());
+                        if (!File.Exists(item.GetSourceFilePath()))
+                            await FileUtils.CopyFileAsync(sourceItem.GetSourceFilePath(), item.GetSourceFilePath());
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                    {
+                        _logger.LogError(ex, "{tag} Error copying QuickMedia files for slot {slot}.", _logTag, buttonSlot);
+                        return false;
+                    }
+                }
+
+                await TransitionGate.WaitAsync();
+                try
+                {
+                    return UpsertButtonItem(buttonSlot, item);
+                }
+                finally
+                {
+                    TransitionGate.Release();
+                }
+            }
+            finally
+            {
+                ItemMutationGate.Release();
+            }
+        }
+
+        private bool UpsertButtonItem(int buttonSlot, PlayableItem item)
         {
             var quickMediaItem = item.Clone();
             var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
@@ -285,14 +363,22 @@ namespace WearWare.Services.QuickMedia
         /// </summary>
         public async Task<bool> DeleteButtonItemAsync(int buttonSlot)
         {
-            await TransitionGate.WaitAsync();
+            await ItemMutationGate.WaitAsync();
             try
             {
-                return DeleteButtonItem(buttonSlot);
+                await TransitionGate.WaitAsync();
+                try
+                {
+                    return DeleteButtonItem(buttonSlot);
+                }
+                finally
+                {
+                    TransitionGate.Release();
+                }
             }
             finally
             {
-                TransitionGate.Release();
+                ItemMutationGate.Release();
             }
         }
 
@@ -317,11 +403,7 @@ namespace WearWare.Services.QuickMedia
             try
             {
                 ItemDeleting?.Invoke(buttonSlot);
-                var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonSlot.ToString());
-                if (Directory.Exists(buttonPath))
-                {
-                    Directory.Delete(buttonPath, recursive: true);
-                }
+                DeleteButtonFiles(buttonSlot);
 
                 _buttonSlotItems[buttonSlot] = null;
 
@@ -335,6 +417,7 @@ namespace WearWare.Services.QuickMedia
                 deleted = true;
                 return true;
             }
+
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{tag} Error deleting quick media item for slot {slot}.", _logTag, buttonSlot);
@@ -343,6 +426,18 @@ namespace WearWare.Services.QuickMedia
             finally
             {
                 ItemDeletionFinished?.Invoke(buttonSlot, deleted);
+            }
+        }
+
+        private static void DeleteButtonFiles(int buttonSlot)
+        {
+            var buttonPath = Path.Combine(PathConfig.QuickMediaPath, buttonSlot.ToString());
+            try
+            {
+                Directory.Delete(buttonPath, recursive: true);
+            }
+            catch (DirectoryNotFoundException)
+            {
             }
         }
     }

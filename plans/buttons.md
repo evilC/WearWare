@@ -1,6 +1,6 @@
 # Buttons
 
-Status: Configurable Pi GPIO and MCP23017 QuickMedia providers are implemented. Hardware testing and recovery behavior remain future work. See also [I2C](i2c.md).
+Status: Configurable Pi GPIO and MCP23017 providers and central button routing are implemented. Hardware testing and recovery behavior remain future work. See also [I2C](i2c.md).
 
 ## Goals
 
@@ -8,14 +8,16 @@ Status: Configurable Pi GPIO and MCP23017 QuickMedia providers are implemented. 
 - Share the existing `GpioButton` handling logic between providers.
 - Configure the provider and button pins in `config/buttonsconfig.json`. Its empty `PiGpio` configuration is a safe default.
 
-## Proposed approach
+## Current implementation
 
 - `PiGpio` uses an explicit ordered list of available BCM GPIO pins, accounting for the installed matrix HAT and other peripherals. `excludeI2cPins` rejects GPIO2/3 in that list when true; it never remaps the configured pins.
 - `Mcp23017` uses an ordered list of driver pin numbers plus two interrupt pin entries in IA, IB order. The I2C bus and address are fixed to bus 1 and `0x20`.
-- Both providers expose a shared `GpioController`, allowing reuse of the existing `GpioButton`-based handler.
+- Both providers expose a shared `GpioController`. The central button handler subscribes to all configured pins and routes presses according to their current function.
 - Each provider owns its controller resources; the MCP23017 provider also owns the Pi GPIO controller used for interrupts and the I2C device. Individual buttons do not dispose shared controllers.
 - If `buttonsconfig.json` is missing, WearWare creates an empty `PiGpio` configuration. Invalid config is logged and leaves buttons disabled without stopping playlist playback. The former `buttonpins.json` is no longer read.
-- Preserve the current 200 ms debounce and 100 ms suppression of events after each button is created unless testing shows a change is needed. The suppression is not limited to application startup.
+- The Buttons page assigns `None` or `QuickMedia` to each pin and saves the mapping in `config/buttonfunctionmapping.json`. Changes take effect immediately. QuickMedia button numbers correspond to the configured pin order, including pins assigned to other functions.
+- Reassigning a QuickMedia button stops its active item or clears its saved Forever item. Other QuickMedia playback continues or resumes as appropriate; otherwise control returns to the selected normal mode. The item's files are retained if the button is assigned to QuickMedia again.
+- `GpioButton` uses its default pull-up and resistor settings and its default debounce time of zero. Physical debounce behaviour still needs testing.
 
 ## MCP23017 wiring
 

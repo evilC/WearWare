@@ -126,29 +126,15 @@ namespace WearWare.Components.Pages.QuickMedia
                 {
                     var originalItem = formModel.OriginalItem;
                     originalItem.UpdateFromClone(formModel.UpdatedItem);
-                    QuickMediaManager.UpsertButtonItem(formModel.ItemIndex, originalItem);
+                    if (!await QuickMediaManager.UpsertButtonItemAsync(formModel.ItemIndex, originalItem))
+                        throw new InvalidOperationException("Could not save Quick Media item. See the log for details.");
                     OperationProgress.CompleteOperation(opId, true, "Done");
                 }
                 else
                 {
                     // ADD mode
                     var newItem = formModel.UpdatedItem;
-                    newItem.ParentFolder = Path.Combine(PathConfig.QuickMediaFolder, formModel.ItemIndex.ToString());
-                    
-                    // Copy fseq file
-                    var copyFrom = formModel.OriginalItem.GetFseqFilePath();
-                    var copyTo = newItem.GetFseqFilePath();
-                    await FileUtils.CopyFileAsync(copyFrom, copyTo).ConfigureAwait(false);
-                    
-                    // Copy source file
-                    var srcCopyFrom = formModel.OriginalItem.GetSourceFilePath();
-                    var srcCopyTo = newItem.GetSourceFilePath();
-                    if (!File.Exists(srcCopyTo))
-                    {
-                        await FileUtils.CopyFileAsync(srcCopyFrom, srcCopyTo).ConfigureAwait(false);
-                    }
-                    
-                    if (!QuickMediaManager.UpsertButtonItem(formModel.ItemIndex, newItem))
+                    if (!await QuickMediaManager.UpsertButtonItemAsync(formModel.ItemIndex, newItem, formModel.OriginalItem))
                         throw new InvalidOperationException("Could not save Quick Media item. See the log for details.");
                     OperationProgress.CompleteOperation(opId, true, "Done");
                 }

@@ -9,7 +9,8 @@ namespace WearWare.Services.Button
         private static readonly string ConfigFilePath = Path.Combine(PathConfig.ConfigPath, "buttonfunctionmapping.json");
         private ButtonFunctionMappingConfig _config;
 
-        public ButtonFunctionMappingConfig Config => _config;
+        public ButtonFunctionMappingConfig Config => Volatile.Read(ref _config);
+        public event Action? StateChanged;
 
         public ButtonFunctionMappingService(ILogger<ButtonFunctionMappingService> logger)
         {
@@ -51,43 +52,58 @@ namespace WearWare.Services.Button
         /// <returns>The assigned function ("None", "QuickMedia", etc.), or "None" if not found.</returns>
         public string GetFunctionForPin(string pinName)
         {
-            if (_config.Mappings == null)
+            var mappings = Config.Mappings;
+            if (mappings == null)
             {
                 return "None";
             }
 
-            var mapping = _config.Mappings.FirstOrDefault(m => m.PinName == pinName);
+            var mapping = mappings.FirstOrDefault(m => m.PinName == pinName);
             return mapping?.Function ?? "None";
         }
 
         /// <summary>
         /// Sets the function assignment for a button pin.
         /// </summary>
-        public async Task SetFunctionForPinAsync(string pinName, string function)
+        internal void SetFunctionForPin(string pinName, string function)
         {
-            if (_config.Mappings == null)
-            {
-                _config.Mappings = [];
-            }
-
-            var mapping = _config.Mappings.FirstOrDefault(m => m.PinName == pinName);
-            if (mapping == null)
-            {
-                mapping = new ButtonFunctionMapping { PinName = pinName };
-                _config.Mappings = _config.Mappings.Append(mapping).ToArray();
-            }
-
-            mapping.Function = function;
+            var mappings = (Config.Mappings ?? [])
+                .Where(m => m.PinName != pinName)
+                .Select(m => new ButtonFunctionMapping { PinName = m.PinName, Function = m.Function })
+                .Append(new ButtonFunctionMapping { PinName = pinName, Function = function })
+                .ToArray();
+            var updated = new ButtonFunctionMappingConfig { Mappings = mappings };
+            ValidateMappings(updated);
 
             try
             {
-                await Task.Run(() => JsonUtils.ToJsonFile(ConfigFilePath, _config));
+                JsonUtils.ToJsonFileAtomic(ConfigFilePath, updated, _logger);
+                Volatile.Write(ref _config, updated);
                 _logger.LogInformation("Updated button function mapping: {pinName} -> {function}", pinName, function);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 _logger.LogError(ex, "Failed to save button function mapping for pin {pinName}.", pinName);
                 throw;
+            }
+        }
+
+        internal void NotifyStateChanged()
+        {
+            var handlers = StateChanged;
+            if (handlers == null)
+                return;
+
+            foreach (Action handler in handlers.GetInvocationList())
+            {
+                try
+                {
+                    handler();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "A button mapping listener failed.");
+                }
             }
         }
 

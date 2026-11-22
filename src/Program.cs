@@ -107,6 +107,7 @@ builder.Services.AddSingleton<PlaylistHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<PlaylistHandler>());
 builder.Services.AddSingleton<ButtonManager>();
 builder.Services.AddSingleton<ButtonFunctionMappingService>();
+builder.Services.AddSingleton<ButtonHandler>();
 builder.Services.AddSingleton<QuickMediaHandler>();
 builder.Services.AddSingleton<ModeManager>();
 builder.Services.AddSingleton<FluidRenderer>();
@@ -154,5 +155,6 @@ app.Services.GetRequiredService<ButtonManager>().Initialize();
 // Wire mode handling before enabling button events
 app.Services.GetRequiredService<ModeHandler>();
 app.Services.GetRequiredService<QuickMediaHandler>().Initialize();
+app.Services.GetRequiredService<ButtonHandler>().Initialize();
 
 app.Run();

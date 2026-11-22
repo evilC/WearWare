@@ -4,14 +4,12 @@ using WearWare.Services.Playback;
 using WearWare.Services.Button;
 using WearWare.Services.Mode;
 
-using Iot.Device.Button;
-
 namespace WearWare.Services.QuickMedia
 {
     public class QuickMediaHandler : IHandler, IDisposable
     {
         private readonly QuickMediaManager _quickMediaManager;
-        private readonly ButtonManager _buttonManager;
+        private readonly ButtonHandler _buttonHandler;
         private readonly IMediaPlayer _mediaPlayer;
         private readonly ILogger<QuickMediaHandler> _logger;
         private readonly string _logTag = "[QUICKMEDIAHANDLER]";
@@ -28,25 +26,24 @@ namespace WearWare.Services.QuickMedia
         private Func<DisplayMode, Task<bool>>? _requestControl;
         private Func<DisplayMode, Task>? _releaseControl;
         private Func<bool>? _controlAvailable;
-        private Dictionary<int, int> _buttonIndexToSlot = [];
-        private Dictionary<int, GpioButton> _gpioButtons = [];
 
         public string Name => "QuickMedia";
         public HandlerState State => _state;
         public event Action? StateChanged;
         internal SemaphoreSlim TransitionGate => _quickMediaManager.TransitionGate;
+        internal SemaphoreSlim ItemMutationGate => _quickMediaManager.ItemMutationGate;
 
         /// <summary>
         /// Connects the QM handler to its manager, buttons, and media player.
         /// </summary>
         public QuickMediaHandler(
             QuickMediaManager quickMediaManager,
-            ButtonManager buttonManager,
+            ButtonHandler buttonHandler,
             IMediaPlayer mediaPlayer,
             ILogger<QuickMediaHandler> logger)
         {
             _quickMediaManager = quickMediaManager;
-            _buttonManager = buttonManager;
+            _buttonHandler = buttonHandler;
             _mediaPlayer = mediaPlayer; 
             _logger = logger;
             _quickMediaManager.StateChanged += OnQuickMediaManagerStateChanged;
@@ -94,7 +91,7 @@ namespace WearWare.Services.QuickMedia
         }
 
         /// <summary>
-        /// Loads QM items and subscribes to button events without starting playback.
+        /// Loads QM items and subscribes to logical button events without starting playback.
         /// </summary>
         public void Initialize()
         {
@@ -102,12 +99,12 @@ namespace WearWare.Services.QuickMedia
 
             _quickMediaManager.LoadAllItems();
 
-            SubscribeToButtonEvents();
+            _buttonHandler.QuickMediaPressed += OnButtonPressed;
             _logger.LogInformation("{tag} QuickMedia items loaded. Not starting playback - waiting for mode switch.", _logTag);
         }
 
         /// <summary>
-        /// Stops playback and releases manager and GPIO subscriptions.
+        /// Stops playback and releases manager and button subscriptions.
         /// </summary>
         public void Dispose()
         {
@@ -116,79 +113,8 @@ namespace WearWare.Services.QuickMedia
             _quickMediaManager.StateChanged -= OnQuickMediaManagerStateChanged;
             _quickMediaManager.ItemDeleting -= OnItemDeleting;
             _quickMediaManager.ItemDeletionFinished -= OnItemDeletionFinished;
-            try
-            {
-                Stop();
-            }
-            finally
-            {
-                UnsubscribeFromButtonEvents();
-            }
-        }
-
-        /// <summary>
-        /// Subscribes configured QM buttons to their GPIO press events.
-        /// </summary>
-        private void SubscribeToButtonEvents()
-        {
-            if (_buttonManager.Provider == null)
-            {
-                _logger.LogInformation("{tag} No button provider available, button events disabled.", _logTag);
-                return;
-            }
-
-            var quickMediaButtons = _buttonManager.GetButtonsForFunction("QuickMedia").ToList();
-            if (quickMediaButtons.Count == 0)
-            {
-                _logger.LogInformation("{tag} No buttons assigned to QuickMedia function.", _logTag);
-                return;
-            }
-
-            foreach (var button in quickMediaButtons)
-            {
-                try
-                {
-                    var buttonNumber = button.Index + 1;
-                    var gpioButton = new GpioButton(
-                        buttonPin: button.PinNumber,
-                        isPullUp: true,
-                        hasExternalResistor: false,
-                        gpio: _buttonManager.Provider.Controller,
-                        shouldDispose: false,
-                        debounceTime: TimeSpan.FromMilliseconds(50));
-                    
-                    gpioButton.Press += (s, e) => OnButtonPressed(buttonNumber);
-                    _gpioButtons[button.PinNumber] = gpioButton;
-                    
-                    _logger.LogInformation("{tag} Subscribed to button {pin} ({name}) -> button {button}.", _logTag, button.PinNumber, button.PinName, buttonNumber);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "{tag} Failed to subscribe to button {pin} ({name}).", _logTag, button.PinNumber, button.PinName);
-                }
-            }
-            
-            _logger.LogInformation("{tag} Button event handlers initialized and enabled.", _logTag);
-        }
-
-        /// <summary>
-        /// Disposes the GPIO buttons and clears their subscriptions.
-        /// </summary>
-        private void UnsubscribeFromButtonEvents()
-        {
-            foreach (var gpioButton in _gpioButtons.Values)
-            {
-                try
-                {
-                    gpioButton?.Dispose();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "{tag} Failed to dispose GpioButton.", _logTag);
-                }
-            }
-            _gpioButtons.Clear();
-            _buttonIndexToSlot.Clear();
+            _buttonHandler.QuickMediaPressed -= OnButtonPressed;
+            Stop();
         }
 
         /// <summary>
@@ -198,6 +124,29 @@ namespace WearWare.Services.QuickMedia
         {
             _ = HandleButtonPressAsync(buttonNumber);
         }
+
+        // The mode coordinator holds the transition gate during a mapping change.
+        internal async Task<bool> RemoveButtonAssignmentAsync(int buttonSlot)
+        {
+            var saved = true;
+            if (_quickMediaManager.ForeverButtonSlot == buttonSlot)
+                saved = _quickMediaManager.ClearForeverButton();
+
+            if (_quickMediaManager.ActiveButtonSlot == buttonSlot)
+            {
+                Stop();
+                _quickMediaManager.ClearActiveButton();
+                if (_hasControl && !ResumeForever())
+                    await YieldControlAsync();
+            }
+            return saved;
+        }
+
+        internal void UpdateButtonAssignment(int buttonSlot, bool assigned) =>
+            _quickMediaManager.UpdateButtonAssignment(buttonSlot, assigned);
+
+        internal bool DeleteUnassignedButtonItem(int buttonSlot) =>
+            _quickMediaManager.DeleteUnassignedButtonItem(buttonSlot);
 
         /// <summary>
         /// Supplies the callbacks used to request and yield playback control.
@@ -225,6 +174,8 @@ namespace WearWare.Services.QuickMedia
             await TransitionGate.WaitAsync();
             try
             {
+                if (!_controlAvailable())
+                    return;
                 _logger.LogInformation("{tag} QuickMedia button pressed: button {button}.", _logTag, buttonNumber);
                 if (!_quickMediaManager.GetQuickMediaButtonNumbers().Contains(buttonNumber) ||
                     _quickMediaManager.GetButtonItem(buttonNumber) == null)
