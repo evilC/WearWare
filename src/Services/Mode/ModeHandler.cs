@@ -322,11 +322,12 @@ namespace WearWare.Services.Mode
 
         private void OnJogPressed(string pinName, JogDirection direction)
         {
-            if (State.ActiveMode == DisplayMode.Physics)
-                _ = HandleJogAsync(pinName, direction);
+            var activeMode = State.ActiveMode;
+            if (activeMode == DisplayMode.Physics || activeMode == DisplayMode.Playlist)
+                _ = HandleJogAsync(pinName, direction, activeMode);
         }
 
-        private async Task HandleJogAsync(string pinName, JogDirection direction)
+        private async Task HandleJogAsync(string pinName, JogDirection direction, DisplayMode activeMode)
         {
             try
             {
@@ -342,11 +343,13 @@ namespace WearWare.Services.Mode
                         JogDirection.Previous => nameof(ButtonFunction.JogPrevious),
                         _ => throw new ArgumentOutOfRangeException(nameof(direction))
                     };
-                    if (_buttonMappings.GetFunctionForPin(pinName) != function)
+                    if (_buttonMappings.GetFunctionForPin(pinName) != function || State.ActiveMode != activeMode)
                         return;
 
-                    if (State.ActiveMode == DisplayMode.Physics)
+                    if (activeMode == DisplayMode.Physics)
                         await SelectPhysicsSimulationCoreAsync(_physicsHandler.GetJoggedSimulation(direction));
+                    else
+                        JogPlaylist(direction);
                 }
                 finally
                 {
@@ -356,6 +359,33 @@ namespace WearWare.Services.Mode
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[MODEHANDLER] Failed to handle {direction} jog from {pinName}.", direction, pinName);
+            }
+        }
+
+        private void JogPlaylist(JogDirection direction)
+        {
+            var playlist = _playlistManager.CurrentPlaylist;
+            if (playlist == null)
+                return;
+
+            var wasRunning = _playlistHandler.IsRunning();
+            if (wasRunning)
+                _playlistHandler.Stop();
+            try
+            {
+                var index = direction switch
+                {
+                    JogDirection.Next => playlist.GetNextElegibleItemIndex(),
+                    JogDirection.Previous => playlist.GetPreviousEligibleItemIndex(),
+                    _ => throw new ArgumentOutOfRangeException(nameof(direction))
+                };
+                if (index.HasValue)
+                    playlist.JumpToPlaylistIndex(index.Value);
+            }
+            finally
+            {
+                if (wasRunning)
+                    _playlistHandler.Start();
             }
         }
 

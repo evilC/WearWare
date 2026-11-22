@@ -66,32 +66,26 @@ namespace WearWare.Services.Playlist
         /// Gets the index of the next enabled item in the playlist
         /// </summary>
         /// <returns>The index of the next enabled item, or null if none found</returns>
-        public int? GetNextElegibleItemIndex()
-        {
-            var currentIndex = _state.CurrentItem;
-            if (_items.Count == 0)
-            {
-                return null;
-            }
+        public int? GetNextElegibleItemIndex() => GetAdjacentEligibleItemIndex(1);
 
-            int checkedItems = 0;
-            while (true)
+        internal int? GetPreviousEligibleItemIndex() => GetAdjacentEligibleItemIndex(-1);
+
+        private int? GetAdjacentEligibleItemIndex(int direction)
+        {
+            if (_items.Count == 0)
+                return null;
+
+            var currentIndex = _state.CurrentItem;
+            if (currentIndex == -1 && direction == -1)
+                currentIndex = 0;
+
+            for (var checkedItems = 0; checkedItems < _items.Count; checkedItems++)
             {
-                checkedItems++;
-                currentIndex = (currentIndex + 1) % _items.Count;
-                
+                currentIndex = (currentIndex + direction + _items.Count) % _items.Count;
                 if (_items[currentIndex].Enabled)
-                {
-                    // Return the next enabled item
-                    break;
-                }
-                // If we've looped all the way around and found no valid items, return null
-                if (checkedItems >= _items.Count)
-                {
-                    return null;
-                }
+                    return currentIndex;
             }
-            return currentIndex;
+            return null;
         }
 
 
