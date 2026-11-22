@@ -6,7 +6,7 @@ This document records the current working model for WearWare's responsibilities 
 
 ### Web UI
 
-Razor pages own layout, presentation, and UI-specific state. Pages call Managers to read available options or request changes. Managers do not depend on Razor.
+Razor pages own layout, presentation, and UI-specific state. Pages call Managers to read available options and use the ModeHandler for operations that affect playback. Managers should not depend on Razor; some existing form operations still do.
 
 ### Managers
 
@@ -27,11 +27,13 @@ Each item should be able to specify a `PlayMode` - current implementation allows
 
 Numerous playlists can be defined, and switched to in the Web UI.
 
-Interruptable by QuickMedia.
+Interruptible by QuickMedia.
+
+Playlist Start/Stop controls whether the playlist should play when it has display control. It does not select Playlist mode or interrupt QuickMedia. The running/stopped state persists across restarts. When Playlist has control but is stopped, the display is blank.
 
 #### Components
 
-- `PlaylistManager` manages playlist definitions, edits, configuration, and the current playlist position.
+- `PlaylistManager` manages playlist definitions, edits, the selected playlist, the current playlist position, and the desired running/stopped state.
 - `PlaylistHandler` runs playlist playback and handles playlist-specific logical input.
 
 #### Buttons
@@ -43,11 +45,13 @@ Interruptable by QuickMedia.
 
 
 
-### QuickMedia (Mode)
+### QuickMedia (Interrupting Mode)
 
-Contextual media which is triggered through the press of a physical button. Interrupts interruptable modes, plays the media, then returns to the interrupted mode on the same item that it was.
+Contextual media triggered by a physical button. QuickMedia interrupts the current mode, plays the requested media, then returns control to the currently selected mode. If the selected mode changes during the interruption, QuickMedia continues and yields to the new selection when finished.
 
 QuickMedia items may be of "Forever" type - they are set to play forever, until the button that triggered them is pressed again.
+
+Temporary QuickMedia items can play over a Forever item. When the temporary item finishes, the Forever item resumes; QuickMedia yields only when it has no item left to play. A saved Forever item resumes after an app restart.
 
 #### Components
 
@@ -66,14 +70,12 @@ A real-time physics simulation that reacts to data from an IMU (Accelerometer)
 
 It is intended that various simulations be available.
 
-(Should be) Interruptable by QuickMedia.
+Interruptible by QuickMedia.
 
 #### Components
 
-- `PhysicsManager` manages general Physics configuration applicable to all simulations (eg which type of IMU the user has installed), as well as the current simulation.  
-- `PhysicsHandler` runs the selected simulation and manages it's runtime lifecycle.  
-  Initializes the IMU and passes an instance of the already warmed-up IMU class to any Physics runner that runs.
-- Each simulation is it's own Runner, and is responsible for storing it's own configuration, if any, independently of the manager. (Eg number of balls in a ball simulation)
+- `PhysicsHandler` currently runs the Fluid simulation and manages its runtime lifecycle. `ImuService` initializes and monitors the IMU separately.
+- A `PhysicsManager`, simulation selection, and independently configurable simulation runners are planned.
 
 #### Buttons
 
@@ -82,6 +84,8 @@ None currently planned
 
 
 ### Button Management
+
+The current QuickMedia handler subscribes directly to the configured GPIO buttons. The routing described below is planned, not implemented.
 
 #### Components
 
@@ -100,24 +104,32 @@ None currently planned
 
 ### Mode
 
-The mode system owns persisted mode state and coordinates runtime transitions, including which mode Handler has control of the display.
+The mode system owns the selected mode and coordinates runtime transitions, including which mode Handler has control of the display.
+
+- `CurrentMode` is the selected underlying mode, currently Playlist or Physics.
+- `InterruptingMode` is QuickMedia while it holds control, or null otherwise.
+- The interrupting mode controls the display when present. Otherwise, the selected mode controls it. If Physics is unavailable or fails, playback falls back to Playlist while the selected mode remains Physics for a future retry.
+
+Playlist and Physics are interruptible. Future modes such as Preview and Settings may be non-interruptible.
 
 #### Components
 
-- `ModeManager` owns persisted mode state, including the current mode and the mode to return to after QuickMedia.
+- `ModeManager` owns the current and interrupting mode state.
 - `ModeHandler` owns runtime mode transitions and arbitrates which mode Handler has control of the display.
 
 #### Buttons
 
 * Next / Prevoius - changes currently active mode
-  Note that only modes marked with `Selectable Mode` can be selected with these buttons (ie Playlist and Physics) - QuickMedia is not selectable with these buttons as it is triggered with one of the QuickMedia slot buttons  
-  Note that if QuickMedia is currently active in Forever mode, these buttons would change the return mode, not the currently active mode
+  Note that only modes marked with `Selectable Mode` can be selected with these buttons (ie Playlist and Physics) - QuickMedia is triggered with a QuickMedia slot button.
+  If QuickMedia is active, changing the selected mode changes the return destination without stopping QuickMedia. Physical mode-switch buttons are not yet implemented.
 
 
 
 ### Matrix
 
-There must be one owner for the physical matrix instance and its lifecycle. Mode Handlers use the matrix through a shared matrix-facing component. `ModeHandler` coordinates which Handler may use the display, and waits for the current Handler to stop before handing control to another. The component name and exact API are undecided. Mode Handlers should not start or stop one another directly.
+`MatrixService` owns the physical matrix instance and its lifecycle, and locks access during matrix operations and replacement. `ModeHandler` coordinates which Handler may use the display, and waits for the current Handler to stop before starting another. Mode Handlers should not start or stop one another directly.
+
+Structural matrix options changes still need coordinated suspension and resumption of playback; a Forever item can otherwise hold the matrix lock indefinitely.
 
 These are working boundaries. They do not imply that every Manager and Handler must be separate if a responsibility does not justify another component.
 
@@ -127,7 +139,7 @@ These are working boundaries. They do not imply that every Manager and Handler m
 
 (To be implemented)
 
-Not interruptable by QuickMedia.
+Not interruptible by QuickMedia.
 
 To be used at home, when adding new animations. Facilitates seeing how they look etc.
 
@@ -141,7 +153,7 @@ Items in the preview folder are shown on the preview page, and each one has a "k
 
 (To be implemented)
 
-Not interruptable by QuickMedia.
+Not interruptible by QuickMedia.
 
 Allows changing of various options via a menu displayed on the Matrix.
 
@@ -149,25 +161,24 @@ Allows changing of various options via a menu displayed on the Matrix.
 
 ## Persisted state
 
-- `PlaylistManager` persists the selected playlist and current item. Save when the selection or current item changes, not on every frame.
-- `QuickMediaManager` persists which QuickMedia item is active.
-- `ModeManager` persists the current mode and, while QuickMedia is active, the mode to return to. `ReturnMode` or `InterruptedMode` is clearer than `LastMode`.
+- `PlaylistManager` persists the selected playlist, current item, and running/stopped state. The running state is in `config/playlist-state.json`; when absent, Playlist defaults to running.
+- `QuickMediaManager` persists the active Forever slot in `quickmedia/quickmedia-state.json`.
+- `ModeManager` persists `CurrentMode` and `InterruptingMode` in `config/mode-state.json`.
 
-QuickMedia is represented as the current mode while active. Its active item belongs to QuickMedia state; the interrupted (return mode) belong to mode state.
+The current mode remains the selected return destination during QuickMedia. On restart, a saved QuickMedia interruption resumes its Forever item if available. A temporary item is not restarted; if it was playing over a saved Forever item, that Forever item resumes.
 
 ## QuickMedia handoff example
 
-This illustrates the intended responsibilities, not a finalized API:
+This illustrates the current coordination. Button routing is still planned:
 
-1. `ButtonInputHandler` routes a QuickMedia button press to `QuickMediaHandler`.
+1. A GPIO button press reaches `QuickMediaHandler` directly.
 2. `QuickMediaHandler` requests display control from `ModeHandler`.
 3. `ModeHandler` asks the active mode Handler to stop or suspend, and waits for it to release the matrix.
-4. `ModeHandler` gives `QuickMediaHandler` exclusive display control, and QuickMedia starts the requested item.
-5. If QuickMedia starts successfully, `ModeHandler` tells `ModeManager` to persist `CurrentMode = QuickMedia` and the interrupted mode as the return mode. `QuickMediaManager` persists the active item.
-6. If QuickMedia fails to start, `ModeHandler` restores the previous Handler and the failed transition is not persisted as the current mode.
-7. When the QuickMedia playback ends (Animation finished), `QuickMediaHandler` requests release. `ModeHandler` stops QuickMedia, restores the return mode, and persists the resulting mode state.
+4. `ModeHandler` persists `InterruptingMode = QuickMedia`, grants control, and QuickMedia starts the requested item. `QuickMediaManager` persists a Forever slot when one is selected.
+5. While QuickMedia is active, selecting another mode updates `CurrentMode` without stopping QuickMedia.
+6. When QuickMedia has no item left to play, it yields control. `ModeHandler` clears `InterruptingMode` and starts the currently selected mode, respecting Playlist's running/stopped state.
 
-The same handoff applies when Physics, rather than Playlist, was active before QuickMedia.
+The same handoff applies when Physics, rather than Playlist, was active before QuickMedia. If QuickMedia cannot resume at startup, the selected mode is restored instead.
 
 
 
@@ -184,4 +195,3 @@ The same handoff applies when Physics, rather than Playlist, was active before Q
 - What should happen if persistence fails after a Handler successfully takes control?
 - A sudden power loss can occur after a successful handoff but before the new state is persisted. Is a transition-intent or recovery mechanism needed?
 - What should startup do if persisted mode state refers to a missing QuickMedia item, playlist, or simulation?
-- What exact matrix-facing component and API should own the physical matrix resource?
