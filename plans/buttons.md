@@ -16,7 +16,7 @@ Status: Configurable Pi GPIO and MCP23017 providers and central button routing a
 - Each provider owns its controller resources; the MCP23017 provider also owns the Pi GPIO controller used for interrupts and the I2C device. Individual buttons do not dispose shared controllers.
 - If `buttonsconfig.json` is missing, WearWare creates an empty `PiGpio` configuration. Invalid config is logged and leaves buttons disabled without stopping playlist playback. The former `buttonpins.json` is no longer read.
 - The Buttons page assigns `None`, `QuickMedia`, `Jog Next` or `Jog Previous` to each pin and saves the mapping in `config/buttonfunctionmapping.json`. Changes take effect immediately. QuickMedia button numbers correspond to the configured pin order, including pins assigned to other functions.
-- Jog presses are routed to the active mode. Physics uses them to select the next or previous simulation, wrapping at either end and saving the selection. Jog does nothing in Playlist or while QuickMedia is active.
+- Jog presses are routed to the active mode. Physics uses them to select the next or previous simulation, wrapping at either end and saving the selection. Jog does nothing while QuickMedia is active.
 - Reassigning a QuickMedia button stops its active item or clears its saved Forever item. Other QuickMedia playback continues or resumes as appropriate; otherwise control returns to the selected normal mode. The slot's saved item and files are deleted; library originals are preserved.
 - `GpioButton` uses its default pull-up and resistor settings and its default debounce time of zero. Physical debounce behaviour still needs testing.
 
