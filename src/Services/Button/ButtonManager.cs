@@ -1,8 +1,9 @@
 using System.Text.Json;
 using WearWare.Config;
+using WearWare.Services.Button.Providers;
 using WearWare.Utils;
 
-namespace WearWare.Architecture.Button
+namespace WearWare.Services.Button
 {
     /// <summary>
     /// Manages button providers and configuration for the wearable device.

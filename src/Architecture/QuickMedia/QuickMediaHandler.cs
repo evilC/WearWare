@@ -1,6 +1,6 @@
 using WearWare.Common.Media;
 using WearWare.Architecture.Playback;
-using WearWare.Architecture.Button;
+using WearWare.Services.Button;
 using WearWare.Architecture.Mode;
 
 using Iot.Device.Button;

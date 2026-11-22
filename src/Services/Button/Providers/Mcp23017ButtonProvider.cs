@@ -2,7 +2,7 @@ using Iot.Device.Mcp23xxx;
 using System.Device.Gpio;
 using System.Device.I2c;
 
-namespace WearWare.Architecture.Button
+namespace WearWare.Services.Button.Providers
 {
     /// <summary>
     /// Provides button input functionality using an Adafruit MCP23017 I2C GPIO expander.

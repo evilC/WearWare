@@ -1,6 +1,6 @@
 using System.Device.Gpio;
 
-namespace WearWare.Architecture.Button
+namespace WearWare.Services.Button.Providers
 {
     /// <summary>
     /// Provides button input functionality using the Raspberry Pi's native GPIO pins.

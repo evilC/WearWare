@@ -1,7 +1,7 @@
 using WearWare.Config;
 using WearWare.Utils;
 
-namespace WearWare.Architecture.Button
+namespace WearWare.Services.Button
 {
     public sealed class ButtonFunctionMappingService
     {

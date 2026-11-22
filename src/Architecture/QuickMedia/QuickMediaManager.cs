@@ -1,6 +1,6 @@
 using WearWare.Common.Media;
 using WearWare.Utils;
-using WearWare.Architecture.Button;
+using WearWare.Services.Button;
 using System.Device.Gpio;
 
 namespace WearWare.Architecture.QuickMedia

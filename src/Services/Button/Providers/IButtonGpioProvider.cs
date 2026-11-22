@@ -1,6 +1,6 @@
 using System.Device.Gpio;
 
-namespace WearWare.Architecture.Button
+namespace WearWare.Services.Button.Providers
 {
     /// <summary>
     /// Represents a GPIO provider that provides button input functionality.

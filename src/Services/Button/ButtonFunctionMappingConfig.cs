@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace WearWare.Architecture.Button
+namespace WearWare.Services.Button
 {
     public sealed class ButtonFunctionMapping
     {
