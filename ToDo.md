@@ -21,9 +21,6 @@
   ButtonHandler should handle subscribing to the physical GPIO button, and then route events to the handler.  
   eg ButtonHandler subscribes to GPIO pin 10, which is assigned to QuickMedia...  
   ... When pressed, should send "QuickMedia button pressed" event to QuickMedia Handler.
-- ModeHandler should not store previous state, should instead store CurrentState and InterruptingState  
-  That way if QM interrupts Playback with Forever item, and while playing we change mode to Physics...  
-  ... When we end the forever item, it goes to Physics
 
 ## I2C support
 - Battery voltage monitoring / logging
