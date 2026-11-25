@@ -188,6 +188,10 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var tip = new Point(
                 start.X + Math.Sin(tipAngle) * length + idleSway,
                 start.Y + Math.Cos(tipAngle) * length);
+            // Reduce curvature without changing the root-to-tip displacement.
+            middle = new Point(
+                (start.X + tip.X) * 0.1 + middle.X * 0.8,
+                (start.Y + tip.Y) * 0.1 + middle.Y * 0.8);
 
             var baseRadius = radius * 0.231;
             var middleRadius = radius * 0.1955;
