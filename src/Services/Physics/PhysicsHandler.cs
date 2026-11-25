@@ -2,6 +2,7 @@ using WearWare.Services.Button;
 using WearWare.Services.Physics.Imu;
 using WearWare.Services.Physics.Simulations;
 using WearWare.Services.Physics.Simulations.Ball;
+using WearWare.Services.Physics.Simulations.AcidSmiley;
 using WearWare.Services.Physics.Simulations.Fluid;
 using WearWare.Services.Physics.Simulations.ImuTest;
 using WearWare.Utils;
@@ -31,6 +32,7 @@ namespace WearWare.Services.Physics
             FluidRenderer fluid,
             BallPhysicsRenderer ball,
             ImuTestRenderer imuTest,
+            AcidSmileyRenderer acidSmiley,
             ILogger<PhysicsHandler> logger)
         {
             _imu = imu;
@@ -39,7 +41,8 @@ namespace WearWare.Services.Physics
             [
                 new("Fluid", fluid),
                 new("Ball", ball),
-                new("IMU Test", imuTest)
+                new("IMU Test", imuTest),
+                new("Acid Smiley", acidSmiley)
             ];
             Simulations = Array.AsReadOnly(_simulations.Select(simulation => simulation.Name).ToArray());
             _selectedSimulation = LoadSelection();
