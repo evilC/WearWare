@@ -177,7 +177,8 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         {
             var mouthPoint = SmilePoint(centerX, centerY, radius, _basePosition);
             var start = mouthPoint;
-            var length = radius * 0.31;
+            // Keep the wider rounded tip within the same overall reach.
+            var length = radius * 0.2716;
             var middleAngle = (_baseAngle + _tipAngle) / 2;
             var idleSway = Math.Sin(_elapsedSeconds * 2.1) * radius * 0.045;
             var tipAngle = _tipAngle + Math.Sin(_elapsedSeconds * 1.7) * 0.055;
@@ -188,9 +189,9 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                 start.X + Math.Sin(tipAngle) * length + idleSway,
                 start.Y + Math.Cos(tipAngle) * length);
 
-            var baseRadius = radius * 0.21;
-            var middleRadius = radius * 0.17;
-            var tipRadius = radius * 0.12;
+            var baseRadius = radius * 0.231;
+            var middleRadius = radius * 0.1955;
+            var tipRadius = radius * 0.1584;
             var control = GetPathControl(start, middle, tip);
             var baseDirection = GetPathDirection(start, control, tip, 0);
             var baseNormal = new Point(baseDirection.Y, -baseDirection.X);
