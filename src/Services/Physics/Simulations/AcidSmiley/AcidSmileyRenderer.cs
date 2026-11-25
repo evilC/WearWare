@@ -177,7 +177,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         {
             var mouthPoint = SmilePoint(centerX, centerY, radius, _basePosition);
             var start = mouthPoint;
-            var length = radius * 0.35;
+            var length = radius * 0.31;
             var middleAngle = (_baseAngle + _tipAngle) / 2;
             var idleSway = Math.Sin(_elapsedSeconds * 2.1) * radius * 0.045;
             var tipAngle = _tipAngle + Math.Sin(_elapsedSeconds * 1.7) * 0.055;
@@ -191,83 +191,121 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var baseRadius = radius * 0.21;
             var middleRadius = radius * 0.17;
             var tipRadius = radius * 0.12;
-            var tongueOutline = CreateTongueOutline(start, middle, tip, baseRadius, middleRadius, tipRadius, radius);
-            FillPolygon(canvas, tongueOutline, TongueColor);
-
             var control = GetPathControl(start, middle, tip);
             var baseDirection = GetPathDirection(start, control, tip, 0);
+            var baseNormal = new Point(baseDirection.Y, -baseDirection.X);
+            const double attachmentPosition = 0.9;
+            var attachmentDepth = TongueRootDepth(attachmentPosition, radius);
+            var rightEdge = new Point(
+                start.X + baseNormal.X * baseRadius * attachmentPosition + baseDirection.X * attachmentDepth,
+                start.Y + baseNormal.Y * baseRadius * attachmentPosition + baseDirection.Y * attachmentDepth);
+            var shift = centerY + MouthBounds((rightEdge.X - centerX) / radius).Bottom * radius - rightEdge.Y;
+            start = new Point(start.X, start.Y + shift);
+            middle = new Point(middle.X, middle.Y + shift);
+            tip = new Point(tip.X, tip.Y + shift);
+
+            control = GetPathControl(start, middle, tip);
             var grooveStart = new Point(
-                start.X + baseDirection.X * radius * 0.07,
-                start.Y + baseDirection.Y * radius * 0.07);
+                start.X + baseDirection.X * radius * 0.005,
+                start.Y + baseDirection.Y * radius * 0.005);
             var grooveEnd = new Point(
                 tip.X + (middle.X - tip.X) * 0.25,
                 tip.Y + (middle.Y - tip.Y) * 0.25);
             var grooveRadius = Math.Max(0.5, radius * 0.025);
-            DrawThickSegment(canvas, grooveStart, middle, grooveRadius, grooveRadius, TongueGrooveColor);
-            DrawThickSegment(canvas, middle, grooveEnd, grooveRadius, grooveRadius, TongueGrooveColor);
+            DrawTongueShape(canvas, start, control, tip, baseDirection, baseNormal,
+                baseRadius, middleRadius, tipRadius, radius, grooveStart, middle, grooveEnd, grooveRadius);
         }
 
-        private static Point[] CreateTongueOutline(
+        private static void DrawTongueShape(
+            RGBLedCanvas canvas,
             Point start,
-            Point middle,
+            Point control,
             Point tip,
+            Point baseDirection,
+            Point baseNormal,
             double baseRadius,
             double middleRadius,
             double tipRadius,
-            double faceRadius)
+            double faceRadius,
+            Point grooveStart,
+            Point grooveMiddle,
+            Point grooveEnd,
+            double grooveRadius)
         {
-            const int rootSteps = 16;
-            const int sideSteps = 12;
-            const int tipSteps = 8;
-            var outline = new Point[rootSteps + 1 + sideSteps + tipSteps + sideSteps - 1];
-            var control = GetPathControl(start, middle, tip);
-            var baseDirection = GetPathDirection(start, control, tip, 0);
-            var baseNormal = new Point(baseDirection.Y, -baseDirection.X);
-            var index = 0;
-
-            // Paired lobes and a center notch give the root a stable, cleft shape.
-            for (var i = 0; i <= rootSteps; i++)
+            const int steps = 32;
+            var samples = new TongueSample[steps + 1];
+            for (var i = 0; i <= steps; i++)
             {
-                var across = -1 + 2.0 * i / rootSteps;
-                var lobeDepth = -faceRadius * 0.05 * Math.Pow(Math.Sin(Math.PI * across), 2);
-                var notchDepth = faceRadius * 0.07 * Math.Exp(-Math.Pow(across / 0.18, 2));
-                var depth = lobeDepth + notchDepth;
-                outline[index++] = new Point(
-                    start.X + baseNormal.X * across * baseRadius + baseDirection.X * depth,
-                    start.Y + baseNormal.Y * across * baseRadius + baseDirection.Y * depth);
+                var t = i / (double)steps;
+                samples[i] = new TongueSample(GetPathPoint(start, control, tip, t),
+                    GetTongueWidth(t, baseRadius, middleRadius, tipRadius));
             }
 
-            for (var i = 1; i <= sideSteps; i++)
+            var minX = Math.Max(0, (int)Math.Floor(Math.Min(Math.Min(start.X, control.X), tip.X) - baseRadius));
+            var maxX = Math.Min(canvas.Width - 1, (int)Math.Ceiling(Math.Max(Math.Max(start.X, control.X), tip.X) + baseRadius));
+            var minY = Math.Max(0, (int)Math.Floor(Math.Min(Math.Min(start.Y, control.Y), tip.Y) - baseRadius));
+            var maxY = Math.Min(canvas.Height - 1, (int)Math.Ceiling(Math.Max(Math.Max(start.Y, control.Y), tip.Y) + baseRadius));
+            for (var y = minY; y <= maxY; y++)
             {
-                var t = i / (double)sideSteps;
-                var center = GetPathPoint(start, control, tip, t);
-                var direction = GetPathDirection(start, control, tip, t);
-                var normal = new Point(direction.Y, -direction.X);
-                var width = GetTongueWidth(t, baseRadius, middleRadius, tipRadius);
-                outline[index++] = new Point(center.X + normal.X * width, center.Y + normal.Y * width);
+                for (var x = minX; x <= maxX; x++)
+                {
+                    var point = new Point(x, y);
+                    if (!TongueContains(point, start, baseDirection, baseNormal, baseRadius, faceRadius, samples))
+                        continue;
+
+                    var inGroove = DistanceToSegmentSquared(point, grooveStart, grooveMiddle) <= grooveRadius * grooveRadius ||
+                        DistanceToSegmentSquared(point, grooveMiddle, grooveEnd) <= grooveRadius * grooveRadius;
+                    canvas.SetPixel(x, y, inGroove ? TongueGrooveColor : TongueColor);
+                }
+            }
+        }
+
+        private static bool TongueContains(
+            Point point,
+            Point start,
+            Point baseDirection,
+            Point baseNormal,
+            double baseRadius,
+            double faceRadius,
+            TongueSample[] samples)
+        {
+            var dx = point.X - start.X;
+            var dy = point.Y - start.Y;
+            var across = (dx * baseNormal.X + dy * baseNormal.Y) / baseRadius;
+            var along = dx * baseDirection.X + dy * baseDirection.Y;
+            if (along < TongueRootDepth(Math.Clamp(across, -1, 1), faceRadius))
+                return false;
+
+            foreach (var sample in samples)
+            {
+                var sampleX = point.X - sample.Center.X;
+                var sampleY = point.Y - sample.Center.Y;
+                if (sampleX * sampleX + sampleY * sampleY <= sample.Radius * sample.Radius)
+                    return true;
             }
 
-            var tipDirection = GetPathDirection(start, control, tip, 1);
-            var tipNormal = new Point(tipDirection.Y, -tipDirection.X);
-            for (var i = 1; i <= tipSteps; i++)
-            {
-                var angle = Math.PI * i / tipSteps;
-                outline[index++] = new Point(
-                    tip.X + tipNormal.X * Math.Cos(angle) * tipRadius + tipDirection.X * Math.Sin(angle) * tipRadius,
-                    tip.Y + tipNormal.Y * Math.Cos(angle) * tipRadius + tipDirection.Y * Math.Sin(angle) * tipRadius);
-            }
+            return false;
+        }
 
-            for (var i = sideSteps - 1; i >= 1; i--)
-            {
-                var t = i / (double)sideSteps;
-                var center = GetPathPoint(start, control, tip, t);
-                var direction = GetPathDirection(start, control, tip, t);
-                var normal = new Point(direction.Y, -direction.X);
-                var width = GetTongueWidth(t, baseRadius, middleRadius, tipRadius);
-                outline[index++] = new Point(center.X - normal.X * width, center.Y - normal.Y * width);
-            }
+        private static double TongueRootDepth(double across, double faceRadius)
+        {
+            var lobe = -faceRadius * 0.05 * Math.Pow(Math.Sin(Math.PI * across), 2);
+            var notch = -faceRadius * 0.022 * Math.Exp(-Math.Pow(across / 0.3, 2));
+            var corner = Math.Clamp((Math.Abs(across) - 0.75) / 0.25, 0, 1);
+            var rounding = faceRadius * 0.04 * corner * corner * (3 - 2 * corner);
+            return lobe + notch + rounding;
+        }
 
-            return outline;
+        private static double DistanceToSegmentSquared(Point point, Point start, Point end)
+        {
+            var dx = end.X - start.X;
+            var dy = end.Y - start.Y;
+            var lengthSquared = dx * dx + dy * dy;
+            var position = lengthSquared == 0 ? 0 :
+                Math.Clamp(((point.X - start.X) * dx + (point.Y - start.Y) * dy) / lengthSquared, 0, 1);
+            var distanceX = point.X - (start.X + position * dx);
+            var distanceY = point.Y - (start.Y + position * dy);
+            return distanceX * distanceX + distanceY * distanceY;
         }
 
         private static Point GetPathControl(Point start, Point middle, Point tip)
@@ -388,6 +426,12 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private static Point SmilePoint(double centerX, double centerY, double radius, double position)
         {
             var x = (position - 0.5) * 1.28;
+            var bounds = MouthBounds(x);
+            return new Point(centerX + x * radius, centerY + (bounds.Top + bounds.Bottom) * radius / 2);
+        }
+
+        private static (double Top, double Bottom) MouthBounds(double x)
+        {
             var top = double.PositiveInfinity;
             var bottom = double.NegativeInfinity;
             for (var i = 0; i < MouthOutline.Length; i++)
@@ -405,7 +449,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             if (!double.IsFinite(top) || !double.IsFinite(bottom))
                 throw new InvalidOperationException("Tongue position is outside the smile.");
 
-            return new Point(centerX + x * radius, centerY + (top + bottom) * radius / 2);
+            return (top, bottom);
         }
 
         private static void FillEllipse(
@@ -469,5 +513,6 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         }
 
         private readonly record struct Point(double X, double Y);
+        private readonly record struct TongueSample(Point Center, double Radius);
     }
 }
