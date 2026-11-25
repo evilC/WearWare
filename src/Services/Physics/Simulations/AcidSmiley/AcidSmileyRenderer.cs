@@ -111,7 +111,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                     MaxTiltRadians);
             }
 
-            var targetBasePosition = 0.5 + Math.Sin(targetAngle) * 0.22;
+            var targetBasePosition = 0.5 + Math.Sin(targetAngle) * 0.33;
             if (!_motionInitialized)
             {
                 _basePosition = targetBasePosition;
