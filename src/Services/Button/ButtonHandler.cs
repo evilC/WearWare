@@ -45,7 +45,9 @@ namespace WearWare.Services.Button
                     var gpioButton = new GpioButton(
                         buttonPin: button.PinNumber,
                         gpio: provider.Controller,
-                        shouldDispose: false);
+                        shouldDispose: false,
+                        debounceTime: TimeSpan.FromMilliseconds(50)
+                    );
                     gpioButton.Press += (_, _) => OnPressed(button);
                     _buttons.Add(gpioButton);
                     _logger.LogInformation("[BUTTONHANDLER] Subscribed to button {pin} ({name}) as button {number}.",
