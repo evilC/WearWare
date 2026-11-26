@@ -13,7 +13,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
         private static readonly Color SecondColor = new(210, 35, 25);
 
         public FlavorFlavRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger<FlavorFlavRenderer> logger)
-            : base(imu, display, config, logger)
+            : base(imu, display, config, logger, "Flavor Flav.svg")
         {
         }
 
@@ -24,7 +24,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
 
         internal void DrawClock(Vector2 center, float radius, float angle, DateTime time)
         {
-            DrawArtwork(center, radius, angle, MedallionArtwork.Part.Clock);
+            base.DrawBody(center, radius, angle);
             DrawFace(center, radius * 0.84f);
 
             for (var hour = 0; hour < 12; hour++)

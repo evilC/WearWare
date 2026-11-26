@@ -12,14 +12,17 @@ namespace WearWare.Services.Physics.Simulations.Medallion
         private const float ChainChunkiness = 2f;
         protected const int SamplesPerAxis = 4;
         protected const int CoverageSamples = SamplesPerAxis * SamplesPerAxis;
+        private readonly string _artworkPath;
+        private MedallionArtwork? _artwork;
         private MedallionSimulation? _simulation;
         private Color[] _pixels = [];
         private int _width;
         private int _height;
 
-        protected NecklaceRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger logger)
+        protected NecklaceRenderer(ImuService imu, IMatrixDisplay display, MatrixConfigService config, ILogger logger, string artworkFileName)
             : base(imu, display, config, logger)
         {
+            _artworkPath = Path.Combine(AppContext.BaseDirectory, "Artwork", artworkFileName);
         }
 
         protected int Width => _width;
@@ -28,7 +31,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
 
         protected override void Reset()
         {
-            MedallionArtwork.Prepare();
+            _artwork ??= MedallionArtwork.Load(_artworkPath);
             _simulation = null;
             _pixels = [];
         }
@@ -39,20 +42,20 @@ namespace WearWare.Services.Physics.Simulations.Medallion
             {
                 _width = canvas.Width;
                 _height = canvas.Height;
-                _simulation = new MedallionSimulation(_width, _height, RadiusFraction);
+                _simulation = new MedallionSimulation(_width, _height, RadiusFraction, _artwork!.AttachmentDistance);
                 _pixels = new Color[checked(_width * _height)];
             }
 
             _simulation.Update(reading.MountedAcceleration, elapsedSeconds);
             Array.Clear(_pixels);
             DrawChain(_simulation.Chain, foreground: false);
-            DrawArtwork(_simulation.MedallionCenter, _simulation.Radius, _simulation.Angle, MedallionArtwork.Part.Loop);
+            DrawArtwork(_simulation.MedallionCenter, _simulation.Radius, _simulation.Angle, loop: true);
             DrawChain(_simulation.Chain, foreground: true);
             DrawBody(_simulation.MedallionCenter, _simulation.Radius, _simulation.Angle);
             canvas.SetPixels(0, 0, _width, _height, _pixels);
         }
 
-        protected abstract void DrawBody(Vector2 center, float radius, float angle);
+        protected virtual void DrawBody(Vector2 center, float radius, float angle) => DrawArtwork(center, radius, angle, loop: false);
 
         private void DrawChain(ReadOnlySpan<Vector2> chain, bool foreground)
         {
@@ -123,15 +126,15 @@ namespace WearWare.Services.Physics.Simulations.Medallion
             }
         }
 
-        private protected void DrawArtwork(Vector2 center, float radius, float angle, MedallionArtwork.Part part)
+        private void DrawArtwork(Vector2 center, float radius, float angle, bool loop)
         {
+            var artwork = _artwork!;
             var cos = MathF.Cos(angle);
             var sin = MathF.Sin(angle);
-            var loop = part == MedallionArtwork.Part.Loop;
             var boundsCenter = loop
-                ? center + new Vector2(sin, -cos) * (radius * MedallionArtwork.AttachmentDistance)
+                ? center + new Vector2(sin, -cos) * (radius * artwork.AttachmentDistance)
                 : center;
-            var reach = radius * (loop ? 0.26f : 1.75f) + 1;
+            var reach = radius * (loop ? artwork.LoopReach : artwork.BodyReach) + 1;
             var left = Math.Max(0, (int)MathF.Floor(boundsCenter.X - reach));
             var right = Math.Min(_width - 1, (int)MathF.Ceiling(boundsCenter.X + reach));
             var top = Math.Max(0, (int)MathF.Floor(boundsCenter.Y - reach));
@@ -148,7 +151,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
                         {
                             var dx = (x + (sx + 0.5f) / SamplesPerAxis - 0.5f - center.X) / radius;
                             var dy = (y + (sy + 0.5f) / SamplesPerAxis - 0.5f - center.Y) / radius;
-                            if (MedallionArtwork.IsMetal(dx * cos + dy * sin, -dx * sin + dy * cos, part))
+                            if (artwork.IsMetal(dx * cos + dy * sin, -dx * sin + dy * cos, loop))
                                 coverage++;
                         }
                     }

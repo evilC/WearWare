@@ -14,6 +14,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
         private readonly Vector2[] _previous = new Vector2[Center + 1];
         private readonly Vector2[] _velocities = new Vector2[Center + 1];
         private readonly float _linkLength;
+        private readonly float _attachmentDistance;
 
         public float Radius { get; }
         public ReadOnlySpan<Vector2> Chain => _positions.AsSpan(0, RightAnchor + 1);
@@ -27,14 +28,17 @@ namespace WearWare.Services.Physics.Simulations.Medallion
             }
         }
 
-        public MedallionSimulation(int width, int height, float radiusFraction)
+        public MedallionSimulation(int width, int height, float radiusFraction, float attachmentDistance)
         {
             if (width <= 0 || height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(width), "Invalid medallion canvas dimensions.");
             if (!float.IsFinite(radiusFraction) || radiusFraction <= 0)
                 throw new ArgumentOutOfRangeException(nameof(radiusFraction), "Invalid medallion radius.");
+            if (!float.IsFinite(attachmentDistance) || attachmentDistance <= 0)
+                throw new ArgumentOutOfRangeException(nameof(attachmentDistance), "Invalid medallion attachment distance.");
 
             var scale = Math.Min(width, height);
+            _attachmentDistance = attachmentDistance;
             Radius = Math.Max(0.5f, scale * radiusFraction);
             var left = new Vector2((width - 1) * 0.035f, (height - 1) * 0.025f);
             var right = new Vector2((width - 1) * 0.965f, left.Y);
@@ -46,7 +50,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
                     ? Vector2.Lerp(left, knot, (float)i / LinksPerSide)
                     : Vector2.Lerp(knot, right, (float)(i - Knot) / LinksPerSide);
             }
-            _positions[Center] = knot + new Vector2(0, Radius * MedallionArtwork.AttachmentDistance);
+            _positions[Center] = knot + new Vector2(0, Radius * _attachmentDistance);
         }
 
         public void Update(Vector3 acceleration, double elapsedSeconds)
@@ -82,7 +86,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
                         Constrain(i, i + 1, _linkLength, false);
                     for (var i = RightAnchor - 1; i >= 0; i--)
                         Constrain(i, i + 1, _linkLength, false);
-                    Constrain(Knot, Center, Radius * MedallionArtwork.AttachmentDistance, true);
+                    Constrain(Knot, Center, Radius * _attachmentDistance, true);
                 }
 
                 for (var i = 1; i <= Center; i++)

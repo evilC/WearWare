@@ -14,6 +14,14 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageReference Include="Serilog.Sinks.InMemory" Version="2.0.0" />
+    <PackageReference Include="Svg.Skia" Version="5.2.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.151.1" />
     <ProjectReference Include="../rpi-rgb-led-matrix/bindings/c#/RPiRgbLEDMatrix.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Services\Physics\Simulations\Medallion\Artwork\**\*"
+             Link="Artwork\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
