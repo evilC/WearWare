@@ -10,18 +10,18 @@ Status: IMU sensing and a separate Physics mode are implemented. Simulation tuni
 - The Physics page allows selection of current simulation from a list of all the simulations that have been implemented.
 - Changing the selection switches simulations immediately when Physics is active, without selecting Physics mode. During a QuickMedia interruption, the new selection is used when Physics resumes.
 - Invalid or unreadable simulation state is logged and reported on the Physics page, and Fluid is used. If saving a selection fails, the current selection remains unchanged and the page reports the error.
-- An unavailable, stale or failed IMU prevents Physics from running. WearWare falls back to Playlist and reports the failure, while Physics remains the selected mode. If Playlist is stopped, the display remains blank. A sensor failure is logged and monitoring does not automatically retry.
+- An unavailable, stale or failed IMU prevents Physics from running. WearWare falls back to Playlist and reports the failure, while Physics remains the selected mode. If Playlist is stopped, the display remains blank. A sensor failure is logged and monitoring does not automatically retry - the sensor can be reset using a button on the Physics page in the UI.
 
 ## Mounting orientation
 
-- `config/imuconfig.json` is created on startup if missing, with `x`, `y` and `z` all set to `1`. Changes take effect after restarting WearWare.
+- `config/imuconfig.json` is created on startup if missing, with `x`, `y` and `z` all set to `1`. Configuration is possible via the Physics page in the UI, and takes effect immediately
 - Each axis must be `1` or `-1`, with zero or two axes inverted. The signs apply to both acceleration and gyroscope readings. They support axis-aligned 180-degree rotations, not axis swaps or arbitrary rotations.
-- For the author's inward-facing mount, the intended setting is `x: -1`, `y: 1`, `z: -1`. Confirm the direction on the mounted shirt.
 - Invalid configuration is logged and disables IMU monitoring rather than overwriting the file. Playlist playback remains available.
 
 ## Remaining work
 
 - Configure the sensor model and address, and consider calibration or additional filtering if needed.
-- Consider display pitch when calculating the real-world fall rate, and configuration options for the simulations. The fluid simulation currently uses an off-screen margin to reduce wall-sticking artefacts, with trade-offs in visible pool depth and splashing.
+- Consider display pitch when calculating the real-world fall rate, and configuration options for the simulations.  
+- The fluid simulation currently uses an off-screen margin to reduce wall-sticking artefacts, with trade-offs in visible pool depth and splashing.
 
 Reference: [Adafruit MPU-6050 pinout](https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro/pinouts).

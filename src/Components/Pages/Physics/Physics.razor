@@ -38,6 +38,16 @@
     }
 </div>
 
+<section class="mt-3" aria-labelledby="physics-imu">
+    <h2 id="physics-imu">IMU</h2>
+    <p>Reset the IMU connection if motion sensing stops. If readings resume, Physics will be selected and the current simulation will start after any QuickMedia interruption.</p>
+    <button type="button" class="btn btn-secondary" disabled="@_resettingImu" @onclick="ResetImu">Reset IMU</button>
+    @if (_imuResetMessage is not null)
+    {
+        <div class="alert @(_imuResetSuccess ? "alert-success" : "alert-warning") mt-2" role="status">@_imuResetMessage</div>
+    }
+</section>
+
 <section class="mt-3" aria-labelledby="physics-calibration">
     <h2 id="physics-calibration">Calibration</h2>
     @if (Imu.CalibrationWarning is { } calibrationWarning)
@@ -97,6 +107,9 @@
 
 @code {
     private bool _changing;
+    private bool _resettingImu;
+    private bool _imuResetSuccess;
+    private string? _imuResetMessage;
     private bool _calibrationSuccess;
     private string? _calibrationMessage;
     private ImuOrientation _selectedOrientation;
@@ -210,6 +223,33 @@
     private void CalibrateAlignment() => (_calibrationSuccess, _calibrationMessage) = Imu.CalibrateAlignment();
 
     private void ResetAlignment() => (_calibrationSuccess, _calibrationMessage) = Imu.ResetAlignment();
+
+    private async Task ResetImu()
+    {
+        _resettingImu = true;
+        _imuResetMessage = "Resetting IMU...";
+        try
+        {
+            (_imuResetSuccess, _imuResetMessage) = await Imu.ResetAsync();
+            if (!_imuResetSuccess)
+                return;
+
+            await ModeHandler.SetModeAsync(DisplayMode.Physics);
+            if (ModeHandler.State.InterruptingMode != null && ModeHandler.State.CurrentMode == DisplayMode.Physics)
+                _imuResetMessage = "IMU reset. Physics will start after QuickMedia.";
+            else if (ModeHandler.State.ActiveMode == DisplayMode.Physics)
+                _imuResetMessage = "IMU reset. Physics started.";
+            else
+            {
+                _imuResetSuccess = false;
+                _imuResetMessage = "IMU reset, but Physics could not start. See the mode message and log.";
+            }
+        }
+        finally
+        {
+            _resettingImu = false;
+        }
+    }
 
     protected override void OnInitialized()
     {

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using System.Threading.Channels;
 using WearWare.Config;
 using WearWare.Services.Physics.Imu.Sensors;
 
@@ -10,6 +11,7 @@ namespace WearWare.Services.Physics.Imu
         private static readonly TimeSpan SampleInterval = TimeSpan.FromSeconds(1.0 / 30);
         private static readonly TimeSpan MaxReadingAge = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan CalibrationWindow = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan ResetTimeout = TimeSpan.FromSeconds(5);
         private const double TiltSmoothingSeconds = 0.15;
         private readonly string _orientationPath = Path.Combine(PathConfig.ConfigPath, "imuconfig.json");
         private readonly string _calibrationPath = Path.Combine(PathConfig.ConfigPath, "imu-calibration.json");
@@ -18,6 +20,8 @@ namespace WearWare.Services.Physics.Imu
         private readonly object _samplesLock = new();
         private readonly object _calibrationLock = new();
         private readonly Queue<CalibrationSample> _samples = new();
+        private readonly Channel<TaskCompletionSource<bool>> _resetRequests = Channel.CreateBounded<TaskCompletionSource<bool>>(
+            new BoundedChannelOptions(1) { SingleReader = true });
         private ImuState _state;
         private Transform? _transform;
 
@@ -42,6 +46,34 @@ namespace WearWare.Services.Physics.Imu
         public string? CalibrationWarning { get; private set; }
         public ImuOrientation? Orientation => Volatile.Read(ref _transform)?.Orientation.Orientation;
         public event Action? OrientationChanged;
+
+        public async Task<(bool Success, string Message)> ResetAsync()
+        {
+            if (_sensorFactory == null)
+                return (false, "IMU is unavailable on this system.");
+
+            var request = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (!_resetRequests.Writer.TryWrite(request))
+                return (false, "An IMU reset is already waiting. Try again later.");
+
+            _logger.LogInformation("Manual IMU reset requested.");
+            try
+            {
+                var success = await request.Task.WaitAsync(ResetTimeout);
+                return success
+                    ? (true, "IMU reset successfully.")
+                    : (false, "IMU reset failed. See the log for details.");
+            }
+            catch (TimeoutException)
+            {
+                if (!request.TrySetResult(false))
+                    return await request.Task
+                        ? (true, "IMU reset successfully.")
+                        : (false, "IMU reset failed. See the log for details.");
+                _logger.LogWarning("IMU reset timed out. An I2C operation may still be blocked.");
+                return (false, "IMU reset timed out. An I2C operation may still be blocked; see the log.");
+            }
+        }
 
         public (bool Success, string Message) SetOrientation(ImuOrientation orientation)
         {
@@ -192,71 +224,118 @@ namespace WearWare.Services.Physics.Imu
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             await Task.Yield();
+            TaskCompletionSource<bool>? reset = null;
             try
             {
-                var orientation = ImuOrientationConfig.Load(_orientationPath);
-                _logger.LogInformation("IMU orientation from {path}: X={x}, Y={y}, Z={z}.",
-                    _orientationPath, orientation.X, orientation.Y, orientation.Z);
-                lock (_calibrationLock)
-                {
-                    Volatile.Write(ref _transform, new Transform(orientation, LoadAlignment(orientation)));
-                }
-                NotifyOrientationChanged();
-                if (_sensorFactory == null)
-                {
-                    return;
-                }
-
-                using var sensor = _sensorFactory();
-                _logger.LogInformation("IMU sensor initialized.");
-                double? filteredTilt = null;
-                long previousSample = 0;
-
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    var frameStart = Stopwatch.GetTimestamp();
-                    var (acceleration, gyroscope) = sensor.Read();
-                    var timestampTicks = Stopwatch.GetTimestamp();
-                    lock (_samplesLock)
+                    try
                     {
-                        _samples.Enqueue(new CalibrationSample(acceleration, gyroscope, timestampTicks));
-                        while (Stopwatch.GetElapsedTime(_samples.Peek().TimestampTicks, timestampTicks) > CalibrationWindow)
-                            _samples.Dequeue();
+                        if (Volatile.Read(ref _transform) == null)
+                        {
+                            var orientation = ImuOrientationConfig.Load(_orientationPath);
+                            _logger.LogInformation("IMU orientation from {path}: X={x}, Y={y}, Z={z}.",
+                                _orientationPath, orientation.X, orientation.Y, orientation.Z);
+                            lock (_calibrationLock)
+                            {
+                                Volatile.Write(ref _transform, new Transform(orientation, LoadAlignment(orientation)));
+                            }
+                            NotifyOrientationChanged();
+                        }
+                        if (_sensorFactory == null)
+                            return;
+
+                        if (reset != null)
+                        {
+                            Volatile.Write(ref _state, new ImuState(ImuStatus.Recovering, null));
+                            lock (_samplesLock)
+                                _samples.Clear();
+                        }
+
+                        using var sensor = _sensorFactory();
+                        _logger.LogInformation("IMU sensor initialized.");
+                        double? filteredTilt = null;
+                        long previousSample = 0;
+
+                        while (!stoppingToken.IsCancellationRequested)
+                        {
+                            if (reset == null && _resetRequests.Reader.TryRead(out var nextReset))
+                            {
+                                if (nextReset.Task.IsCompleted)
+                                    continue;
+                                reset = nextReset;
+                                break;
+                            }
+
+                            var frameStart = Stopwatch.GetTimestamp();
+                            var (acceleration, gyroscope) = sensor.Read();
+                            var timestampTicks = Stopwatch.GetTimestamp();
+                            lock (_samplesLock)
+                            {
+                                _samples.Enqueue(new CalibrationSample(acceleration, gyroscope, timestampTicks));
+                                while (Stopwatch.GetElapsedTime(_samples.Peek().TimestampTicks, timestampTicks) > CalibrationWindow)
+                                    _samples.Dequeue();
+                            }
+                            var transform = Volatile.Read(ref _transform)!;
+                            var mountedAcceleration = transform.Alignment.Apply(transform.Orientation.Apply(acceleration));
+                            var mountedGyroscope = transform.Alignment.Apply(transform.Orientation.Apply(gyroscope));
+                            var rawTilt = CalculateTiltDegrees(mountedAcceleration);
+                            var tilt = rawTilt;
+                            if (filteredTilt.HasValue)
+                            {
+                                var elapsed = Stopwatch.GetElapsedTime(previousSample, timestampTicks).TotalSeconds;
+                                var weight = 1 - Math.Exp(-elapsed / TiltSmoothingSeconds);
+                                tilt = filteredTilt.Value + weight * (rawTilt - filteredTilt.Value);
+                            }
+
+                            filteredTilt = tilt;
+                            previousSample = timestampTicks;
+                            var reading = new ImuReading(acceleration, gyroscope, mountedAcceleration, mountedGyroscope,
+                                rawTilt, tilt, DateTimeOffset.UtcNow, timestampTicks);
+                            Volatile.Write(ref _state, new ImuState(ImuStatus.Available, reading));
+                            if (reset != null)
+                            {
+                                _logger.LogInformation("IMU reset completed and readings resumed.");
+                                reset.TrySetResult(true);
+                                reset = null;
+                            }
+
+                            var remaining = SampleInterval - Stopwatch.GetElapsedTime(frameStart);
+                            if (remaining > TimeSpan.Zero)
+                                await Task.Delay(remaining, stoppingToken);
+                        }
                     }
-                    var transform = Volatile.Read(ref _transform)!;
-                    var mountedAcceleration = transform.Alignment.Apply(transform.Orientation.Apply(acceleration));
-                    var mountedGyroscope = transform.Alignment.Apply(transform.Orientation.Apply(gyroscope));
-                    var rawTilt = CalculateTiltDegrees(mountedAcceleration);
-                    var tilt = rawTilt;
-                    if (filteredTilt.HasValue)
+                    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                     {
-                        var elapsed = Stopwatch.GetElapsedTime(previousSample, timestampTicks).TotalSeconds;
-                        var weight = 1 - Math.Exp(-elapsed / TiltSmoothingSeconds);
-                        tilt = filteredTilt.Value + weight * (rawTilt - filteredTilt.Value);
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        Volatile.Write(ref _state, new ImuState(ImuStatus.Failed, null));
+                        _logger.LogError(ex, "IMU monitoring stopped after a configuration, initialization or read error. Configuration: {path}.",
+                            _orientationPath);
+                        reset?.TrySetResult(false);
+                        reset = null;
                     }
 
-                    filteredTilt = tilt;
-                    previousSample = timestampTicks;
-                    var reading = new ImuReading(acceleration, gyroscope, mountedAcceleration, mountedGyroscope,
-                        rawTilt, tilt, DateTimeOffset.UtcNow, timestampTicks);
-                    Volatile.Write(ref _state, new ImuState(ImuStatus.Available, reading));
-
-                    var remaining = SampleInterval - Stopwatch.GetElapsedTime(frameStart);
-                    if (remaining > TimeSpan.Zero)
+                    if (reset == null && !stoppingToken.IsCancellationRequested)
                     {
-                        await Task.Delay(remaining, stoppingToken);
+                        do
+                        {
+                            reset = await _resetRequests.Reader.ReadAsync(stoppingToken);
+                        } while (reset.Task.IsCompleted);
                     }
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
             }
-            catch (Exception ex)
+            finally
             {
-                Volatile.Write(ref _state, new ImuState(ImuStatus.Failed, null));
-                _logger.LogError(ex, "IMU monitoring stopped after a configuration, initialization or read error. Configuration: {path}.",
-                    _orientationPath);
-                return;
+                _resetRequests.Writer.TryComplete();
+                reset?.TrySetResult(false);
+                while (_resetRequests.Reader.TryRead(out var pending))
+                    pending.TrySetResult(false);
             }
 
             Volatile.Write(ref _state, new ImuState(ImuStatus.Stopped, null));

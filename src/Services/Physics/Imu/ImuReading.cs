@@ -23,6 +23,7 @@ namespace WearWare.Services.Physics.Imu
     {
         Unavailable,
         Starting,
+        Recovering,
         Available,
         Stale,
         Failed,

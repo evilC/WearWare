@@ -27,7 +27,6 @@ Status: Partially implemented. MCP23017 QuickMedia buttons and MPU-6050 motion s
 
 ## Open questions
 
-- Runtime recovery behaviour for an I2C bus or expander failure.
 - Which additional expander chips are worth integrating and testing.
 
 References: [Adafruit MCP23017 pinout](https://learn.adafruit.com/adafruit-mcp23017-i2c-gpio-expander/pinouts), [INA219 pinout](https://learn.adafruit.com/adafruit-ina219-current-sensor-breakout/pinouts), [MPU-6050 pinout](https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro/pinouts).
