@@ -96,6 +96,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var targetOffsetX = 0.0;
             var targetOffsetY = 0.0;
             var targetFaceRotation = 0.0;
+            var translationSlide = 0.0;
             if (float.IsFinite((float)gravityX) && float.IsFinite((float)gravityY))
             {
                 targetAngle = Math.Clamp(
@@ -116,6 +117,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                 _gravityY += (gravityY - _gravityY) * gravityWeight;
                 targetOffsetX = Math.Clamp((gravityX - _gravityX) * 0.0125, -0.05, 0.05);
                 targetOffsetY = Math.Clamp((gravityY - _gravityY) * 0.0125, -0.05, 0.05);
+                translationSlide = Math.Clamp((gravityX - _gravityX) * 0.08, -0.25, 0.25);
                 var restingAngle = Math.Clamp(
                     Math.Atan2(_gravityX, Math.Max(Math.Abs(_gravityY), 1.0)),
                     -MaxTiltRadians,
@@ -128,7 +130,9 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             targetFaceRotation += Math.Sin(_elapsedSeconds * 1.3) * 0.012;
             _faceRotation += (targetFaceRotation - _faceRotation) * SmoothingWeight(dt, 0.3);
             var localAngle = Math.Clamp(targetAngle + _faceRotation, -MaxTiltRadians, MaxTiltRadians);
-            var targetBasePosition = 0.5 + Math.Sin(localAngle) * 0.33;
+            var maxBaseTravel = Math.Sin(MaxTiltRadians) * 0.33;
+            var targetBasePosition = 0.5 + Math.Clamp(
+                Math.Sin(localAngle) * 0.33 + translationSlide, -maxBaseTravel, maxBaseTravel);
             if (!_motionInitialized)
             {
                 _basePosition = targetBasePosition;
