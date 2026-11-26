@@ -17,13 +17,13 @@ namespace WearWare.Services.Physics
         private readonly ImuService _imu;
         private readonly ILogger<PhysicsHandler> _logger;
         private readonly Simulation[] _simulations;
-        private string _selectedSimulation;
+        private PhysicsState _physicsState;
         private volatile HandlerState _state = HandlerState.Idle;
 
         public string Name => "Physics";
         public HandlerState State => _state;
         public IReadOnlyList<string> Simulations { get; }
-        public string SelectedSimulation => Volatile.Read(ref _selectedSimulation);
+        public string SelectedSimulation => Volatile.Read(ref _physicsState).Simulation;
         public string? SelectionMessage { get; private set; }
         public event Action? StateChanged;
 
@@ -45,7 +45,7 @@ namespace WearWare.Services.Physics
                 new("Acid Smiley", acidSmiley)
             ];
             Simulations = Array.AsReadOnly(_simulations.Select(simulation => simulation.Name).ToArray());
-            _selectedSimulation = LoadSelection();
+            _physicsState = LoadState();
         }
 
         public async Task WaitForImuAsync(CancellationToken cancellationToken)
@@ -62,26 +62,52 @@ namespace WearWare.Services.Physics
             if (!Simulations.Contains(name))
                 throw new ArgumentOutOfRangeException(nameof(name));
 
+            return SaveState(new PhysicsState
+            {
+                Simulation = name,
+                ExcludedFromJog = Volatile.Read(ref _physicsState).ExcludedFromJog
+            }, "simulation selection");
+        }
+
+        public bool IsJogEnabled(string name) => !Volatile.Read(ref _physicsState).ExcludedFromJog.Contains(name);
+
+        internal void SetJogEnabled(string name, bool enabled)
+        {
+            if (!Simulations.Contains(name))
+                throw new ArgumentOutOfRangeException(nameof(name));
+
+            var state = Volatile.Read(ref _physicsState);
+            var excluded = state.ExcludedFromJog.Where(simulation => simulation != name);
+            SaveState(new PhysicsState
+            {
+                Simulation = state.Simulation,
+                ExcludedFromJog = (enabled ? excluded : excluded.Append(name)).ToArray()
+            }, "button navigation settings");
+        }
+
+        private bool SaveState(PhysicsState state, string description)
+        {
             try
             {
-                JsonUtils.ToJsonFileAtomic(_selectionPath, new PhysicsState { Simulation = name }, _logger);
-                Volatile.Write(ref _selectedSimulation, name);
+                JsonUtils.ToJsonFileAtomic(_selectionPath, state, _logger);
+                Volatile.Write(ref _physicsState, state);
                 SelectionMessage = null;
                 NotifyStateChanged();
                 return true;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                _logger.LogError(ex, "[PHYSICSHANDLER] Could not save simulation selection.");
-                SelectionMessage = "Could not save simulation selection. See the log for details.";
+                _logger.LogError(ex, "[PHYSICSHANDLER] Could not save {description}.", description);
+                SelectionMessage = $"Could not save {description}. See the log for details.";
                 NotifyStateChanged();
                 return false;
             }
         }
 
-        internal string GetJoggedSimulation(JogDirection direction)
+        internal string? GetJoggedSimulation(JogDirection direction)
         {
-            var index = Array.FindIndex(_simulations, simulation => simulation.Name == SelectedSimulation);
+            var state = Volatile.Read(ref _physicsState);
+            var index = Array.FindIndex(_simulations, simulation => simulation.Name == state.Simulation);
             if (index < 0)
                 throw new InvalidOperationException("The selected Physics simulation is not available.");
 
@@ -91,7 +117,14 @@ namespace WearWare.Services.Physics
                 JogDirection.Previous => -1,
                 _ => throw new ArgumentOutOfRangeException(nameof(direction))
             };
-            return _simulations[(index + offset + _simulations.Length) % _simulations.Length].Name;
+            for (var i = 0; i < _simulations.Length; i++)
+            {
+                index = (index + offset + _simulations.Length) % _simulations.Length;
+                var name = _simulations[index].Name;
+                if (!state.ExcludedFromJog.Contains(name))
+                    return name;
+            }
+            return null;
         }
 
         public async Task RunAsync(CancellationToken cancellationToken)
@@ -114,10 +147,10 @@ namespace WearWare.Services.Physics
             }
         }
 
-        private string LoadSelection()
+        private PhysicsState LoadState()
         {
             if (!File.Exists(_selectionPath))
-                return Simulations[0];
+                return new PhysicsState { Simulation = Simulations[0] };
 
             try
             {
@@ -125,13 +158,15 @@ namespace WearWare.Services.Physics
                     ?? throw new JsonException("Physics state contains null.");
                 if (state.Simulation == null || !Simulations.Contains(state.Simulation))
                     throw new JsonException($"Invalid Physics simulation '{state.Simulation}'.");
-                return state.Simulation;
+                if (state.ExcludedFromJog == null || state.ExcludedFromJog.Any(name => name == null))
+                    throw new JsonException("Invalid Physics button navigation settings.");
+                return state;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
             {
-                _logger.LogError(ex, "[PHYSICSHANDLER] Could not load simulation selection from {path}; using Fluid.", _selectionPath);
-                SelectionMessage = "Could not load simulation selection. Using Fluid. See the log for details.";
-                return Simulations[0];
+                _logger.LogError(ex, "[PHYSICSHANDLER] Could not load Physics state from {path}; using Fluid.", _selectionPath);
+                SelectionMessage = "Could not load Physics state. Using Fluid. See the log for details.";
+                return new PhysicsState { Simulation = Simulations[0] };
             }
         }
 
@@ -165,7 +200,8 @@ namespace WearWare.Services.Physics
 
         private sealed class PhysicsState
         {
-            public string? Simulation { get; set; }
+            public string Simulation { get; set; } = string.Empty;
+            public string[] ExcludedFromJog { get; set; } = [];
         }
     }
 }

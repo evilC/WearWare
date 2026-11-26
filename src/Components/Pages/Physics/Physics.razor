@@ -10,7 +10,7 @@
 
 <h1>Physics</h1>
 
-<p>Select the simulation to run in Physics mode.</p>
+<p>Select the simulation to run in Physics mode. Check simulations to include them in physical Next/Previous button navigation.</p>
 
 @if (PhysicsHandler.SelectionMessage is { } selectionMessage)
 {
@@ -24,9 +24,14 @@
 <div class="list-group" aria-label="Physics simulations">
     @foreach (var simulation in PhysicsHandler.Simulations)
     {
-        <button type="button" class="list-group-item list-group-item-action @(simulation == PhysicsHandler.SelectedSimulation ? "active" : "")"
-                aria-pressed="@(simulation == PhysicsHandler.SelectedSimulation)"
-                disabled="@_changing" @onclick="() => SelectSimulation(simulation)">@simulation</button>
+        <div class="d-flex align-items-center gap-2">
+            <input type="checkbox" class="ww-large-checkbox flex-shrink-0" aria-label="Include @simulation in button navigation"
+                   disabled="@_changing" @bind:get="PhysicsHandler.IsJogEnabled(simulation)"
+                   @bind:set="(bool enabled) => SetJogEnabled(simulation, enabled)" />
+            <button type="button" class="list-group-item list-group-item-action flex-grow-1 w-auto @(simulation == PhysicsHandler.SelectedSimulation ? "active" : "")"
+                    aria-pressed="@(simulation == PhysicsHandler.SelectedSimulation)"
+                    disabled="@_changing" @onclick="() => SelectSimulation(simulation)">@simulation</button>
+        </div>
     }
 </div>
 
@@ -47,6 +52,19 @@
         try
         {
             await ModeHandler.SelectPhysicsSimulationAsync(simulation);
+        }
+        finally
+        {
+            _changing = false;
+        }
+    }
+
+    private async Task SetJogEnabled(string simulation, bool enabled)
+    {
+        _changing = true;
+        try
+        {
+            await ModeHandler.SetPhysicsJogEnabledAsync(simulation, enabled);
         }
         finally
         {

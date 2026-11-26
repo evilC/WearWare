@@ -364,6 +364,20 @@ namespace WearWare.Services.Mode
             }
         }
 
+        public async Task SetPhysicsJogEnabledAsync(string name, bool enabled)
+        {
+            await _transition.WaitAsync();
+            try
+            {
+                if (!_stopping && _started)
+                    _physicsHandler.SetJogEnabled(name, enabled);
+            }
+            finally
+            {
+                _transition.Release();
+            }
+        }
+
         private async Task SelectPhysicsSimulationCoreAsync(string name)
         {
             if (_stopping || !_started)
@@ -409,7 +423,11 @@ namespace WearWare.Services.Mode
                         return;
 
                     if (activeMode == DisplayMode.Physics)
-                        await SelectPhysicsSimulationCoreAsync(_physicsHandler.GetJoggedSimulation(direction));
+                    {
+                        var simulation = _physicsHandler.GetJoggedSimulation(direction);
+                        if (simulation != null)
+                            await SelectPhysicsSimulationCoreAsync(simulation);
+                    }
                     else
                         JogPlaylist(direction);
                 }

@@ -22,8 +22,6 @@ Status: IMU sensing and a separate Physics mode are implemented. Simulation tuni
 ## Remaining work
 
 - Configure the sensor model and address, and consider calibration or additional filtering if needed.
-- Add physical buttons to select the previous or next simulation.
 - Consider display pitch when calculating the real-world fall rate, and configuration options for the simulations. The fluid simulation currently uses an off-screen margin to reduce wall-sticking artefacts, with trade-offs in visible pool depth and splashing.
-- Verify mounting directions, simulation behaviour and performance on the shirt. A shared I2C bus fault can also affect buttons.
 
 Reference: [Adafruit MPU-6050 pinout](https://learn.adafruit.com/mpu6050-6-dof-accelerometer-and-gyro/pinouts).
