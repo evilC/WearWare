@@ -195,6 +195,16 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var middleRadius = radius * 0.1955;
             var tipRadius = radius * 0.1584;
             var control = GetPathControl(start, middle, tip);
+            var restingTip = new Point(
+                start.X + Math.Sin(_tipAngle) * length,
+                start.Y + Math.Cos(_tipAngle) * length);
+            var restingMiddle = new Point(
+                (start.X + restingTip.X) * 0.1 + (start.X + Math.Sin(middleAngle) * length * 0.5) * 0.8,
+                (start.Y + restingTip.Y) * 0.1 + (start.Y + Math.Cos(middleAngle) * length * 0.5) * 0.8);
+            var restingControl = GetPathControl(start, restingMiddle, restingTip);
+            // Dampen the idle bend at the root without reducing the tip's sideways sway.
+            control = new Point((control.X + restingControl.X) * 0.5, (control.Y + restingControl.Y) * 0.5);
+            middle = GetPathPoint(start, control, tip, 0.5);
             var baseDirection = GetPathDirection(start, control, tip, 0);
             var baseNormal = new Point(baseDirection.Y, -baseDirection.X);
             const double attachmentPosition = 0.9;
@@ -202,10 +212,13 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var rightEdge = new Point(
                 start.X + baseNormal.X * baseRadius * attachmentPosition + baseDirection.X * attachmentDepth,
                 start.Y + baseNormal.Y * baseRadius * attachmentPosition + baseDirection.Y * attachmentDepth);
-            var shift = MouthBounds(rightEdge.X / radius).Bottom * radius - rightEdge.Y;
-            start = new Point(start.X, start.Y + shift);
-            middle = new Point(middle.X, middle.Y + shift);
-            tip = new Point(tip.X, tip.Y + shift);
+            var mouthBottom = MouthBounds(rightEdge.X / radius).Bottom * radius;
+            var mouthCenterY = radius * (LowerMouthCenterY / ReferenceRadius);
+            var shiftX = -rightEdge.X * 0.1;
+            var shiftY = mouthBottom - rightEdge.Y - (mouthBottom - mouthCenterY) * 0.1;
+            start = new Point(start.X + shiftX, start.Y + shiftY);
+            middle = new Point(middle.X + shiftX, middle.Y + shiftY);
+            tip = new Point(tip.X + shiftX, tip.Y + shiftY);
 
             control = GetPathControl(start, middle, tip);
             var grooveStart = new Point(
