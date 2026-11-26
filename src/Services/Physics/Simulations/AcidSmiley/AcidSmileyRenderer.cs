@@ -22,7 +22,14 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private double _basePosition;
         private double _baseAngle;
         private double _tipAngle;
+        private double _faceRotation;
+        private double _gravityX;
+        private double _gravityY;
+        private double _offsetX;
+        private double _offsetY;
         private bool _motionInitialized;
+        private bool _gravityInitialized;
+        private Color[] _pixels = [];
 
         public AcidSmileyRenderer(
             ImuService imu,
@@ -39,30 +46,32 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             _basePosition = 0.5;
             _baseAngle = 0;
             _tipAngle = 0;
+            _faceRotation = 0;
+            _gravityX = 0;
+            _gravityY = 0;
+            _offsetX = 0;
+            _offsetY = 0;
             _motionInitialized = false;
+            _gravityInitialized = false;
+            _pixels = [];
         }
 
         protected override void DrawFrame(RGBLedCanvas canvas, ImuReading reading, double elapsedSeconds)
         {
-            var radius = Math.Min(canvas.Width, canvas.Height) * (ReferenceRadius / 128);
+            var radius = Math.Min(canvas.Width, canvas.Height) * (ReferenceRadius / 128) * 0.9;
             if (radius < 1)
                 return;
 
-            var centerX = (canvas.Width - 1) / 2.0;
-            var centerY = (canvas.Height - 1) / 2.0;
+            var pixelCount = checked(canvas.Width * canvas.Height);
+            if (_pixels.Length != pixelCount)
+                _pixels = new Color[pixelCount];
+
             UpdateMotion(reading, elapsedSeconds);
+            var centerX = (canvas.Width - 1) / 2.0 + _offsetX * radius;
+            var centerY = (canvas.Height - 1) / 2.0 + _offsetY * radius;
 
-            FillEllipse(canvas, centerX, centerY, radius, radius, FaceColor);
-
-            var eyeRadiusX = radius * (4.960674857154 / ReferenceRadius);
-            var eyeRadiusY = radius * (14.38153091568093 / ReferenceRadius);
-            var eyeY = centerY - radius * (17.99319034459099 / ReferenceRadius);
-            var eyeOffset = radius * (14.84340816236941 / ReferenceRadius);
-            FillEllipse(canvas, centerX - eyeOffset, eyeY, eyeRadiusX, eyeRadiusY, Black);
-            FillEllipse(canvas, centerX + eyeOffset, eyeY, eyeRadiusX, eyeRadiusY, Black);
-
-            DrawMouth(canvas, centerX, centerY, radius);
-            DrawTongue(canvas, centerX, centerY, radius);
+            DrawSmiley(_pixels, canvas.Width, canvas.Height, centerX, centerY, radius, _faceRotation);
+            canvas.SetPixels(0, 0, canvas.Width, canvas.Height, _pixels);
         }
 
         private void UpdateMotion(ImuReading reading, double elapsedSeconds)
@@ -74,27 +83,47 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var gravityX = -reading.MountedAcceleration.X;
             var gravityY = reading.MountedAcceleration.Y;
             var targetAngle = 0.0;
+            var targetOffsetX = 0.0;
+            var targetOffsetY = 0.0;
             if (float.IsFinite((float)gravityX) && float.IsFinite((float)gravityY))
             {
                 targetAngle = Math.Clamp(
                     Math.Atan2(gravityX, Math.Max(Math.Abs(gravityY), 1.0)),
                     -MaxTiltRadians,
                     MaxTiltRadians);
+
+                if (!_gravityInitialized)
+                {
+                    _gravityX = gravityX;
+                    _gravityY = gravityY;
+                    _gravityInitialized = true;
+                }
+
+                // A slow baseline removes sustained gravity without integrating position drift.
+                var gravityWeight = SmoothingWeight(dt, 0.6);
+                _gravityX += (gravityX - _gravityX) * gravityWeight;
+                _gravityY += (gravityY - _gravityY) * gravityWeight;
+                targetOffsetX = Math.Clamp((gravityX - _gravityX) * 0.0125, -0.05, 0.05);
+                targetOffsetY = Math.Clamp((gravityY - _gravityY) * 0.0125, -0.05, 0.05);
             }
 
-            var targetBasePosition = 0.5 + Math.Sin(targetAngle) * 0.33;
+            _offsetX += (targetOffsetX - _offsetX) * SmoothingWeight(dt, 0.16);
+            _offsetY += (targetOffsetY - _offsetY) * SmoothingWeight(dt, 0.16);
+            _faceRotation += (-targetAngle * 0.12 - _faceRotation) * SmoothingWeight(dt, 0.6);
+            var localAngle = Math.Clamp(targetAngle + _faceRotation, -MaxTiltRadians, MaxTiltRadians);
+            var targetBasePosition = 0.5 + Math.Sin(localAngle) * 0.33;
             if (!_motionInitialized)
             {
                 _basePosition = targetBasePosition;
-                _baseAngle = targetAngle * 0.35;
-                _tipAngle = targetAngle;
+                _baseAngle = localAngle * 0.35;
+                _tipAngle = localAngle;
                 _motionInitialized = true;
                 return;
             }
 
             _basePosition += (targetBasePosition - _basePosition) * SmoothingWeight(dt, 0.45);
-            _baseAngle += (targetAngle * 0.35 - _baseAngle) * SmoothingWeight(dt, 0.5);
-            _tipAngle += (targetAngle - _tipAngle) * SmoothingWeight(dt, 0.12);
+            _baseAngle += (localAngle * 0.35 - _baseAngle) * SmoothingWeight(dt, 0.5);
+            _tipAngle += (localAngle - _tipAngle) * SmoothingWeight(dt, 0.12);
         }
 
         private static double SmoothingWeight(double elapsedSeconds, double timeConstant)
@@ -102,53 +131,9 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             return 1 - Math.Exp(-elapsedSeconds / timeConstant);
         }
 
-        private static void DrawMouth(RGBLedCanvas canvas, double centerX, double centerY, double radius)
+        private void DrawSmiley(Color[] pixels, int width, int height, double centerX, double centerY, double radius, double rotation)
         {
-            var minX = Math.Max(0, (int)Math.Ceiling(centerX - MouthHalfWidth * radius));
-            var maxX = Math.Min(canvas.Width - 1, (int)Math.Floor(centerX + MouthHalfWidth * radius));
-            for (var x = minX; x <= maxX; x++)
-            {
-                var bounds = MouthBounds((x - centerX) / radius);
-                var top = Math.Max(0, (int)Math.Ceiling(centerY + bounds.Top * radius));
-                var bottom = Math.Min(canvas.Height - 1, (int)Math.Floor(centerY + bounds.Bottom * radius));
-                if (top <= bottom)
-                    canvas.DrawLine(x, top, x, bottom, Black);
-            }
-
-            var cornerX = radius * (37.88638811911351 / ReferenceRadius);
-            var cornerY = centerY + radius * (5.909734806123538 / ReferenceRadius);
-            DrawMouthCorner(canvas, centerX - cornerX, cornerY, radius, -1);
-            DrawMouthCorner(canvas, centerX + cornerX, cornerY, radius, 1);
-        }
-
-        private static void DrawMouthCorner(RGBLedCanvas canvas, double centerX, double centerY, double radius, int side)
-        {
-            var majorX = side * 3.03108891324545 / ReferenceRadius * radius;
-            var majorY = 1.749999999999951 / ReferenceRadius * radius;
-            var majorRadius = Math.Sqrt(majorX * majorX + majorY * majorY);
-            var minorRadius = majorRadius * 0.3571428571428671;
-            var minX = Math.Max(0, (int)Math.Floor(centerX - majorRadius));
-            var maxX = Math.Min(canvas.Width - 1, (int)Math.Ceiling(centerX + majorRadius));
-            var minY = Math.Max(0, (int)Math.Floor(centerY - majorRadius));
-            var maxY = Math.Min(canvas.Height - 1, (int)Math.Ceiling(centerY + majorRadius));
-
-            for (var y = minY; y <= maxY; y++)
-            {
-                for (var x = minX; x <= maxX; x++)
-                {
-                    var dx = x - centerX;
-                    var dy = y - centerY;
-                    var along = (dx * majorX + dy * majorY) / (majorRadius * majorRadius);
-                    var across = (-dx * majorY + dy * majorX) / (majorRadius * minorRadius);
-                    if (along * along + across * across <= 1)
-                        canvas.SetPixel(x, y, Black);
-                }
-            }
-        }
-
-        private void DrawTongue(RGBLedCanvas canvas, double centerX, double centerY, double radius)
-        {
-            var mouthPoint = SmilePoint(centerX, centerY, radius, _basePosition);
+            var mouthPoint = SmilePoint(0, 0, radius, _basePosition);
             var start = mouthPoint;
             // Keep the wider rounded tip within the same overall reach.
             var length = radius * 0.2716;
@@ -177,7 +162,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var rightEdge = new Point(
                 start.X + baseNormal.X * baseRadius * attachmentPosition + baseDirection.X * attachmentDepth,
                 start.Y + baseNormal.Y * baseRadius * attachmentPosition + baseDirection.Y * attachmentDepth);
-            var shift = centerY + MouthBounds((rightEdge.X - centerX) / radius).Bottom * radius - rightEdge.Y;
+            var shift = MouthBounds(rightEdge.X / radius).Bottom * radius - rightEdge.Y;
             start = new Point(start.X, start.Y + shift);
             middle = new Point(middle.X, middle.Y + shift);
             tip = new Point(tip.X, tip.Y + shift);
@@ -190,12 +175,17 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                 tip.X + (middle.X - tip.X) * 0.25,
                 tip.Y + (middle.Y - tip.Y) * 0.25);
             var grooveRadius = Math.Max(0.5, radius * 0.025);
-            DrawTongueShape(canvas, start, control, tip, baseDirection, baseNormal,
+            DrawSmileyPixels(pixels, width, height, centerX, centerY, rotation, start, control, tip, baseDirection, baseNormal,
                 baseRadius, middleRadius, tipRadius, radius, grooveStart, middle, grooveEnd, grooveRadius);
         }
 
-        private static void DrawTongueShape(
-            RGBLedCanvas canvas,
+        private static void DrawSmileyPixels(
+            Color[] pixels,
+            int width,
+            int height,
+            double centerX,
+            double centerY,
+            double rotation,
             Point start,
             Point control,
             Point tip,
@@ -219,23 +209,74 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                     GetTongueWidth(t, baseRadius, middleRadius, tipRadius));
             }
 
-            var minX = Math.Max(0, (int)Math.Floor(Math.Min(Math.Min(start.X, control.X), tip.X) - baseRadius));
-            var maxX = Math.Min(canvas.Width - 1, (int)Math.Ceiling(Math.Max(Math.Max(start.X, control.X), tip.X) + baseRadius));
-            var minY = Math.Max(0, (int)Math.Floor(Math.Min(Math.Min(start.Y, control.Y), tip.Y) - baseRadius));
-            var maxY = Math.Min(canvas.Height - 1, (int)Math.Ceiling(Math.Max(Math.Max(start.Y, control.Y), tip.Y) + baseRadius));
-            for (var y = minY; y <= maxY; y++)
+            var minX = Math.Min(Math.Min(start.X, control.X), tip.X) - baseRadius;
+            var maxX = Math.Max(Math.Max(start.X, control.X), tip.X) + baseRadius;
+            var minY = Math.Min(Math.Min(start.Y, control.Y), tip.Y) - baseRadius;
+            var maxY = Math.Max(Math.Max(start.Y, control.Y), tip.Y) + baseRadius;
+            var cos = Math.Cos(rotation);
+            var sin = Math.Sin(rotation);
+            var eyeX = faceRadius * (14.84340816236941 / ReferenceRadius);
+            var eyeY = -faceRadius * (17.99319034459099 / ReferenceRadius);
+            var eyeRadiusX = faceRadius * (4.960674857154 / ReferenceRadius);
+            var eyeRadiusY = faceRadius * (14.38153091568093 / ReferenceRadius);
+            for (var y = 0; y < height; y++)
             {
-                for (var x = minX; x <= maxX; x++)
+                for (var x = 0; x < width; x++)
                 {
-                    var point = new Point(x, y);
-                    if (!TongueContains(point, start, baseDirection, baseNormal, baseRadius, faceRadius, samples))
-                        continue;
-
-                    var inGroove = DistanceToSegmentSquared(point, grooveStart, grooveMiddle) <= grooveRadius * grooveRadius ||
-                        DistanceToSegmentSquared(point, grooveMiddle, grooveEnd) <= grooveRadius * grooveRadius;
-                    canvas.SetPixel(x, y, inGroove ? TongueGrooveColor : TongueColor);
+                    var dx = x - centerX;
+                    var dy = y - centerY;
+                    var point = new Point(cos * dx + sin * dy, -sin * dx + cos * dy);
+                    var color = Black;
+                    if (point.X >= minX && point.X <= maxX && point.Y >= minY && point.Y <= maxY &&
+                        TongueContains(point, start, baseDirection, baseNormal, baseRadius, faceRadius, samples))
+                    {
+                        var inGroove = DistanceToSegmentSquared(point, grooveStart, grooveMiddle) <= grooveRadius * grooveRadius ||
+                            DistanceToSegmentSquared(point, grooveMiddle, grooveEnd) <= grooveRadius * grooveRadius;
+                        color = inGroove ? TongueGrooveColor : TongueColor;
+                    }
+                    else if (point.X * point.X + point.Y * point.Y <= faceRadius * faceRadius &&
+                        !EllipseContains(point.X - eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
+                        !EllipseContains(point.X + eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
+                        !MouthContains(point, faceRadius))
+                    {
+                        color = FaceColor;
+                    }
+                    pixels[y * width + x] = color;
                 }
             }
+        }
+
+        private static bool MouthContains(Point point, double radius)
+        {
+            var x = point.X / radius;
+            if (Math.Abs(x) <= MouthHalfWidth)
+            {
+                var bounds = MouthBounds(x);
+                if (point.Y >= bounds.Top * radius && point.Y <= bounds.Bottom * radius)
+                    return true;
+            }
+
+            var cornerX = radius * (37.88638811911351 / ReferenceRadius);
+            var cornerY = radius * (5.909734806123538 / ReferenceRadius);
+            var majorX = radius * (3.03108891324545 / ReferenceRadius);
+            var majorY = radius * (1.749999999999951 / ReferenceRadius);
+            var majorRadius = Math.Sqrt(majorX * majorX + majorY * majorY);
+            var minorRadius = majorRadius * 0.3571428571428671;
+            var side = point.X < 0 ? -1 : 1;
+            var dx = point.X - side * cornerX;
+            var dy = point.Y - cornerY;
+            if (Math.Abs(dx) > majorRadius || Math.Abs(dy) > majorRadius)
+                return false;
+            var along = (dx * side * majorX + dy * majorY) / majorRadius;
+            var across = (-dx * majorY + dy * side * majorX) / majorRadius;
+            return EllipseContains(along, across, majorRadius, minorRadius);
+        }
+
+        private static bool EllipseContains(double x, double y, double radiusX, double radiusY)
+        {
+            var normalizedX = x / radiusX;
+            var normalizedY = y / radiusY;
+            return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
         }
 
         private static bool TongueContains(
@@ -339,31 +380,6 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var bottom = (LowerMouthCenterY +
                 Math.Sqrt(LowerMouthRadius * LowerMouthRadius - referenceX * referenceX)) / ReferenceRadius;
             return (top, bottom);
-        }
-
-        private static void FillEllipse(
-            RGBLedCanvas canvas,
-            double centerX,
-            double centerY,
-            double radiusX,
-            double radiusY,
-            Color color)
-        {
-            var minX = Math.Max(0, (int)Math.Floor(centerX - radiusX));
-            var maxX = Math.Min(canvas.Width - 1, (int)Math.Ceiling(centerX + radiusX));
-            var minY = Math.Max(0, (int)Math.Floor(centerY - radiusY));
-            var maxY = Math.Min(canvas.Height - 1, (int)Math.Ceiling(centerY + radiusY));
-
-            for (var y = minY; y <= maxY; y++)
-            {
-                var normalizedY = (y - centerY) / radiusY;
-                for (var x = minX; x <= maxX; x++)
-                {
-                    var normalizedX = (x - centerX) / radiusX;
-                    if (normalizedX * normalizedX + normalizedY * normalizedY <= 1)
-                        canvas.SetPixel(x, y, color);
-                }
-            }
         }
 
         private static void DrawThickSegment(
