@@ -3,14 +3,14 @@
 @implements IDisposable
 @using WearWare.Services.Mode
 @using WearWare.Services.Physics
+@using WearWare.Services.Physics.Imu
 @inject PhysicsHandler PhysicsHandler
 @inject ModeHandler ModeHandler
+@inject ImuService Imu
 
 <PageTitle>WearWare Physics</PageTitle>
 
 <h1>Physics</h1>
-
-<p>Select the simulation to run in Physics mode. Check simulations to include them in physical Next/Previous button navigation.</p>
 
 @if (PhysicsHandler.SelectionMessage is { } selectionMessage)
 {
@@ -21,6 +21,8 @@
     <div class="alert alert-warning" role="alert">@modeMessage</div>
 }
 
+<h2>Simulations</h2>
+<p>Select the simulation to run in Physics mode. Check simulations to include them in physical Next/Previous button navigation.</p>
 <div class="list-group" aria-label="Physics simulations">
     @foreach (var simulation in PhysicsHandler.Simulations)
     {
@@ -35,8 +37,31 @@
     }
 </div>
 
+<section class="mt-3" aria-labelledby="physics-configuration">
+    <h2 id="physics-configuration">Configuration</h2>
+    @if (Imu.CalibrationWarning is { } calibrationWarning)
+    {
+        <div class="alert alert-warning" role="alert">@calibrationWarning</div>
+    }
+    <p>Hold the shirt upright and still for a second, then calibrate its alignment. This does not stop the simulation.</p>
+    <div class="d-flex flex-wrap gap-2">
+        <button type="button" class="btn btn-primary" @onclick="CalibrateAlignment">Calibrate IMU</button>
+        <button type="button" class="btn btn-secondary" @onclick="ResetAlignment">Reset IMU calibration</button>
+    </div>
+    @if (_calibrationMessage is not null)
+    {
+        <div class="alert @(_calibrationSuccess ? "alert-success" : "alert-warning") mt-2" role="status">@_calibrationMessage</div>
+    }
+</section>
+
 @code {
     private bool _changing;
+    private bool _calibrationSuccess;
+    private string? _calibrationMessage;
+
+    private void CalibrateAlignment() => (_calibrationSuccess, _calibrationMessage) = Imu.CalibrateAlignment();
+
+    private void ResetAlignment() => (_calibrationSuccess, _calibrationMessage) = Imu.ResetAlignment();
 
     protected override void OnInitialized()
     {
