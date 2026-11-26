@@ -46,7 +46,7 @@ namespace WearWare.Services.Physics
                 new("Ball", ball),
                 new("IMU Test", imuTest),
                 new("Acid Smiley", acidSmiley),
-                new("Medallion", medallion),
+                new("VW", medallion),
                 new("Flavor flav", flavorFlav)
             ];
             Simulations = Array.AsReadOnly(_simulations.Select(simulation => simulation.Name).ToArray());
@@ -161,10 +161,17 @@ namespace WearWare.Services.Physics
             {
                 var state = JsonUtils.FromJsonFile<PhysicsState>(_selectionPath)
                     ?? throw new JsonException("Physics state contains null.");
-                if (state.Simulation == null || !Simulations.Contains(state.Simulation))
-                    throw new JsonException($"Invalid Physics simulation '{state.Simulation}'.");
                 if (state.ExcludedFromJog == null || state.ExcludedFromJog.Any(name => name == null))
                     throw new JsonException("Invalid Physics button navigation settings.");
+                if (state.Simulation == "Medallion")
+                    state.Simulation = "VW";
+                if (state.Simulation == null || !Simulations.Contains(state.Simulation))
+                    throw new JsonException($"Invalid Physics simulation '{state.Simulation}'.");
+                for (var i = 0; i < state.ExcludedFromJog.Length; i++)
+                {
+                    if (state.ExcludedFromJog[i] == "Medallion")
+                        state.ExcludedFromJog[i] = "VW";
+                }
                 return state;
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
