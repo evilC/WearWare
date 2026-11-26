@@ -27,7 +27,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
 
         protected int Width => _width;
         protected int Height => _height;
-        protected virtual float RadiusFraction => 0.15f;
+        protected virtual float RadiusFraction => 0.21f;
 
         protected override void Reset()
         {

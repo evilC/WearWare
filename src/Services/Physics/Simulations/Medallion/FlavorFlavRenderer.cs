@@ -17,8 +17,6 @@ namespace WearWare.Services.Physics.Simulations.Medallion
         {
         }
 
-        protected override float RadiusFraction => 0.21f;
-
         protected override void DrawBody(Vector2 center, float radius, float angle) =>
             DrawClock(center, radius, angle, DateTime.Now);
 
