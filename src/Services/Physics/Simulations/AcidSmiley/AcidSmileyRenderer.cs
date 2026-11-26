@@ -10,7 +10,8 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private static readonly Color FaceColor = new(255, 220, 0);
         private static readonly Color Black = new(0, 0, 0);
         private static readonly Color TongueColor = new(255, 35, 55);
-        private static readonly Color TongueGrooveColor = new(170, 15, 35);
+        private static readonly Color TongueGrooveColor = new(220, 27, 47);
+        private static readonly Color TongueHighlightColor = new(255, 70, 80);
         private const double ReferenceRadius = 56.5;
         private const double UpperMouthRadius = 45;
         private const double UpperMouthCenterY = -18;
@@ -193,7 +194,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
 
             var baseRadius = radius * 0.231;
             var middleRadius = radius * 0.1955;
-            var tipRadius = radius * 0.1584;
+            var tipRadius = radius * 0.18;
             var control = GetPathControl(start, middle, tip);
             var restingTip = new Point(
                 start.X + Math.Sin(_tipAngle) * length,
@@ -224,12 +225,11 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var grooveStart = new Point(
                 start.X + baseDirection.X * radius * 0.005,
                 start.Y + baseDirection.Y * radius * 0.005);
-            var grooveEnd = new Point(
-                tip.X + (middle.X - tip.X) * 0.25,
-                tip.Y + (middle.Y - tip.Y) * 0.25);
+            var grooveMiddle = GetPathPoint(start, control, tip, 0.325);
+            var grooveEnd = GetPathPoint(start, control, tip, 0.65);
             var grooveRadius = Math.Max(0.5, radius * 0.025);
             DrawSmileyPixels(pixels, width, height, centerX, centerY, rotation, start, control, tip, baseDirection, baseNormal,
-                baseRadius, middleRadius, tipRadius, radius, grooveStart, middle, grooveEnd, grooveRadius,
+                baseRadius, middleRadius, tipRadius, radius, grooveStart, grooveMiddle, grooveEnd, grooveRadius,
                 EyeOpenness(_blinkTime - _blinkStartTime, _doubleBlink));
         }
 
@@ -264,6 +264,20 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                     GetTongueWidth(t, baseRadius, middleRadius, tipRadius));
             }
 
+            const int highlightSteps = 8;
+            Span<Point> highlight = stackalloc Point[highlightSteps + 1];
+            var tipDirection = GetPathDirection(start, control, tip, 1);
+            var tipNormal = new Point(tipDirection.Y, -tipDirection.X);
+            for (var i = 0; i <= highlightSteps; i++)
+            {
+                var across = i * 2.0 / highlightSteps - 1;
+                var along = -0.15 + 0.65 * (1 - across * across);
+                highlight[i] = new Point(
+                    tip.X + tipNormal.X * tipRadius * 0.65 * across + tipDirection.X * tipRadius * along,
+                    tip.Y + tipNormal.Y * tipRadius * 0.65 * across + tipDirection.Y * tipRadius * along);
+            }
+            var highlightRadius = Math.Max(1.5, faceRadius * 0.025);
+
             var minX = Math.Min(Math.Min(start.X, control.X), tip.X) - baseRadius;
             var maxX = Math.Max(Math.Max(start.X, control.X), tip.X) + baseRadius;
             var minY = Math.Min(Math.Min(start.Y, control.Y), tip.Y) - baseRadius;
@@ -289,7 +303,10 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                     {
                         var inGroove = DistanceToSegmentSquared(point, grooveStart, grooveMiddle) <= grooveRadius * grooveRadius ||
                             DistanceToSegmentSquared(point, grooveMiddle, grooveEnd) <= grooveRadius * grooveRadius;
-                        color = inGroove ? TongueGrooveColor : TongueColor;
+                        var inHighlight = false;
+                        for (var i = 0; i < highlightSteps && !inHighlight; i++)
+                            inHighlight = DistanceToSegmentSquared(point, highlight[i], highlight[i + 1]) <= highlightRadius * highlightRadius;
+                        color = inHighlight ? TongueHighlightColor : inGroove ? TongueGrooveColor : TongueColor;
                     }
                     else if (point.X * point.X + point.Y * point.Y <= faceRadius * faceRadius &&
                         !EllipseContains(point.X - eyeShift - eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
