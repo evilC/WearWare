@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="109.176mm"
+   height="118.213mm"
+   viewBox="0 0 109.176 118.213"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="VW Logo loop filled 02.svg"
+   inkscape:version="1.4.4 (dcaf3e7, 2026-05-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.2679355"
+     inkscape:cx="-120.27425"
+     inkscape:cy="240.15417"
+     inkscape:window-width="2560"
+     inkscape:window-height="1351"
+     inkscape:window-x="2551"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <g
+     id="layer-0"
+     inkscape:groupmode="layer"
+     inkscape:label="0"
+     style="display:inline">
+    <path
+       id="path1"
+       d="m 66.777,26.27 c -7.943,-2.44 -16.435,-2.44 -24.378,0 L 54.588,53.647 Z M 48.558,64.69 h 12.06 L 75.912,30.338 c 4.827,2.891 9.016,6.733 12.311,11.294 L 68.731,85.413 60.618,67.19 H 48.558 L 40.445,85.413 20.952,41.632 c 3.296,-4.561 7.485,-8.403 12.312,-11.294 z M 15.119,53.116 37.708,103.852 C 18.304,95.213 8.555,73.317 15.119,53.116 Z m 56.348,50.736 22.59,-50.736 c 6.563,20.201 -3.185,42.097 -22.59,50.736 z m -29.068,1.758 c 7.943,2.44 16.435,2.44 24.378,0 L 54.588,78.233 Z m 2.253055,-88.673049 c -25.169,5.103 -42.3791074,28.444187 -39.8141074,53.996187 2.564,25.552 24.0689344,45.007072 49.7499344,45.007072 25.681,0 47.185938,-19.455072 49.749938,-45.007072 2.564,-25.552 -14.645593,-48.893187 -39.813593,-53.996187 M 64.524,16.937 c -6.557,-1.329 -13.315,-1.329 -19.872,0"
+       style="fill-rule:evenodd" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer6"
+     inkscape:label="Loop"
+     style="display:inline">
+    <path
+       id="path18-9"
+       style="display:inline;fill-rule:evenodd"
+       d="m 57.921,10.607 c 0,-1.841 -1.492,-3.334 -3.333,-3.334 -1.841,0 -3.333,1.493 -3.333,3.334 0,1.841 1.492,3.333 3.333,3.333 1.841,0 3.333,-1.492 3.333,-3.333 z m 6.603,6.33 c -6.557,-1.329 -13.315,-1.329 -19.872,0 m 19.872227,-4.9e-5 c -0.933,-0.189 -1.603003,-1.009087 -1.603003,-1.960087 v -4.36976 c 0,-4.6029995 -3.731342,-8.3338577 -8.333342,-8.3338577 -4.603,0 -8.332824,3.7308582 -8.332824,8.3338577 v 4.36976 c 0,0.951 -0.671003,1.771087 -1.603003,1.960087" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer7"
+     inkscape:label="Loop hole"
+     style="display:none">
+    <path
+       d="m 57.921,10.607 c 0,-1.841 -1.492,-3.334 -3.333,-3.334 -1.841,0 -3.333,1.493 -3.333,3.334 0,1.841 1.492,3.333 3.333,3.333 1.841,0 3.333,-1.492 3.333,-3.333 z"
+       id="path18-9-3"
+       style="display:inline" />
+  </g>
+</svg>
