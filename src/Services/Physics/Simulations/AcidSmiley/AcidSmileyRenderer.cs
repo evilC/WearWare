@@ -11,41 +11,12 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private static readonly Color Black = new(0, 0, 0);
         private static readonly Color TongueColor = new(255, 35, 55);
         private static readonly Color TongueGrooveColor = new(170, 15, 35);
-        private const double ReferenceRadius = 56.85291170560415;
-        private static readonly Point[] MouthControlPoints =
-        [
-            new(0, -22.28032013741425),
-            new(0.5985040195939257, -22.28032013741425),
-            new(1.842413595554615, -22.26429145157641),
-            new(3.848981818201683, -22.19216347482328),
-            new(6.792322182755246, -21.97956652925373),
-            new(10.82981039017698, -21.41104558592548),
-            new(15.09536121990046, -20.41528989825641),
-            new(19.42863478261973, -18.89528663567038),
-            new(23.65096514590162, -16.82312449398408),
-            new(27.57667108381664, -14.28675569981604),
-            new(31.02521567677473, -11.5254785824527),
-            new(33.84273991019501, -8.874647596184043),
-            new(35.9217135973713, -6.718850002966593),
-            new(37.22473812943423, -5.44503574154254),
-            new(37.80138745560452, -5.389894393682174),
-            new(37.82401501577345, -6.802576299862879),
-            new(37.35930077980281, -9.661694572042442),
-            new(36.35010488114705, -13.69331393040688),
-            new(34.6874179761248, -18.47398421886917),
-            new(32.25159550547628, -23.50265096368547),
-            new(28.96909946731926, -28.28722155491521),
-            new(24.8570254822393, -32.4171063021475),
-            new(20.08935828365794, -35.66054299849288),
-            new(14.99986942719173, -37.98695760467193),
-            new(10.00304633578591, -39.49230312546565),
-            new(5.536522079822939, -40.35030790985241),
-            new(2.703480077487104, -40.67373186922657),
-            new(1.125325763270984, -40.78425856261437),
-            new(0.3319815203877852, -40.80881890129521),
-            new(0, -40.80881890129521)
-        ];
-        private static readonly Point[] MouthOutline = CreateMouthOutline();
+        private const double ReferenceRadius = 56.5;
+        private const double UpperMouthRadius = 45;
+        private const double UpperMouthCenterY = -18;
+        private const double LowerMouthRadius = 38.29090294217289;
+        private const double LowerMouthCenterY = 2.709097057827122;
+        private const double MouthHalfWidth = 38.16216432703916 / ReferenceRadius;
         private const double MaxTiltRadians = 70 * Math.PI / 180;
         private double _elapsedSeconds;
         private double _basePosition;
@@ -133,27 +104,29 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
 
         private static void DrawMouth(RGBLedCanvas canvas, double centerX, double centerY, double radius)
         {
-            var mouth = new Point[MouthOutline.Length];
-            for (var i = 0; i < mouth.Length; i++)
+            var minX = Math.Max(0, (int)Math.Ceiling(centerX - MouthHalfWidth * radius));
+            var maxX = Math.Min(canvas.Width - 1, (int)Math.Floor(centerX + MouthHalfWidth * radius));
+            for (var x = minX; x <= maxX; x++)
             {
-                mouth[i] = new Point(
-                    centerX + MouthOutline[i].X * radius,
-                    centerY + MouthOutline[i].Y * radius);
+                var bounds = MouthBounds((x - centerX) / radius);
+                var top = Math.Max(0, (int)Math.Ceiling(centerY + bounds.Top * radius));
+                var bottom = Math.Min(canvas.Height - 1, (int)Math.Floor(centerY + bounds.Bottom * radius));
+                if (top <= bottom)
+                    canvas.DrawLine(x, top, x, bottom, Black);
             }
 
-            FillPolygon(canvas, mouth, Black);
-            var cornerX = radius * (37.36421678566272 / ReferenceRadius);
-            var cornerY = centerY + radius * (5.230682114258513 / ReferenceRadius);
+            var cornerX = radius * (37.88638811911351 / ReferenceRadius);
+            var cornerY = centerY + radius * (5.909734806123538 / ReferenceRadius);
             DrawMouthCorner(canvas, centerX - cornerX, cornerY, radius, -1);
             DrawMouthCorner(canvas, centerX + cornerX, cornerY, radius, 1);
         }
 
         private static void DrawMouthCorner(RGBLedCanvas canvas, double centerX, double centerY, double radius, int side)
         {
-            var majorX = side * 2.662139290359387 / ReferenceRadius * radius;
-            var majorY = 1.625135789877915 / ReferenceRadius * radius;
+            var majorX = side * 3.03108891324545 / ReferenceRadius * radius;
+            var majorY = 1.749999999999951 / ReferenceRadius * radius;
             var majorRadius = Math.Sqrt(majorX * majorX + majorY * majorY);
-            var minorRadius = majorRadius * 0.308229434072314;
+            var minorRadius = majorRadius * 0.3571428571428671;
             var minX = Math.Max(0, (int)Math.Floor(centerX - majorRadius));
             var maxX = Math.Min(canvas.Width - 1, (int)Math.Ceiling(centerX + majorRadius));
             var minY = Math.Max(0, (int)Math.Floor(centerY - majorRadius));
@@ -348,86 +321,6 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             return middleRadius + (tipRadius - middleRadius) * secondPosition;
         }
 
-        private static void FillPolygon(RGBLedCanvas canvas, Point[] points, Color color)
-        {
-            var minX = Math.Max(0, (int)Math.Floor(points.Min(point => point.X)));
-            var maxX = Math.Min(canvas.Width - 1, (int)Math.Ceiling(points.Max(point => point.X)));
-            var minY = Math.Max(0, (int)Math.Floor(points.Min(point => point.Y)));
-            var maxY = Math.Min(canvas.Height - 1, (int)Math.Ceiling(points.Max(point => point.Y)));
-
-            for (var y = minY; y <= maxY; y++)
-            {
-                for (var x = minX; x <= maxX; x++)
-                {
-                    if (ContainsPoint(points, x, y))
-                        canvas.SetPixel(x, y, color);
-                }
-            }
-        }
-
-        private static bool ContainsPoint(Point[] polygon, double x, double y)
-        {
-            var inside = false;
-            for (var i = 0; i < polygon.Length; i++)
-            {
-                var current = polygon[i];
-                var previous = polygon[(i + polygon.Length - 1) % polygon.Length];
-                if ((current.Y > y) != (previous.Y > y) &&
-                    x < (previous.X - current.X) * (y - current.Y) / (previous.Y - current.Y) + current.X)
-                {
-                    inside = !inside;
-                }
-            }
-
-            return inside;
-        }
-
-        private static Point[] CreateMouthOutline()
-        {
-            const int steps = 64;
-            var outline = new Point[steps * 2 + 2];
-            for (var i = 0; i <= steps; i++)
-            {
-                var point = EvaluateMouthSpline(i / (double)steps);
-                outline[i] = new Point(point.X / ReferenceRadius, -point.Y / ReferenceRadius);
-                outline[outline.Length - 1 - i] = new Point(-point.X / ReferenceRadius, -point.Y / ReferenceRadius);
-            }
-
-            return outline;
-        }
-
-        private static Point EvaluateMouthSpline(double position)
-        {
-            const int degree = 5;
-            var span = position == 1 ? 29 : degree + (int)(position * 25);
-            var points = new Point[degree + 1];
-            for (var j = 0; j <= degree; j++)
-                points[j] = MouthControlPoints[span - degree + j];
-
-            // The DXF spline has uniformly spaced interior knots and clamped endpoints.
-            for (var level = 1; level <= degree; level++)
-            {
-                for (var j = degree; j >= level; j--)
-                {
-                    var left = MouthKnot(span - degree + j);
-                    var right = MouthKnot(span + 1 + j - level);
-                    var weight = (position - left) / (right - left);
-                    points[j] = new Point(
-                        (1 - weight) * points[j - 1].X + weight * points[j].X,
-                        (1 - weight) * points[j - 1].Y + weight * points[j].Y);
-                }
-            }
-
-            return points[degree];
-        }
-
-        private static double MouthKnot(int index)
-        {
-            if (index <= 5) return 0;
-            if (index >= 30) return 1;
-            return (index - 5) / 25.0;
-        }
-
         private static Point SmilePoint(double centerX, double centerY, double radius, double position)
         {
             var x = (position - 0.5) * 1.28;
@@ -437,23 +330,14 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
 
         private static (double Top, double Bottom) MouthBounds(double x)
         {
-            var top = double.PositiveInfinity;
-            var bottom = double.NegativeInfinity;
-            for (var i = 0; i < MouthOutline.Length; i++)
-            {
-                var a = MouthOutline[i];
-                var b = MouthOutline[(i + 1) % MouthOutline.Length];
-                if ((a.X <= x && b.X > x) || (b.X <= x && a.X > x))
-                {
-                    var y = a.Y + (b.Y - a.Y) * (x - a.X) / (b.X - a.X);
-                    top = Math.Min(top, y);
-                    bottom = Math.Max(bottom, y);
-                }
-            }
-
-            if (!double.IsFinite(top) || !double.IsFinite(bottom))
+            if (!double.IsFinite(x) || Math.Abs(x) > MouthHalfWidth)
                 throw new InvalidOperationException("Tongue position is outside the smile.");
 
+            var referenceX = x * ReferenceRadius;
+            var top = (UpperMouthCenterY +
+                Math.Sqrt(UpperMouthRadius * UpperMouthRadius - referenceX * referenceX)) / ReferenceRadius;
+            var bottom = (LowerMouthCenterY +
+                Math.Sqrt(LowerMouthRadius * LowerMouthRadius - referenceX * referenceX)) / ReferenceRadius;
             return (top, bottom);
         }
 
