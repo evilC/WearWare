@@ -40,7 +40,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
             var scale = Math.Min(width, height);
             _attachmentDistance = attachmentDistance;
             Radius = Math.Max(0.5f, scale * radiusFraction);
-            var left = new Vector2((width - 1) * 0.25f, (height - 1) * 0.025f);
+            var left = new Vector2((width - 1) * 0.25f, 0);
             var right = new Vector2((width - 1) * 0.75f, left.Y);
             var knot = new Vector2((width - 1) / 2f, (height - 1) * 0.52f);
             _linkLength = Math.Max(0.01f, Vector2.Distance(left, knot) * 1.025f / LinksPerSide);

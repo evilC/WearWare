@@ -67,9 +67,12 @@ namespace WearWare.Services.Physics.Simulations.Medallion
             var thickness = (0.95f + 0.2f * chunkiness) * scale;
             var distanceAlongChain = 0f;
             var nextLink = 0f;
-            for (var i = 0; i < chain.Length - 1; i++)
+            var direction = foreground ? 1 : -1;
+            var start = foreground ? 0 : chain.Length - 1;
+            var knot = chain.Length / 2;
+            for (var i = start; i != knot; i += direction)
             {
-                var segment = chain[i + 1] - chain[i];
+                var segment = chain[i + direction] - chain[i];
                 var length = segment.Length();
                 if (length < 0.0001f)
                     continue;
@@ -77,11 +80,8 @@ namespace WearWare.Services.Physics.Simulations.Medallion
                 var tangent = segment / length;
                 while (nextLink <= distanceAlongChain + length)
                 {
-                    if ((i < chain.Length / 2) == foreground)
-                    {
-                        var center = chain[i] + tangent * (nextLink - distanceAlongChain);
-                        DrawLink(center, tangent, majorRadius, minorRadius, thickness);
-                    }
+                    var center = chain[i] + tangent * (nextLink - distanceAlongChain);
+                    DrawLink(center, foreground ? tangent : -tangent, majorRadius, minorRadius, thickness);
                     nextLink += spacing;
                 }
                 distanceAlongChain += length;
