@@ -258,6 +258,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var cos = Math.Cos(rotation);
             var sin = Math.Sin(rotation);
             var eyeX = faceRadius * (14.84340816236941 / ReferenceRadius);
+            var eyeShift = tip.X * 0.12;
             var eyeY = -faceRadius * (17.99319034459099 / ReferenceRadius);
             var eyeRadiusX = faceRadius * (4.960674857154 / ReferenceRadius);
             var eyeRadiusY = faceRadius * (14.38153091568093 / ReferenceRadius);
@@ -278,8 +279,8 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                         color = inGroove ? TongueGrooveColor : TongueColor;
                     }
                     else if (point.X * point.X + point.Y * point.Y <= faceRadius * faceRadius &&
-                        !EllipseContains(point.X - eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
-                        !EllipseContains(point.X + eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
+                        !EllipseContains(point.X - eyeShift - eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
+                        !EllipseContains(point.X - eyeShift + eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
                         !MouthContains(point, faceRadius))
                     {
                         color = FaceColor;
