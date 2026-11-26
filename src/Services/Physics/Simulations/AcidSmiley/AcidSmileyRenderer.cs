@@ -27,8 +27,12 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private double _gravityY;
         private double _offsetX;
         private double _offsetY;
+        private double _blinkTime;
+        private double _blinkStartTime;
+        private double _nextBlinkTime;
         private bool _motionInitialized;
         private bool _gravityInitialized;
+        private bool _doubleBlink;
         private Color[] _pixels = [];
 
         public AcidSmileyRenderer(
@@ -51,8 +55,12 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             _gravityY = 0;
             _offsetX = 0;
             _offsetY = 0;
+            _blinkTime = 0;
+            _blinkStartTime = -1;
+            _nextBlinkTime = 5 + Random.Shared.NextDouble() * 5;
             _motionInitialized = false;
             _gravityInitialized = false;
+            _doubleBlink = false;
             _pixels = [];
         }
 
@@ -67,6 +75,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                 _pixels = new Color[pixelCount];
 
             UpdateMotion(reading, elapsedSeconds);
+            UpdateBlink(elapsedSeconds);
             var centerX = (canvas.Width - 1) / 2.0 + _offsetX * radius;
             var centerY = (canvas.Height - 1) / 2.0 + _offsetY * radius;
 
@@ -138,6 +147,30 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             return 1 - Math.Exp(-elapsedSeconds / timeConstant);
         }
 
+        private void UpdateBlink(double elapsedSeconds)
+        {
+            _blinkTime += elapsedSeconds;
+            if (_blinkTime >= _nextBlinkTime)
+            {
+                _blinkStartTime = _blinkTime;
+                _doubleBlink = Random.Shared.Next(4) == 0;
+                _nextBlinkTime = _blinkTime + 5 + Random.Shared.NextDouble() * 5;
+            }
+        }
+
+        private static double EyeOpenness(double elapsedSeconds, bool doubleBlink)
+        {
+            if (doubleBlink && elapsedSeconds >= 0.42)
+                elapsedSeconds -= 0.42;
+            if (elapsedSeconds < 0 || elapsedSeconds >= 0.3)
+                return 1;
+            if (elapsedSeconds < 0.1)
+                return 1 - elapsedSeconds / 0.1;
+            if (elapsedSeconds < 0.15)
+                return 0;
+            return (elapsedSeconds - 0.15) / 0.15;
+        }
+
         private void DrawSmiley(Color[] pixels, int width, int height, double centerX, double centerY, double radius, double rotation)
         {
             var mouthPoint = SmilePoint(0, 0, radius, _basePosition);
@@ -183,7 +216,8 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                 tip.Y + (middle.Y - tip.Y) * 0.25);
             var grooveRadius = Math.Max(0.5, radius * 0.025);
             DrawSmileyPixels(pixels, width, height, centerX, centerY, rotation, start, control, tip, baseDirection, baseNormal,
-                baseRadius, middleRadius, tipRadius, radius, grooveStart, middle, grooveEnd, grooveRadius);
+                baseRadius, middleRadius, tipRadius, radius, grooveStart, middle, grooveEnd, grooveRadius,
+                EyeOpenness(_blinkTime - _blinkStartTime, _doubleBlink));
         }
 
         private static void DrawSmileyPixels(
@@ -205,7 +239,8 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             Point grooveStart,
             Point grooveMiddle,
             Point grooveEnd,
-            double grooveRadius)
+            double grooveRadius,
+            double eyeOpenness)
         {
             const int steps = 32;
             var samples = new TongueSample[steps + 1];
@@ -226,6 +261,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var eyeY = -faceRadius * (17.99319034459099 / ReferenceRadius);
             var eyeRadiusX = faceRadius * (4.960674857154 / ReferenceRadius);
             var eyeRadiusY = faceRadius * (14.38153091568093 / ReferenceRadius);
+            eyeRadiusY = Math.Max(Math.Min(0.5, eyeRadiusY), eyeRadiusY * eyeOpenness);
             for (var y = 0; y < height; y++)
             {
                 for (var x = 0; x < width; x++)
