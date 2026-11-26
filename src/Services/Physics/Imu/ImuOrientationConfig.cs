@@ -5,6 +5,14 @@ using WearWare.Utils;
 
 namespace WearWare.Services.Physics.Imu
 {
+    public enum ImuOrientation
+    {
+        Default,
+        RotateX,
+        RotateY,
+        RotateZ
+    }
+
     internal sealed class ImuOrientationConfig
     {
         [JsonPropertyName("x")]
@@ -18,6 +26,29 @@ namespace WearWare.Services.Physics.Imu
         [JsonPropertyName("z")]
         [JsonRequired]
         public int Z { get; set; } = 1;
+
+        [JsonPropertyName("calibrationId")]
+        public Guid? CalibrationId { get; set; }
+
+        [JsonIgnore]
+        public ImuOrientation Orientation => (X, Y, Z) switch
+        {
+            (1, 1, 1) => ImuOrientation.Default,
+            (1, -1, -1) => ImuOrientation.RotateX,
+            (-1, 1, -1) => ImuOrientation.RotateY,
+            (-1, -1, 1) => ImuOrientation.RotateZ,
+            _ => throw new InvalidOperationException("Invalid IMU orientation.")
+        };
+
+        // A new ID prevents an old calibration from returning if the orientation is later changed back.
+        public static ImuOrientationConfig Create(ImuOrientation orientation) => orientation switch
+        {
+            ImuOrientation.Default => new() { X = 1, Y = 1, Z = 1, CalibrationId = Guid.NewGuid() },
+            ImuOrientation.RotateX => new() { X = 1, Y = -1, Z = -1, CalibrationId = Guid.NewGuid() },
+            ImuOrientation.RotateY => new() { X = -1, Y = 1, Z = -1, CalibrationId = Guid.NewGuid() },
+            ImuOrientation.RotateZ => new() { X = -1, Y = -1, Z = 1, CalibrationId = Guid.NewGuid() },
+            _ => throw new ArgumentOutOfRangeException(nameof(orientation))
+        };
 
         public static ImuOrientationConfig Load(string path)
         {

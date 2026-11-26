@@ -4,6 +4,7 @@
 @using WearWare.Services.Mode
 @using WearWare.Services.Physics
 @using WearWare.Services.Physics.Imu
+@using System.Numerics
 @inject PhysicsHandler PhysicsHandler
 @inject ModeHandler ModeHandler
 @inject ImuService Imu
@@ -37,8 +38,8 @@
     }
 </div>
 
-<section class="mt-3" aria-labelledby="physics-configuration">
-    <h2 id="physics-configuration">Configuration</h2>
+<section class="mt-3" aria-labelledby="physics-calibration">
+    <h2 id="physics-calibration">Calibration</h2>
     @if (Imu.CalibrationWarning is { } calibrationWarning)
     {
         <div class="alert alert-warning" role="alert">@calibrationWarning</div>
@@ -54,10 +55,157 @@
     }
 </section>
 
+<section class="mt-3" aria-labelledby="physics-configuration">
+    <h2 id="physics-configuration">Configuration</h2>
+    <h3>IMU orientation</h3>
+    <p>Current orientation: @(Imu.Orientation is { } orientation ? OrientationLabel(orientation) : "Unavailable")</p>
+    <label for="imu-orientation" class="form-label">Mounting orientation</label>
+    <select id="imu-orientation" class="form-select mb-2" @bind="SelectedOrientation" disabled="@(Imu.Orientation == null || _detectionStep != DetectionStep.None)">
+        @foreach (var option in Enum.GetValues<ImuOrientation>())
+        {
+            <option value="@option">@OrientationLabel(option)</option>
+        }
+    </select>
+    <div class="alert @(_orientationMessage is null ? "alert-info" : _orientationSuccess ? "alert-success" : "alert-warning") mb-2"
+         role="status" style="height: 11rem; overflow-y: auto;">
+        @if (_detectionStep != DetectionStep.None)
+        {
+            <p class="mb-0">@DetectionInstruction</p>
+        }
+        @if (_orientationMessage is not null)
+        {
+            <p class="@(_detectionStep != DetectionStep.None ? "mt-2 mb-0" : "mb-0")">@_orientationMessage</p>
+        }
+        else if (_detectionStep == DetectionStep.None)
+        {
+            <p class="mb-0">Select an orientation or use detection to find it.</p>
+        }
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (_detectionStep == DetectionStep.None)
+        {
+            <button type="button" class="btn btn-primary" @onclick="ApplyOrientation" disabled="@(Imu.Orientation == null)">Apply orientation</button>
+            <button type="button" class="btn btn-secondary" @onclick="StartDetection">Detect orientation</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-primary" @onclick="CaptureDetection">Continue</button>
+            <button type="button" class="btn btn-secondary" @onclick="CancelDetection">Cancel</button>
+        }
+    </div>
+</section>
+
 @code {
     private bool _changing;
     private bool _calibrationSuccess;
     private string? _calibrationMessage;
+    private ImuOrientation _selectedOrientation;
+    private bool _orientationDirty;
+    private bool _orientationSuccess;
+    private string? _orientationMessage;
+    private DetectionStep _detectionStep;
+    private Vector3 _uprightReading;
+    private Vector3 _rightReading;
+
+    private enum DetectionStep { None, Upright, Right, Left }
+
+    private ImuOrientation SelectedOrientation
+    {
+        get => _selectedOrientation;
+        set
+        {
+            _selectedOrientation = value;
+            _orientationDirty = true;
+            _orientationMessage = null;
+        }
+    }
+
+    private string DetectionInstruction => _detectionStep switch
+    {
+        DetectionStep.Upright => "Hold the shirt upright and still for a second, then press Continue.",
+        DetectionStep.Right => "From the front of the display, tilt its top to the right. Hold still for a second, then press Continue.",
+        DetectionStep.Left => "The result is unclear. Tilt the top to the left instead, hold still for a second, then press Continue.",
+        _ => string.Empty
+    };
+
+    private static string OrientationLabel(ImuOrientation orientation) => orientation switch
+    {
+        ImuOrientation.Default => "Default (X+, Y+, Z+)",
+        ImuOrientation.RotateX => "180 degrees around X (X+, Y-, Z-)",
+        ImuOrientation.RotateY => "180 degrees around Y (X-, Y+, Z-)",
+        ImuOrientation.RotateZ => "180 degrees around Z (X-, Y-, Z+)",
+        _ => throw new ArgumentOutOfRangeException(nameof(orientation))
+    };
+
+    private void ApplyOrientation()
+    {
+        var changed = Imu.Orientation != _selectedOrientation;
+        (_orientationSuccess, _orientationMessage) = Imu.SetOrientation(_selectedOrientation);
+        if (_orientationSuccess)
+        {
+            _orientationDirty = false;
+            if (changed)
+                _calibrationMessage = null;
+        }
+    }
+
+    private void StartDetection()
+    {
+        _orientationMessage = null;
+        _detectionStep = DetectionStep.Upright;
+    }
+
+    private void CancelDetection()
+    {
+        _detectionStep = DetectionStep.None;
+        _orientationMessage = null;
+    }
+
+    private void CaptureDetection()
+    {
+        var (success, message, reading) = Imu.GetStationaryAcceleration();
+        if (!success)
+        {
+            _orientationSuccess = false;
+            _orientationMessage = message;
+            return;
+        }
+        _orientationMessage = null;
+        if (_detectionStep == DetectionStep.Upright)
+        {
+            _uprightReading = reading;
+            _detectionStep = DetectionStep.Right;
+            return;
+        }
+        if (_detectionStep == DetectionStep.Right)
+            _rightReading = reading;
+
+        var (status, orientation) = ImuOrientationDetection.Detect(
+            _uprightReading, _rightReading, _detectionStep == DetectionStep.Left ? reading : null);
+        switch (status)
+        {
+            case OrientationDetectionStatus.Detected:
+                _selectedOrientation = orientation;
+                _orientationDirty = true;
+                _orientationSuccess = true;
+                _orientationMessage = "Orientation detected. Review the selection and press Apply orientation.";
+                _detectionStep = DetectionStep.None;
+                break;
+            case OrientationDetectionStatus.Unsupported:
+                _orientationSuccess = false;
+                _orientationMessage = "Unsupported orientation detected. 90-degree rotations are not supported. The existing orientation has not changed.";
+                _detectionStep = DetectionStep.None;
+                break;
+            case OrientationDetectionStatus.NeedLeftTilt:
+                _detectionStep = DetectionStep.Left;
+                break;
+            case OrientationDetectionStatus.Retry:
+                _orientationSuccess = false;
+                _orientationMessage = "Could not determine orientation. Hold the shirt upright and try again.";
+                _detectionStep = DetectionStep.None;
+                break;
+        }
+    }
 
     private void CalibrateAlignment() => (_calibrationSuccess, _calibrationMessage) = Imu.CalibrateAlignment();
 
@@ -65,11 +213,21 @@
 
     protected override void OnInitialized()
     {
+        Imu.OrientationChanged += OnOrientationChanged;
+        _selectedOrientation = Imu.Orientation ?? ImuOrientation.Default;
         PhysicsHandler.StateChanged += OnStateChanged;
         ModeHandler.StateChanged += OnStateChanged;
     }
 
     private void OnStateChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void OnOrientationChanged() => _ = InvokeAsync(() =>
+    {
+        if (!_orientationDirty && Imu.Orientation is { } orientation)
+            _selectedOrientation = orientation;
+        _calibrationMessage = null;
+        StateHasChanged();
+    });
 
     private async Task SelectSimulation(string simulation)
     {
@@ -101,5 +259,6 @@
     {
         PhysicsHandler.StateChanged -= OnStateChanged;
         ModeHandler.StateChanged -= OnStateChanged;
+        Imu.OrientationChanged -= OnOrientationChanged;
     }
 }
