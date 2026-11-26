@@ -35,6 +35,7 @@ namespace WearWare.Services.Physics
             ImuTestRenderer imuTest,
             AcidSmileyRenderer acidSmiley,
             MedallionRenderer medallion,
+            FlavorFlavRenderer flavorFlav,
             ILogger<PhysicsHandler> logger)
         {
             _imu = imu;
@@ -45,7 +46,8 @@ namespace WearWare.Services.Physics
                 new("Ball", ball),
                 new("IMU Test", imuTest),
                 new("Acid Smiley", acidSmiley),
-                new("Medallion", medallion)
+                new("Medallion", medallion),
+                new("Flavor flav", flavorFlav)
             ];
             Simulations = Array.AsReadOnly(_simulations.Select(simulation => simulation.Name).ToArray());
             _physicsState = LoadState();

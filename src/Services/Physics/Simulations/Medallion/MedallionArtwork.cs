@@ -4,27 +4,37 @@ namespace WearWare.Services.Physics.Simulations.Medallion
 {
     internal static class MedallionArtwork
     {
+        internal enum Part { Body, Loop, Clock }
+
         private const float CenterX = 54.588f;
         private const float CenterY = 65.94f;
         private const float ModelRadius = 50;
         private const int MaskScale = 2;
         private const int MaskWidth = 219;
         private const int MaskHeight = 237;
-        private static readonly (bool[] Body, bool[] Loop) Masks = CreateMasks();
+        private static readonly (bool[] Body, bool[] Loop, bool[] Clock) Masks = CreateMasks();
 
         public const float AttachmentDistance = (CenterY - 10.6065f) / ModelRadius;
 
         public static void Prepare() => _ = Masks;
 
-        public static bool IsMetal(float x, float y, bool loop)
+        public static bool IsMetal(float x, float y, Part part)
         {
             var maskX = (int)MathF.Floor((x * ModelRadius + CenterX) * MaskScale);
             var maskY = (int)MathF.Floor((y * ModelRadius + CenterY) * MaskScale);
-            return maskX >= 0 && maskX < MaskWidth && maskY >= 0 && maskY < MaskHeight &&
-                (loop ? Masks.Loop : Masks.Body)[maskY * MaskWidth + maskX];
+            if (maskX < 0 || maskX >= MaskWidth || maskY < 0 || maskY >= MaskHeight)
+                return false;
+            var mask = part switch
+            {
+                Part.Body => Masks.Body,
+                Part.Loop => Masks.Loop,
+                Part.Clock => Masks.Clock,
+                _ => throw new ArgumentOutOfRangeException(nameof(part))
+            };
+            return mask[maskY * MaskWidth + maskX];
         }
 
-        private static (bool[] Body, bool[] Loop) CreateMasks()
+        private static (bool[] Body, bool[] Loop, bool[] Clock) CreateMasks()
         {
             // Contours from the supplied SVG's body and loop layers.
             Vector2[][] body =
@@ -70,7 +80,7 @@ namespace WearWare.Services.Physics.Simulations.Medallion
                     .Curve(51.255f, 12.448f, 52.747f, 13.94f, 54.588f, 13.94f)
                     .Curve(56.429f, 13.94f, 57.921f, 12.448f, 57.921f, 10.607f).Close()
             ];
-            return (CreateMask(body), CreateMask(loop));
+            return (CreateMask(body), CreateMask(loop), CreateMask([body[^1]]));
         }
 
         private static bool[] CreateMask(Vector2[][] contours)

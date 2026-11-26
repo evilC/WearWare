@@ -117,6 +117,7 @@ builder.Services.AddSingleton<BallPhysicsRenderer>();
 builder.Services.AddSingleton<ImuTestRenderer>();
 builder.Services.AddSingleton<AcidSmileyRenderer>();
 builder.Services.AddSingleton<MedallionRenderer>();
+builder.Services.AddSingleton<FlavorFlavRenderer>();
 builder.Services.AddSingleton<PhysicsHandler>();
 builder.Services.AddSingleton<ModeHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeHandler>());

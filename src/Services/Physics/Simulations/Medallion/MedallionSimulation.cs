@@ -27,13 +27,15 @@ namespace WearWare.Services.Physics.Simulations.Medallion
             }
         }
 
-        public MedallionSimulation(int width, int height)
+        public MedallionSimulation(int width, int height, float radiusFraction)
         {
             if (width <= 0 || height <= 0)
                 throw new ArgumentOutOfRangeException(nameof(width), "Invalid medallion canvas dimensions.");
+            if (!float.IsFinite(radiusFraction) || radiusFraction <= 0)
+                throw new ArgumentOutOfRangeException(nameof(radiusFraction), "Invalid medallion radius.");
 
             var scale = Math.Min(width, height);
-            Radius = Math.Max(0.5f, scale * 0.15f);
+            Radius = Math.Max(0.5f, scale * radiusFraction);
             var left = new Vector2((width - 1) * 0.035f, (height - 1) * 0.025f);
             var right = new Vector2((width - 1) * 0.965f, left.Y);
             var knot = new Vector2((width - 1) / 2f, (height - 1) * 0.52f);
