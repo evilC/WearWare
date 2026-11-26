@@ -26,6 +26,7 @@ using WearWare.Services.Physics.Simulations.AcidSmiley;
 using WearWare.Services.Physics.Simulations.Ball;
 using WearWare.Services.Physics.Simulations.Fluid;
 using WearWare.Services.Physics.Simulations.ImuTest;
+using WearWare.Services.Physics.Simulations.Medallion;
 using WearWare.Services.Playback;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -115,6 +116,7 @@ builder.Services.AddSingleton<FluidRenderer>();
 builder.Services.AddSingleton<BallPhysicsRenderer>();
 builder.Services.AddSingleton<ImuTestRenderer>();
 builder.Services.AddSingleton<AcidSmileyRenderer>();
+builder.Services.AddSingleton<MedallionRenderer>();
 builder.Services.AddSingleton<PhysicsHandler>();
 builder.Services.AddSingleton<ModeHandler>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ModeHandler>());

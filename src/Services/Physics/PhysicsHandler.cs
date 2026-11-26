@@ -5,6 +5,7 @@ using WearWare.Services.Physics.Simulations.Ball;
 using WearWare.Services.Physics.Simulations.AcidSmiley;
 using WearWare.Services.Physics.Simulations.Fluid;
 using WearWare.Services.Physics.Simulations.ImuTest;
+using WearWare.Services.Physics.Simulations.Medallion;
 using WearWare.Utils;
 
 namespace WearWare.Services.Physics
@@ -33,6 +34,7 @@ namespace WearWare.Services.Physics
             BallPhysicsRenderer ball,
             ImuTestRenderer imuTest,
             AcidSmileyRenderer acidSmiley,
+            MedallionRenderer medallion,
             ILogger<PhysicsHandler> logger)
         {
             _imu = imu;
@@ -42,7 +44,8 @@ namespace WearWare.Services.Physics
                 new("Fluid", fluid),
                 new("Ball", ball),
                 new("IMU Test", imuTest),
-                new("Acid Smiley", acidSmiley)
+                new("Acid Smiley", acidSmiley),
+                new("Medallion", medallion)
             ];
             Simulations = Array.AsReadOnly(_simulations.Select(simulation => simulation.Name).ToArray());
             _physicsState = LoadState();
