@@ -20,12 +20,18 @@ namespace WearWare.Services.Physics.Simulations.Ball
         {
             _ball.Update(reading.MountedAcceleration, elapsedSeconds, canvas.Width, canvas.Height);
             DrawRamps(canvas, _ball.RampRadius);
+            var radius = _ball.Radius;
+            if (_ball.Y < -radius - 0.5)
+                return;
+
             var centerX = (int)Math.Round(_ball.X);
             var centerY = (int)Math.Round(_ball.Y);
-            var radius = _ball.Radius;
             var color = new Color(255, 255, 255);
             for (var y = -radius; y <= radius; y++)
             {
+                if (centerY + y < 0)
+                    continue;
+
                 for (var x = -radius; x <= radius; x++)
                 {
                     if (x * x + y * y <= radius * radius)

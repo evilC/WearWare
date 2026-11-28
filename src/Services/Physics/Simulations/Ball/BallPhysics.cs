@@ -6,7 +6,7 @@ namespace WearWare.Services.Physics.Simulations.Ball
     {
         private const double PixelsPerMeter = 1000.0 / 1.85;
         private const double Restitution = 0.6;
-        private const double SurfaceFriction = 0.05;
+        private const double SurfaceFriction = 0.01;
         private const double RestingSpeed = PixelsPerMeter * 0.2;
         private const double MaxStepSeconds = 1.0 / 120;
         private bool _initialized;
@@ -27,7 +27,7 @@ namespace WearWare.Services.Physics.Simulations.Ball
             }
 
             Radius = Math.Min(8, (Math.Min(width, height) - 1) / 2);
-            var rampRadius = Math.Min(32, (Math.Min(width, height) - 1) / 2);
+            var rampRadius = Math.Min(64, (Math.Min(width, height) - 1) / 2);
             RampRadius = rampRadius > Radius ? rampRadius : 0;
             if (!_initialized)
             {
@@ -66,7 +66,7 @@ namespace WearWare.Services.Physics.Simulations.Ball
                 BounceRamp(ref x, ref y, width - 1 - RampRadius, rampCenterY, false);
             }
             Bounce(ref x, Radius, width - 1 - Radius, true);
-            Bounce(ref y, Radius, height - 1 - Radius, false);
+            Bounce(ref y, double.NegativeInfinity, height - 1 - Radius, false);
             X = x;
             Y = y;
         }
