@@ -170,6 +170,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
 
         private static double EyeOpenness(double elapsedSeconds, bool doubleBlink)
         {
+            elapsedSeconds *= 1.5;
             if (doubleBlink && elapsedSeconds >= 0.42)
                 elapsedSeconds -= 0.42;
             if (elapsedSeconds < 0 || elapsedSeconds >= 0.3)
