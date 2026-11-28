@@ -282,6 +282,9 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var sin = Math.Sin(rotation);
             var eyeX = faceRadius * (14.84340816236941 / ReferenceRadius);
             var eyeShift = tip.X * 0.12;
+            var eyeTurn = tip.X * 0.10 / faceRadius;
+            var eyeCos = Math.Cos(eyeTurn);
+            var eyeSin = -Math.Sin(eyeTurn);
             var eyeY = -faceRadius * (17.99319034459099 / ReferenceRadius);
             var eyeRadiusX = faceRadius * (4.960674857154 / ReferenceRadius);
             var eyeRadiusY = faceRadius * (14.38153091568093 / ReferenceRadius);
@@ -305,8 +308,8 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
                         color = inHighlight ? TongueHighlightColor : inGroove ? TongueGrooveColor : TongueColor;
                     }
                     else if (point.X * point.X + point.Y * point.Y <= faceRadius * faceRadius &&
-                        !EllipseContains(point.X - eyeShift - eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
-                        !EllipseContains(point.X - eyeShift + eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY) &&
+                        !EyeContains(point.X - eyeShift - eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY, eyeCos, eyeSin) &&
+                        !EyeContains(point.X - eyeShift + eyeX, point.Y - eyeY, eyeRadiusX, eyeRadiusY, eyeCos, eyeSin) &&
                         !MouthContains(point, faceRadius))
                     {
                         color = FaceColor;
@@ -347,6 +350,11 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             var normalizedX = x / radiusX;
             var normalizedY = y / radiusY;
             return normalizedX * normalizedX + normalizedY * normalizedY <= 1;
+        }
+
+        private static bool EyeContains(double x, double y, double radiusX, double radiusY, double cos, double sin)
+        {
+            return EllipseContains(cos * x + sin * y, -sin * x + cos * y, radiusX, radiusY);
         }
 
         private static bool TongueContains(
