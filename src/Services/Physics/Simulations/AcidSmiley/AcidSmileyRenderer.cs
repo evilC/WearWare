@@ -60,7 +60,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             _offsetY = 0;
             _blinkTime = 0;
             _blinkStartTime = -1;
-            _nextBlinkTime = 5 + Random.Shared.NextDouble() * 5;
+            _nextBlinkTime = NextBlinkDelay();
             _motionInitialized = false;
             _gravityInitialized = false;
             _doubleBlink = false;
@@ -162,9 +162,11 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             {
                 _blinkStartTime = _blinkTime;
                 _doubleBlink = Random.Shared.Next(4) == 0;
-                _nextBlinkTime = _blinkTime + 5 + Random.Shared.NextDouble() * 5;
+                _nextBlinkTime = _blinkTime + NextBlinkDelay();
             }
         }
+
+        private static double NextBlinkDelay() => 3 + Random.Shared.NextDouble() * 5;
 
         private static double EyeOpenness(double elapsedSeconds, bool doubleBlink)
         {
