@@ -20,6 +20,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private const double MouthHalfWidth = 38.16216432703916 / ReferenceRadius;
         private const double MaxTiltRadians = 70 * Math.PI / 180;
         private const double TongueSlideGain = 0.466297348428705;
+        private const double TongueTiltSensitivity = 1.5;
         private double _elapsedSeconds;
         private double _basePosition;
         private double _baseAngle;
@@ -131,21 +132,22 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             targetFaceRotation += Math.Sin(_elapsedSeconds * 1.3) * 0.012;
             _faceRotation += (targetFaceRotation - _faceRotation) * SmoothingWeight(dt, 0.3);
             var localAngle = Math.Clamp(targetAngle + _faceRotation, -MaxTiltRadians, MaxTiltRadians);
+            var tongueAngle = Math.Clamp(localAngle * TongueTiltSensitivity, -MaxTiltRadians, MaxTiltRadians);
             var maxBaseTravel = Math.Sin(MaxTiltRadians) * TongueSlideGain;
             var targetBasePosition = 0.5 + Math.Clamp(
-                Math.Sin(localAngle) * TongueSlideGain + translationSlide, -maxBaseTravel, maxBaseTravel);
+                Math.Sin(tongueAngle) * TongueSlideGain + translationSlide, -maxBaseTravel, maxBaseTravel);
             if (!_motionInitialized)
             {
                 _basePosition = targetBasePosition;
-                _baseAngle = localAngle * 0.35;
-                _tipAngle = localAngle;
+                _baseAngle = tongueAngle * 0.35;
+                _tipAngle = tongueAngle;
                 _motionInitialized = true;
                 return;
             }
 
             _basePosition += (targetBasePosition - _basePosition) * SmoothingWeight(dt, 0.45);
-            _baseAngle += (localAngle * 0.35 - _baseAngle) * SmoothingWeight(dt, 0.5);
-            _tipAngle += (localAngle - _tipAngle) * SmoothingWeight(dt, 0.12);
+            _baseAngle += (tongueAngle * 0.35 - _baseAngle) * SmoothingWeight(dt, 0.5);
+            _tipAngle += (tongueAngle - _tipAngle) * SmoothingWeight(dt, 0.12);
         }
 
         private static double SmoothingWeight(double elapsedSeconds, double timeConstant)
