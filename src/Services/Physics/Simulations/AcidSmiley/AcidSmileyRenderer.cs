@@ -179,8 +179,11 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
 
         private void DrawSmiley(Color[] pixels, int width, int height, double centerX, double centerY, double radius, double rotation)
         {
-            var mouthPoint = SmilePoint(0, 0, radius, _basePosition);
-            var start = mouthPoint;
+            var arcAngle = Math.Asin((_basePosition - 0.5) * 1.28 * ReferenceRadius / LowerMouthRadius);
+            var arcRadius = radius * LowerMouthRadius / ReferenceRadius * 0.9;
+            var start = new Point(
+                Math.Sin(arcAngle) * arcRadius,
+                radius * LowerMouthCenterY / ReferenceRadius + Math.Cos(arcAngle) * arcRadius);
             // Keep the wider rounded tip within the same overall reach.
             var length = radius * 0.2716;
             var middleAngle = (_baseAngle + _tipAngle) / 2;
@@ -213,15 +216,6 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             middle = GetPathPoint(start, control, tip, 0.5);
             var baseDirection = GetPathDirection(start, control, tip, 0);
             var baseNormal = new Point(baseDirection.Y, -baseDirection.X);
-            var mouthBottom = MouthBounds(start.X / radius).Bottom * radius;
-            var mouthCenterY = radius * (LowerMouthCenterY / ReferenceRadius);
-            var shiftX = -start.X * 0.1;
-            var shiftY = mouthBottom - start.Y - (mouthBottom - mouthCenterY) * 0.1;
-            start = new Point(start.X + shiftX, start.Y + shiftY);
-            middle = new Point(middle.X + shiftX, middle.Y + shiftY);
-            tip = new Point(tip.X + shiftX, tip.Y + shiftY);
-
-            control = GetPathControl(start, middle, tip);
             var grooveStart = new Point(
                 start.X + baseDirection.X * radius * 0.005,
                 start.Y + baseDirection.Y * radius * 0.005);
@@ -434,13 +428,6 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
 
             var secondPosition = (t - 0.5) * 2;
             return middleRadius + (tipRadius - middleRadius) * secondPosition;
-        }
-
-        private static Point SmilePoint(double centerX, double centerY, double radius, double position)
-        {
-            var x = (position - 0.5) * 1.28;
-            var bounds = MouthBounds(x);
-            return new Point(centerX + x * radius, centerY + (bounds.Top + bounds.Bottom) * radius / 2);
         }
 
         private static (double Top, double Bottom) MouthBounds(double x)
