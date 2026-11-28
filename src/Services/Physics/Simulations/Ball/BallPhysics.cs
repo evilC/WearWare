@@ -9,9 +9,11 @@ namespace WearWare.Services.Physics.Simulations.Ball
         private const double SurfaceFriction = 0.01;
         private const double RestingSpeed = PixelsPerMeter * 0.2;
         private const double MaxStepSeconds = 1.0 / 120;
+        private const double VerticalMotionSmoothingSeconds = 0.6;
         private bool _initialized;
         private double _velocityX;
         private double _velocityY;
+        private double _verticalAccelerationBaseline;
 
         public double X { get; private set; }
         public double Y { get; private set; }
@@ -33,13 +35,16 @@ namespace WearWare.Services.Physics.Simulations.Ball
             {
                 X = (width - 1) / 2.0;
                 Y = (height - 1) / 2.0;
+                _verticalAccelerationBaseline = acceleration.Y;
                 _initialized = true;
             }
 
             var dt = Math.Min(elapsedSeconds, 0.1);
+            _verticalAccelerationBaseline += (acceleration.Y - _verticalAccelerationBaseline) *
+                (1 - Math.Exp(-dt / VerticalMotionSmoothingSeconds));
             // Accelerometer readings include gravity. Sensor X points right and Y points up.
             var accelerationX = -acceleration.X * PixelsPerMeter;
-            var accelerationY = acceleration.Y * PixelsPerMeter;
+            var accelerationY = (acceleration.Y + (acceleration.Y - _verticalAccelerationBaseline) * 0.7) * PixelsPerMeter;
             var steps = Math.Max(1, (int)Math.Ceiling(dt / MaxStepSeconds));
             for (var i = 0; i < steps; i++)
             {
