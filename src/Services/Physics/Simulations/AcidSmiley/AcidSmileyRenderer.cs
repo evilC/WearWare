@@ -19,6 +19,7 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
         private const double LowerMouthCenterY = 2.709097057827122;
         private const double MouthHalfWidth = 38.16216432703916 / ReferenceRadius;
         private const double MaxTiltRadians = 70 * Math.PI / 180;
+        private const double TongueSlideGain = 0.466297348428705;
         private double _elapsedSeconds;
         private double _basePosition;
         private double _baseAngle;
@@ -130,9 +131,9 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             targetFaceRotation += Math.Sin(_elapsedSeconds * 1.3) * 0.012;
             _faceRotation += (targetFaceRotation - _faceRotation) * SmoothingWeight(dt, 0.3);
             var localAngle = Math.Clamp(targetAngle + _faceRotation, -MaxTiltRadians, MaxTiltRadians);
-            var maxBaseTravel = Math.Sin(MaxTiltRadians) * 0.33;
+            var maxBaseTravel = Math.Sin(MaxTiltRadians) * TongueSlideGain;
             var targetBasePosition = 0.5 + Math.Clamp(
-                Math.Sin(localAngle) * 0.33 + translationSlide, -maxBaseTravel, maxBaseTravel);
+                Math.Sin(localAngle) * TongueSlideGain + translationSlide, -maxBaseTravel, maxBaseTravel);
             if (!_motionInitialized)
             {
                 _basePosition = targetBasePosition;
@@ -212,15 +213,10 @@ namespace WearWare.Services.Physics.Simulations.AcidSmiley
             middle = GetPathPoint(start, control, tip, 0.5);
             var baseDirection = GetPathDirection(start, control, tip, 0);
             var baseNormal = new Point(baseDirection.Y, -baseDirection.X);
-            const double attachmentPosition = 0.9;
-            var attachmentDepth = TongueRootDepth(attachmentPosition, radius);
-            var rightEdge = new Point(
-                start.X + baseNormal.X * baseRadius * attachmentPosition + baseDirection.X * attachmentDepth,
-                start.Y + baseNormal.Y * baseRadius * attachmentPosition + baseDirection.Y * attachmentDepth);
-            var mouthBottom = MouthBounds(rightEdge.X / radius).Bottom * radius;
+            var mouthBottom = MouthBounds(start.X / radius).Bottom * radius;
             var mouthCenterY = radius * (LowerMouthCenterY / ReferenceRadius);
-            var shiftX = -rightEdge.X * 0.1;
-            var shiftY = mouthBottom - rightEdge.Y - (mouthBottom - mouthCenterY) * 0.1;
+            var shiftX = -start.X * 0.1;
+            var shiftY = mouthBottom - start.Y - (mouthBottom - mouthCenterY) * 0.1;
             start = new Point(start.X + shiftX, start.Y + shiftY);
             middle = new Point(middle.X + shiftX, middle.Y + shiftY);
             tip = new Point(tip.X + shiftX, tip.Y + shiftY);
